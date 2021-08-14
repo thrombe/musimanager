@@ -114,6 +114,7 @@ class Song:
         audio['APIC'] = APIC(encoding=3, mime='image/jpeg', type=3, desc='Cover', data=img)
         audio.save()
 
+    """
     def json_load(self, dict): # not sure, gotta try
         self.__dict__.update(dict)
-        !lol
+    """
