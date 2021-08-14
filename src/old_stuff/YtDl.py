@@ -1,6 +1,5 @@
 import requests
 import os
-import json
 from mutagen.mp4  import MP4, MP4Cover
 from mutagen.id3 import ID3, APIC, TALB, TIT2, TPE1
 import youtube_dl
@@ -35,6 +34,8 @@ def ytdl_get_info(_id, YTD, URL, down):
     else: artists = _data['channel']
     #print(_data.keys())
     #print(_data['channel'])
+    from pprint import pprint
+    pprint(_data)
     return _data, {"artists": artists, "name": _data['title'], "album": _data.get('album', ''), "thumbnail": _data['thumbnail']}
 
 def tag_m4a(_file, _data, img):
@@ -57,7 +58,7 @@ def tag_mp3(_file, _data, img):
 
 def download_and_tag(_id, PATH, tag = True, download = ''):
     EXT, YTD, URL = innit(PATH)
-    # print(PATH, os.path.sep, _id, EXT)######
+    # print(PATH, os.path.sep, _id, EXT)
     _file = PATH + os.path.sep + _id + "." + EXT
     
     truthness = not os.path.exists(_file) # if file exists, dont download and tag, else do both
@@ -72,4 +73,4 @@ def download_and_tag(_id, PATH, tag = True, download = ''):
     elif EXT == 'm4a': tag_m4a(_file, _data, img)
 
 if __name__ == "__main__":
-    download_and_tag('uIsuD8odKtI', "/sdcard/Documents")    
+    download_and_tag('uIsuD8odKtI', "/sdcard/Documents", tag=False, download=False)    

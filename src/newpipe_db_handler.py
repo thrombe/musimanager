@@ -1,9 +1,54 @@
 
 import sqlite3
+from zipfile import ZipFile
 import json
-import zip_extract
 import os
 
+import opts
+
+class newpipe_db_handler:
+    def __init__(self):
+        self.bkup_directory = opts.newpipe_bkup_directory
+        self.playlists = opts.newpipe_playlists
+        self.data = None
+    
+    def get_latest_zip_path(self):
+        for directory, subdir, files in os.walk(self.bkup_directory):
+            files = [directory+file for file in files]
+            files.sort(key = os.path.getctime, reverse = True)
+            # files.sort(key = os.path.getmtime, reverse = True)
+            for file in files:
+                if ".zip" in file:
+                    return file
+
+    def extract_from_zip(self):
+        zip_path = self.get_latest_zip_path()
+        input_zip = ZipFile(zip_path)
+        newpipe_db = {name: input_zip.read(name) for name in input_zip.namelist()}["newpipe.db"]
+        db_path = self.bkup_directory+"newpipe.db"
+        with open(db_path, "wb") as f:
+            f.write(newpipe_db)
+        
+        self.data = self.extract_from_db()
+        os.remove(db_path)
+        return self.data
+
+    # {playlistname: [[songname, channel_name, song_key]]}
+    def extract_from_db(self, db_path):
+        return getLinks(
+            db_path, 
+            'playlists', 
+            'streams', 
+            'playlist_stream_join', 
+            self.playlists, 
+            artistname=[""], 
+            songname=[""],
+            quiet=True,
+            )
+
+
+
+# i dont wanna tidy this mess rn
 '''
 streams- 0stream-uid, 2link, 3name, 6channel
 playlistJoin- 0playlist-uid, 1stream-uid
@@ -48,38 +93,3 @@ def getLinks(db, Playlist, Streams, PlaylistJoin, playlistname, artistname, song
         songcount[plistName] = len(playlistWithVideoID[plistName])
     if not quiet: print('\nfound:\n', songcount, '\n')
     return playlistWithVideoID
-
-def quick_extract_for_songo_manager(newpipe_bkup_path):
-    #path = "/sdcard/BKUP/newpipe/"
-    path = newpipe_bkup_path
-    dbpath = path+'newpipe.db'
-    npdb = zip_extract.extract_zip(zip_extract.get_latest_zip_path(path))["newpipe.db"]
-    with open(dbpath, "wb") as f:
-        f.write(npdb)
-    
-    #outfile = '/sdcard/0Git/randomScripts/practicallyUseful/newpipe/outfile.json'
-
-    # filter using these
-    playlistname = ['issac', '0zDownleod', 'sawitch'] # use '' for all playlists
-    artistname = '' # lowercase
-    songname = '' # lowercase
-    
-    result = getLinks(dbpath, 'playlists', 'streams', 'playlist_stream_join', playlistname, artistname, songname, quiet=True)
-    
-    os.remove(dbpath)
-    return result
-    #json.dump(result, fp = open(outfile, 'w'), indent=4)
-
-if __name__ == '__main__':
-    outfile = '/sdcard/0Python/Git/randomScripts/practicallyUseful/newpipe/outfile.json'
-    db = '/storage/emulated/0/0Python/Git/randomScripts/practicallyUseful/newpipe/newpipe.db'
-
-    # filter using these
-    playlistname = ['issac', '0zDownleod', '0switch'] # use '' for all playlists
-    artistname = '' # lowercase
-    songname = '' # lowercase
-    
-    result = getLinks(db, 'playlists', 'streams', 'playlist_stream_join', playlistname, artistname, songname)
-    from pprint import pprint
-    pprint(result)
-    json.dump(result, fp = open(outfile, 'w'), indent=4)

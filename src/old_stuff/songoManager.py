@@ -26,27 +26,7 @@ def songoBongo(_id, PATH,  sorter, cache):
         dataAll['artist'] = dataAll['artist'].replace('.', '')
         # print(dataAll['artist'])########
     except: pass
-    """
-    # artist = _data['artists']
-    found = False
-    for artst, keywords in sorter.items(): # maybe use alldata here
-        if (_data['artists'] in keywords 
-            or _data['name'] in keywords 
-            or ( _data.get('album', '') == '' and any(nam.lower() == key.lower() for nam in _data['name'].split() for key in keywords))
-            or artst in _data['artists']
-        ):
-            found = True
-            _data['artists'] = artst
-            break
-    
-    if not found:
-        if not os.path.exists(PATH + os.path.sep + _data['artists'] + os.path.sep): # /HELLO/ and /hello/ are same in linux
-        #try:
-            os.mkdir(PATH + os.path.sep + _data['artists'])
-        #except: print(f'couldnt create folder named {_data["artists"]}')
-        sorter[_data['artists']] = [_data['artists']]
-        # json.dump(sorter, fp = open(sorterFile, 'w'))
-    """
+
     if EXT == 'mp3': tag_mp3(_file, _data, img)
     elif EXT == 'm4a': tag_m4a(_file, _data, img)
 

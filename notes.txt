@@ -1,0 +1,28 @@
+
+
+plan:
+  . for dl - 
+    . get keys from newpipe
+    . artists have a bunch of keywords they are associated with (like their name in diff languages and stuff)
+      . use these to find what artist the key belongs to- look in tags(dont forget to .lower()), author,  
+
+
+dependency graph thing:
+  . options for everything stored in opts
+  . tracker - artist - album - song (songs for putting in playlist or something, not tracking (for now atleast))
+  . manager - artist - song
+            - np_db_handler
+
+tarcker:
+  . walk through music, generate a list of artist names, ans add artists manually a few at a time
+  . or, take all songs, and get their artist and add it to tracker
+  . see if ytmusic.get_artist()["albums"] gives all albums - nope
+  . ytmusic.get_album(key){["releaseDate"], ["trackCount"], ["tracks"]}
+  . maybe make the first search very long and then, when checking for new, do just top few (search_limit)
+  . maybe check song name in known_songs?
+  . add song in yt playlist? easy access in newpipe
+  . maybe yeet song checks in here so i done have to deal with regional stuff
+  . maybe keep search limit to 50 for regular xhecks and increase it to 300 when adding new?
+
+  . Queen Bee - ten - missing (eg holy war)
+  . regional content stuff?

@@ -1,8 +1,11 @@
+
 import ytmusicapi
-from pprint import pprint
 import json
 from difflib import SequenceMatcher
-ytmusic = ytmusicapi.YTMusic("/sdcard/BKUP/newpipe/headers_auth.json")
+
+import opts
+from artist import ytmusic, Artist
+
 search_limit = 200 #200 uplimit with returns (300 in case of aimer but whatever)
 tracker_path = "/sdcard/BKUP/newpipe/musitracker.json"
 musisorter_path = "/sdcard/BKUP/newpipe/musisorter.json"
@@ -10,86 +13,6 @@ musipath = "/storage/F804-272A/däta/music(issac315)/IsBac"
 #test_musi_data = {"artist": ["b_sBD-j2IpE", "ICCmbFT7rMQ", "0HVbR8eP3k4", "WwyDpKXG83A", "_IkopJwRDKU", "XMaI3U4ducQ", "KiO4kdv1FfM",]}
 plist_name = "musitracker"
 
-# walk through music, generate a list of artist names, ans add artists manually a few at a time
-# or, take all songs, and get their artist and add it to tracker
-# see if ytmusic.get_artist()["albums"] gives all albums - nope
-# ytmusic.get_album(key){["releaseDate"], ["trackCount"], ["tracks"]}
-# maybe make the first search very long and then, when checking for new, do just top few (search_limit)
-# maybe check song name in known_songs?
-# add song in yt playlist? easy access in newpipe
-# maybe yeet song checks in here so i done have to deal with regional stuff
-# maybe keep search limit to 50 for regular xhecks and increase it to 300 when adding new?
-
-class Artist:
-    def __init__(self, name, key):
-        self.name = name
-        if type(key) == type(["key"]): self.keys = set(key)
-        else: self.keys = set([key])
-        self.check_stat = True
-        self.use_get_artist = False
-        self.name_confirmation_status = False
-        self.known_albums = {} # id: name
-        self.known_songs = {} # id: name # do i even need to check these? album trackcount?
-    
-    def __str__(self):
-        return f"{self.keys} {self.name}"
-    
-    def __hash__(self):
-        return hash(self.name+f"{list(self.keys).sort()}")
-    
-    def __eq__(self, other):
-        #if not isinstance(other, type(self)): return False
-        return list(self.keys).sort() == list(other.keys).sort() # sorting to eliminate position probs
-    
-    def get_songs(self, album_key):
-        album = ytmusic.get_album(album_key)
-        songs = {}
-        for song in album["tracks"]:
-            if "(Instrumental)" in song["title"]: continue
-            if None == song["videoId"]:
-                print("no ids")
-                pprint(song)
-                continue
-            songs[song["videoId"]] = song["title"]
-        return songs
-    
-    def get_albums_using_artist_id(self):
-        now_albums = {}
-        for key in self.keys:
-            albums_data = ytmusic.get_artist(key)["albums"]["results"]
-            for album in albums_data:
-                now_albums[album["browseId"]] = album["title"]
-        return now_albums
-    
-    def get_albums(self): # this fails with artists like lisa tho
-        if self.use_get_artist: return self.get_albums_using_artist_id()
-        albums = ytmusic.search(self.name, filter="albums", limit=search_limit, ignore_spelling=True)
-        now_albums = {}
-        for album in albums:
-            for artist in album["artists"]:
-                if artist["id"] in self.keys:
-                    now_albums[album["browseId"]] = album["title"]
-                    # same album can go in multiple artists if album has multiple artists
-        return now_albums
-    
-    def get_new_albums(self, now_albums):
-        #now_albums = self.get_albums()
-        new_albums = {}
-        for album_key, album_name in now_albums.items():
-            if album_key not in self.known_albums:
-                new_albums[album_key] = album_name
-                self.known_albums[album_key] = album_name
-        return new_albums
-    
-    def get_new_songs(self, now_albums):
-        new_songs = {}
-        for album_key, album_name in now_albums.items():
-            now_album_songs = self.get_songs(album_key)
-            for song_key, song_name in now_album_songs.items():
-                if song_key not in self.known_songs:
-                    new_songs[song_key] = song_name
-                    self.known_songs[song_key] = song_name
-        return new_songs
 
 def get_artists(name):
     albums = ytmusic.search(name, filter="albums", limit=search_limit, ignore_spelling=False)
@@ -347,8 +270,6 @@ def add_alts_to_artist():
         tracker.all_keys.add(artists[index].keys)
     tracker.save(tracker_path)
 
-# Queen Bee - ten - missing (eg holy war)
-# regional content stuff?
 
 def testing_playlist_stuff():
     #plist_name = "musitracker"
@@ -375,6 +296,10 @@ def testing_playlist_stuff():
     print(plist_key)
     """
 
+def testing2():
+    song = ytmusic.get_song("b_sBD-j2IpE") #"1MkrNVic7pw")
+    pprint(song)
+
 if __name__ == "__main__":
     #update_data_from_musisorter()
     #add_artist_from_musisorter() # to add a single artist from musisorter
@@ -389,3 +314,4 @@ if __name__ == "__main__":
     #combine_artists()
     
     #testing_playlist_stuff()
+    testing2()
