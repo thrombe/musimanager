@@ -5,15 +5,51 @@ plan:
     . get keys from newpipe
     . artists have a bunch of keywords they are associated with (like their name in diff languages and stuff)
       . use these to find what artist the key belongs to- look in tags(dont forget to .lower()), author,  
+  . manager
+    . sometimes, artist names have wierd chard like "/" that cant be in filenames
+    . for sorting (by prority)
+      . (use the similar strings thing)
+      . get info, check following against every artist
+        . if song key in artist keywords
+        . if song channel key in artist keys from tracker
+      . check these in other loop
+        . if artist name in song.artist_names
+        . if artist name in song tags
+        . if artist name in somg titles
 
+current storage needs:
+  . tracker - checks if a new album is up and aletrs somehow
+    . stores
+      . artists
+        . artist keys
+        . known album keys
+      . all artist keys - (this can be generated from artists tho,
+          so instead of maintaining it everywhere, just generate it)
+  . manager - download and sort musi
+    . stores
+      . import artist keys from tracker
+      . artist name : [keywordas related to artist for sort]
+      . known song keys so that its easy to tell whats new/removed
+
+unified storage needs:
+  .. can i keep it seperate-ish? so reuse is easy
+  . easily editable artist keywords for sort (manager)
+    . add keys from artist keys?
+      \. will be hard to remove tho
+      . maybe artist.show() for debug, that shows what all the keys point to?
+  . artists (tracker + manager) (maybe manager should be able to work without this) 
+    . artist keys
+    . alnum keys
+  . song info - for sort stuff (manager)
+    . also has local stuff that can used to find new/removed songs
 
 dependency graph thing:
   . options for everything stored in opts
-  . tracker - artist - album - song (songs for putting in playlist or something, not tracking (for now atleast))
+  \. tracker - artist - album - song (songs for putting in playlist or something, not tracking (for now atleast))
   . manager - artist - song
             - np_db_handler
 
-tarcker:
+old tracker notes:
   . walk through music, generate a list of artist names, ans add artists manually a few at a time
   . or, take all songs, and get their artist and add it to tracker
   . see if ytmusic.get_artist()["albums"] gives all albums - nope

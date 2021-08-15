@@ -31,14 +31,31 @@ class Ytdl:
 ytdl = Ytdl(opts.musi_path, opts.musi_ext)
 
 class song_info: # all metadata that i might care about
-    def __init__(self, ytdl_data):
+
+    def __init__(self):
+        self.titles = None
+        self.video_id = None
+        self.tags = None
+        self.thumbnail_url = None
+        self.album = None
+        self.artist_names = None
+        self.channel_id = None
+        self.uploader_id = None
+
+    def __str__(self):
+        return f"{self.__dict__}"
+    
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def load(self, ytdl_data):
         # theres also track and alt_title in case of ytm
         self.titles = [ # priority acc to index (low index is better) maybe check if in english?
             ytdl_data.get("track", None),
             ytdl_data.get("alt_title", None),
             ytdl_data["title"], # if this isnt there, something is wrong
             ]
-        self.title = [name for name in self.titles if name != None]
+        self.titles = [name for name in self.titles if name != None]
 
         self.video_id = ytdl_data["id"]
         self.tags = ytdl_data.get("tags", [])
@@ -59,19 +76,31 @@ class song_info: # all metadata that i might care about
     
 
 class Song:
-    def __init__(self, title, key):
-        self.title = title
+    def __init__(self, title, key, artist_name):
+        self.title = title # local one
         self.key = key # videoid
         self.artist_name = artist_name # the local name - i.e the folder name
-        # self.path = "" # ???
+        self.title_lock = False
         self.info = None
     
+    def __str__(self):
+        return f"{self.name} {self.key} {self.artist_name}"
+    
+    def __hash__(self):
+        return hash(self.__str__())
+    
+    def __eq__(self, other):
+        #if not isinstance(other, type(self)): return False
+        return self.__str__() == other.__str__() # sorting to eliminate position probs
+
     def url(self):
         return f"{ytdl.ytm_url}{self.key}"
 
-    def path(self):
+    def path(self, before=False, after=False):
         path_before_sort = f"{ytdl.path}{self.key}.{ytdl.ext}"
         path_after_sort = f"{ytdl.path}{self.artist_name}{os.path.sep}{self.key}.{ytdl.ext}"
+        if after: return path_after_sort
+        if before: return path_before_sort
         before = os.path.exists(path_before_sort)
         after = os.path.exists(path_after_sort)
         if before and after:
@@ -83,20 +112,27 @@ class Song:
         # all cases should be covered here
 
     def download(self):
+        print("downloading {self}")
         ytdl.ytd.download([self.url()])
     
     def get_info(self, force=False):
         if self.info != None and not force: return self.info
-        self.info = song_info(ytdl.ytd.extract_info(self.url(), download=False))
+        self.info = song_info()
+        self.info.load(ytdl.ytd.extract_info(self.url(), download=False))
         return self.info
     
     def tag(self):
+        print(f"tagging {self}")
+        self.get_info()
+        if not self.title_lock: self.title = self.info.titles[0]
+
+        if opts.debug_no_edits_to_stored: return
+
         if ytdl.ext == "m4a": self.tag_m4a()
         elif ytdl.ext == "mp3": self.tag_mp3()
 
     def tag_m4a(self):
         video = MP4(self.path())
-        self.get_info()
         img = requests.get(self.info.thumbnail).content
         video["\xa9nam"] = self.title
         video["\xa9ART"] = self.artist_name
@@ -106,13 +142,80 @@ class Song:
         
     def tag_mp3(self):
         audio = ID3(self.path())
-        self.get_info()
         img = requests.get(self.info.thumbnail).content
         audio['TIT2'] = TIT2(encoding=3, text=self.title)
         audio['TPE1'] = TPE1(encoding=3, text=self.artist_name)
         audio['TALB'] = TALB(encoding=3, text=self.info.album)
         audio['APIC'] = APIC(encoding=3, mime='image/jpeg', type=3, desc='Cover', data=img)
         audio.save()
+
+    def sort(self, current_path=None):
+        if current_path: self.tag() # the need of passing current_path means that its in a different artist folder
+
+        path = self.path(after=True)
+        if os.path.exists(path):
+            print(f"song {self.key} already present")
+            return
+        print(f"sorting {self.title} in {self.artist_name}")
+        pardir = os.path.join(path, os.pardir)
+        if not os.path.exists(pardir):
+            print(f"making a directory {self.artist_name}")
+            if not opts.debug_no_edits_to_stored:
+                os.mkdir(pardir)
+        if not opts.debug_no_edits_to_stored:
+            if not current_path: os.rename(self.path(before=True), path)
+            else: os.rename(current_path, path)
+
+    # assumes that the song is newly added
+    def sort_using_tracker(self, tracker):
+        self.get_info()
+        
+        def found(song, artist):
+            song.artist_name = artist.name
+            song.add_to_artist(artist)
+            song.tag()
+            song.sort()
+
+        for artist in tracker.artists:
+            if self.key in artist.keywords:
+                found(self, artist)
+                return
+        for artist in tracker.artists:
+            if self.info.channel_id in artist.keys:
+                found(self, artist)
+                return
+        for artist in tracker.artists:
+            if any(
+                any(artist.name.lower() in name.lower() for name in song.info.artist_names),
+                any(artist.name.lower() in tag.lower() for tag in song.info.tags),
+                any(artist.name.lower() in title.lower() for title in song.info.titles),
+                ):
+                found(self, artist)
+                return
+        
+        # new artist ig
+        for char in "/:*.":
+            self.artist_name.replace(char, "  ")
+        
+        artist = Artist(self.artist_name, self.info.channel_id)
+        tracker.artists.add(artist)
+        found(self, artist)
+
+    def add_to_artist(self, artist):
+        artist.songs.add(self)
+
+    def check_if_in_tracker(self, tracker):
+        return any(self.key == song.key for artist in tracker.artists for song in artist.songs)
+    
+    def choose_better_title(self):
+        print(self)
+        import pprint
+        pprint.pprint(self.info.__dict__)
+        print()
+        title = input("title plz")
+        self.title = title
+        self.title_lock = True
+        self.tag()
 
     """
     def json_load(self, dict): # not sure, gotta try

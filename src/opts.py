@@ -14,7 +14,12 @@ ytmusic_headers_path = musimanager_directory + "headers_auth.json"
 # do a better system then this
 musisorter_path = musimanager_directory + "musisorter.json"
 musicache_path = musimanager_directory + "musicache.json"
+musitracker_path = musimanager_directory + "musitracker.json"
+musitracker_plist_name = "musitracker"
+musitracker_search_limit = None # for now
 
 # debugs
 manager_sort_debug = True
 ytdl_quiet = True
+debug_no_edits_to_stored = True
+debug_no_edits_to_db = False
