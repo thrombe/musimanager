@@ -172,7 +172,8 @@ class Song:
         
         def found(song, artist):
             song.artist_name = artist.name
-            song.add_to_artist(artist)
+            artist.songs.add(song)
+            artist.keys.add(song.get_info().channel_id)
             song.tag()
             song.sort()
 
@@ -201,9 +202,6 @@ class Song:
         tracker.artists.add(artist)
         found(self, artist)
 
-    def add_to_artist(self, artist):
-        artist.songs.add(self)
-
     def check_if_in_tracker(self, tracker):
         return any(self.key == song.key for artist in tracker.artists for song in artist.songs)
     
@@ -221,3 +219,10 @@ class Song:
     def json_load(self, dict): # not sure, gotta try
         self.__dict__.update(dict)
     """
+
+def get_song(key):
+    song = Song(None, key, None)
+    song.get_info()
+    song.title = song.info.titles[0]
+    song.arrtist_name = song.info.artist_names[0]
+    return song

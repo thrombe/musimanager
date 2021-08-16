@@ -16,7 +16,7 @@ musisorter_path = musimanager_directory + "musisorter.json"
 musicache_path = musimanager_directory + "musicache.json"
 musitracker_path = musimanager_directory + "musitracker.json"
 musitracker_plist_name = "musitracker"
-musitracker_search_limit = None # for now
+musitracker_search_limit = 50 # 200 uplimit with returns (300 in case of aimer but whatever)
 
 # debugs
 manager_sort_debug = True

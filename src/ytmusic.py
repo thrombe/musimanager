@@ -6,7 +6,6 @@ import opts
 ytmusic = ytmusicapi.YTMusic(opts.ytmusic_headers_path)
 
 
-
 class yt_plist:
     def __init__(self, name):
         self.name = name
@@ -28,7 +27,7 @@ class yt_plist:
 
 
 def get_artists(name):
-    albums = ytmusic.search(name, filter="albums", limit=search_limit, ignore_spelling=False)
+    albums = ytmusic.search(name, filter="albums", limit=opts.musitracker_search_limit, ignore_spelling=False)
     artists = set()
     for album in albums:
         for artist in album["artists"]:

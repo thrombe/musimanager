@@ -8,6 +8,7 @@ class Artist:
         if type(key) == type(["key"]): self.keys = set(key)
         else: self.keys = set([key])
         self.check_stat = True
+        self.ignore_no_songs = False # wont be removed from db even if no songs in it (only tracking for new albums)
         self.use_get_artist = False
         self.name_confirmation_status = False
         

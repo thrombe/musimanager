@@ -8,6 +8,7 @@ import opts
 from newpipe_db_handler import newpipe_db_handler
 from song import Song
 from tracker import Tracker
+from artist import Artist
 
 class manager:
     def __init__(self):
@@ -62,10 +63,23 @@ class manager:
                 if song.title: continue
                 current_path = song.path(after=True)
                 # move it to parent folder as if it was newly downloaded
-                print(f"song seems newly added, so moving it to parent dir for sorting - {song}")
-                if not opts.debug_no_edits_to_stored:
-                    os.rename(current_path, os.path.join(current_path, os.pardir, os.path.basename(current_path)))
-                song.sort_using_tracker(tracker)
+                # print(f"song seems newly added, so moving it to parent dir for sorting - {song}")
+                # if not opts.debug_no_edits_to_stored:
+                #     os.rename(current_path, os.path.join(current_path, os.pardir, os.path.basename(current_path)))
+                # song.sort_using_tracker(tracker)
+                
+                found = False
+                for artist in self.tracker.artists: # if its one of the newly created artist from a few lines below
+                    if song.artist_name == artist.name:
+                        song.tag()
+                        artist.keys.add(song.info.channel_id)
+                        break
+                if found: continue
+                print(f"found new song, so assuming that the artist name is currect and stuff {song}")
+                song.tag()
+                artist = Artist(song.artist_name, song.info.channel_id)
+                artist.name_confirmation_status = True
+                self.tracker.artists.add(artist)
 
         # check if all items in tracker are in the dir
         for artist in self.tracker.artists:
@@ -75,6 +89,11 @@ class manager:
                     print(f"song not found in directory - {song}")
                     print("removing the song from db")
                     artist.songs.remove(song)
+                    
+                    if artist.ignore_no_songs: continue
+                    if not artist.songs:
+                        print(f"no songs found in artist, so removing {artist}")
+                        self.tracker.remove(artist)
 
         # removing empty directories in the main dir
         for directory, _, files in os.walk(path):

@@ -1,6 +1,23 @@
 
 
+from difflib import SequenceMatcher
+
 from tracker import Tracker
+
+
+def kinda_similar(str1, str2):
+    # this func is terrible, use a different one
+    perc = SequenceMatcher(None, str1, str2).ratio()
+    if perc >= 0.4: return True
+    else: return False
+
+
+search_limit = 200 #200 uplimit with returns (300 in case of aimer but whatever)
+tracker_path = opts.musitracker_path
+musisorter_path = opts.musisorter_path
+musipath = opts.musi_path
+plist_name = opts.musitracker_plist_name
+#test_musi_data = {"artist": ["b_sBD-j2IpE", "ICCmbFT7rMQ", "0HVbR8eP3k4", "WwyDpKXG83A", "_IkopJwRDKU", "XMaI3U4ducQ", "KiO4kdv1FfM",]}
 
 # def get_playlist_key_from_album(album_key):
 #     return ytmusic.get_album(album_key)["playlistId"]

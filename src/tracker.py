@@ -1,29 +1,17 @@
 
 import ytmusicapi
 import json
-from difflib import SequenceMatcher
 import os
 
 import opts
 from artist import Artist
+from song import Song, get_song
 from ytmusic import ytmusic
-
-search_limit = 200 #200 uplimit with returns (300 in case of aimer but whatever)
-tracker_path = opts.musitracker_path
-musisorter_path = opts.musisorter_path
-musipath = opts.musi_path
-plist_name = opts.musitracker_plist_name
-#test_musi_data = {"artist": ["b_sBD-j2IpE", "ICCmbFT7rMQ", "0HVbR8eP3k4", "WwyDpKXG83A", "_IkopJwRDKU", "XMaI3U4ducQ", "KiO4kdv1FfM",]}
+from ui import kinda_similar
 
 def to_json(obj):
     if type(obj) == type(set()): return list(obj)
     return obj.__dict__
-
-def kinda_similar(str1, str2):
-    # this func is terrible, use a different one
-    perc = SequenceMatcher(None, str1, str2).ratio()
-    if perc >= 0.4: return True
-    else: return False
 
 class Tracker:
     def __init__(self):
@@ -35,55 +23,34 @@ class Tracker:
         self.artists.add(artist)
         for key in artist.keys:
             self.all_keys.add(key)
-    
-    def add_artists_from_musidata(self, musidata):
-        for name, song_keys in musidata.items():
-            artist = Artist(name, "temp")
-            for song_key in song_keys:
-                if song_key in self.got_artist_from_these_songs: continue
-                artist_details = ytmusic.get_song(song_key)
-                try: artist_details = artist_details["videoDetails"]
-                except Exception as e:
-                    print(artist_details, "\n", e)
-                    continue
-                artist.keys.add(artist_details["channelId"])
-                self.got_artist_from_these_songs.add(song_key)
-            artist.keys.remove("temp")
-            artist.name_confirmation_status = True
-            if artist not in self.artists:
-                self.add_artist(artist)
-            else: print(f"artist {artist} already in")
-    
-    def add_artists_from_song_keys(self, keys):
-        for key in keys:
-            if key in self.got_artist_from_these_songs: continue
-            artist_details = ytmusic.get_song(key)
-            try: artist_details = artist_details["videoDetails"]
-            except:
-                print(artist_details)
-                continue
-            artist = Artist(artist_details["author"], artist_details["channelId"])
-            self.got_artist_from_these_songs.add(key)
-            if artist not in self.artists:
-                self.add_artist(artist) # how do i remove alt ids and put them in same artist?
-   
-    def save(self, path):
+       
+    def save(self):
         if opts.debug_no_edits_to_db: return
 
-        self.save_artist_keywords()
+        self.save_sorter()
         dikt = self.__dict__
         dikt.remove("all_keys")
         dikt.remove("got_artist_from_these_songs")
-        with open(path, "w") as f:
+        with open(opts.musitracker_path, "w") as f:
             json.dump(dikt, f, indent=4, default=to_json)
     
-    def load(self, path):
-        with open(path, "r") as f:
+    def save_sorter(self):
+        if opts.debug_no_edits_to_db: return
+        
+        dikt = {}
+        for artist in self.artists:
+            dikt[artist.name] = {"keywords": list(artist.keywords), "keys": list(artist.keys)}
+        with open(opts.musisorter_path, "w") as f:
+            json.dump(dikt, f, indent=4)
+    
+    def load(self):
+        with open(opts.musitracker_path, "r") as f:
             celf = json.load(f)
         self.artists = set()
         for json_artist in celf["artists"]:
             artist = Artist(json_artist["name"], json_artist["keys"])
             artist.check_stat = json_artist["check_stat"]
+            artist.ignore_no_songs = json_artist["ignore_no_songs"]
             artist.use_get_artist = json_artist["use_get_artist"]
             artist.name_confirmation_status = json_artist["name_confirmation_status"]
 
@@ -98,14 +65,60 @@ class Tracker:
                 song.info = song_info()
                 song.info.__dict__ = song_data["info"]
                 artist.songs.add(song)
-            # artist.keywords # ignore the keywords from here
+            artist.keywords = set(json_artist["keywords"])
             self.artists.add(artist)
 
-        self.load_artist_keywords()
         self.gen_extra_data()
+        self.load_sorter()
         # self.gen_all_keys()
         # self.gen_got_artist_from_these_songs()
     
+    def load_sorter(self):
+        with open(opts.musisorter, "r") as f:
+            dikt = json.load(f)
+        # dont change all 3 in one go
+        for artist in self.artists:
+            data = dikt.get(artist.name, None)
+            if not data:
+                for key, val in dikt.items():
+                    if any(
+                        list(artist.keys).sort() == val["keys"].sort(),
+                        list(artist.keywords).sort() == val["keywords"].sort(),
+                        ):
+                        data = val
+                        break
+            artist.keys = data["keys"]
+            artist.keywords = data["keywords"]
+    
+    def gen_extra_data(self):
+        for artist in self.artists:
+            for key in artist.keys:
+                self.all_keys.add(key)
+            for song in artist.songs:
+                self.got_artist_from_these_songs.add(song.key)
+    
+    # NOT NEEDED CUZ MANAGER ALREADY DOES THIS
+    # def add_artists_from_musidata(self, musidata):
+    #     for name, song_keys in musidata.items():
+    #         artist = Artist(name, "temp")
+    #         for song_key in song_keys:
+    #             if song_key in self.got_artist_from_these_songs: continue
+    #             song = get_song(song_key)
+    #             artist.keys.add(song.info.channel_id)
+    #             self.got_artist_from_these_songs.add(song_key)
+    #         artist.keys.remove("temp")
+    #         artist.name_confirmation_status = True
+    #         if artist not in self.artists:
+    #             self.add_artist(artist)
+    #         else: print(f"artist {artist} already in")
+    
+    # assuming that song is downloaded???
+    # def add_artists_from_song_keys(self, keys):
+    #     for key in keys:
+    #         if key in self.got_artist_from_these_songs: continue
+    #         song = get_song(key)
+    #         song.sort_using_tracker(self)
+
     def add_artist_user_input(self):
         name = input("name plz(this will be used as the artist name in db): ")
         artists = list(get_artists(name))
