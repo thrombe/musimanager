@@ -2,7 +2,8 @@
 
 # PATHS WITH SEPERATORS(at end) PLZ
 
-musi_path = "/storage/F804-272A/däta/music(issac315)/IsBac/" # path where music should be stored and stuff
+# musi_path = "/storage/F804-272A/däta/music(issac315)/IsBac/" # path where music should be stored and stuff
+musi_path = "/sdcard/Documents/IsBac/" # path where music should be stored and stuff
 musi_ext = "m4a"
 musimanager_directory = "/sdcard/BKUP/newpipe/musimanager/" # directory where musimanager can store files
 newpipe_bkup_directory = "/sdcard/BKUP/newpipe/"
@@ -19,7 +20,7 @@ musitracker_plist_name = "musitracker"
 musitracker_search_limit = 50 # 200 uplimit with returns (300 in case of aimer but whatever)
 
 # debugs
-manager_sort_debug = True
+# manager_sort_debug = True
 ytdl_quiet = True
-debug_no_edits_to_stored = True
+debug_no_edits_to_stored = False
 debug_no_edits_to_db = False

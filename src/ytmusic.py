@@ -25,6 +25,29 @@ class yt_plist:
         self.playlist_id = ytmusic.create_playlist(plist_name, "", privacy_status="UNLISTED")
         return self.playlist_id
 
+    #ytmusic.delete_playlist(key)
+    #ytmusic.add_playlist_items(key, ["b_sBD-j2IpE", "ICCmbFT7rMQ"], duplicates=False)
+
+    #plist = ytmusic.get_playlist(key, limit=2000)
+    # plist- tracks, title, trackCount
+    #songs = [{"videoId": track["videoId"], "setVideoId": track["setVideoId"]} for track in plist["tracks"]] #setvideoid required for editing songs or something
+    #ytmusic.remove_playlist_items(key, songs)
+
+    #ytmusic.edit_playlist(key, title=plist_name, addPlaylistId=ytmusic.get_album("MPREb_lZxmeDzbB0M")["playlistId"]) # append playlist
+
+
+def ytplist_add_albums(albums):
+    plist_key = get_plist_key(plist_name)
+    for album_key in albums:
+        playlist_key = get_playlist_key_from_album(album_key)
+        ytmusic.edit_playlist(plist_key, title=plist_name, addPlaylistId=playlist_key)
+
+def ytplist_clear_old_with_permission():
+    if input("wanna clear old items from ytplist? y/n: ") == "n": return
+    plist_key = get_plist_key(plist_name)
+    plist = ytmusic.get_playlist(plist_key, limit=2000)
+    songs = [{"videoId": track["videoId"], "setVideoId": track["setVideoId"]} for track in plist["tracks"]] #setvideoid required for editing songs or something
+    ytmusic.remove_playlist_items(plist_key, songs)
 
 def get_artists(name):
     albums = ytmusic.search(name, filter="albums", limit=opts.musitracker_search_limit, ignore_spelling=False)

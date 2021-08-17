@@ -29,7 +29,7 @@ class newpipe_db_handler:
         with open(db_path, "wb") as f:
             f.write(newpipe_db)
         
-        self.data = self.extract_from_db()
+        self.data = self.extract_from_db(db_path)
         os.remove(db_path)
         return self.data
 
@@ -41,8 +41,8 @@ class newpipe_db_handler:
             'streams', 
             'playlist_stream_join', 
             self.playlists, 
-            artistname=[""], 
-            songname=[""],
+            artistname="", 
+            songname="",
             quiet=True,
             )
 

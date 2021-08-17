@@ -18,17 +18,17 @@ class Album:
     def __eq__(self, other):
         return self.__str__() == other.__str__()
 
-    def get_songs(self):
-        album = ytmusic.get_album(self.key)
-        songs = {}
-        for song in album["tracks"]:
-            if "(Instrumental)" in song["title"]: continue
-            if None == song["videoId"]:
-                print("no ids")
-                pprint(song)
-                continue
-            songs[song["videoId"]] = song["title"]
-        return songs
+    # def get_songs(self):
+    #     album = ytmusic.get_album(self.key)
+    #     songs = {}
+    #     for song in album["tracks"]:
+    #         if "(Instrumental)" in song["title"]: continue
+    #         if None == song["videoId"]:
+    #             print("no ids")
+    #             pprint(song)
+    #             continue
+    #         songs[song["videoId"]] = song["title"]
+    #     return songs
 
     def get_playlist_id(self, id=None): # if we add album to a yt_playlist, we need this
         if id:
