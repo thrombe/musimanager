@@ -27,7 +27,7 @@ class manager:
         self.tracker.save()
 
     def download_new_from_newpipe_db(self):
-        self.tracker.gen_extra_data() # to make sure data is updated
+        # self.tracker.gen_extra_data() # to make sure data is updated
 
         np_db = newpipe_db_handler()
         playlists = np_db.extract_from_zip()
@@ -84,7 +84,6 @@ class manager:
                         # next song in tracker
                         break
                     if found: break
-                # if song.key in self.tracker.all_song_keys: found = True
                 if found: continue
                 # song removed from directory but in tracker
                 print(f"song not found in directory - {song}")

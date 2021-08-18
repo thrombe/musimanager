@@ -3,8 +3,9 @@ import json
 
 import opts
 from artist import Artist
+from album import Album
 from song import Song, get_song, song_info
-from ytmusic import ytmusic
+from opts import ytmusic
 
 def to_json(obj):
     if type(obj) == type(set()): return list(obj)
@@ -13,20 +14,22 @@ def to_json(obj):
 class Tracker:
     def __init__(self):
         self.artists = set()
-        self.all_keys = set() # gen on load
+
+        # do i even need these?
+        self.all_artist_keys = set() # handled by get_albums
         self.all_song_keys = set() # gen on load(if song in artists.songs, then we already have the artist) # so that only new songs are tested for artist
     
     def add_artist(self, artist):
         self.artists.add(artist)
         for key in artist.keys:
-            self.all_keys.add(key)
+            self.all_artist_keys.add(key)
        
     def save(self):
         if opts.debug_no_edits_to_db: return
 
         self.save_sorter()
         dikt = self.__dict__
-        dikt.pop("all_keys")
+        # dikt.pop("all_artist_keys")
         dikt.pop("all_song_keys")
         with open(opts.musitracker_path, "w") as f:
             json.dump(dikt, f, indent=4, default=to_json)
@@ -47,6 +50,7 @@ class Tracker:
     def load(self):
         with open(opts.musitracker_path, "r") as f:
             celf = json.load(f)
+        self.all_artist_keys = set(celf["all_artist_keys"])
         self.artists = set()
         for json_artist in celf["artists"]:
             artist = Artist(json_artist["name"], json_artist["keys"])
@@ -56,7 +60,7 @@ class Tracker:
             artist.name_confirmation_status = json_artist["name_confirmation_status"]
 
             for json_album in json_artist["known_albums"]:
-                album = Album("", "", "")
+                album = Album("", "", "", "")
                 album.__dict__ = json_album
                 artist.known_albums.add(album)
 
@@ -93,8 +97,17 @@ class Tracker:
     
     def gen_extra_data(self):
         for artist in self.artists:
-            for key in artist.keys:
-                self.all_keys.add(key)
+            # for key in artist.keys:
+            #     self.all_artist_keys.add(key)
             for song in artist.songs:
                 self.all_song_keys.add(song.key)
     
+
+
+    def get_new_albums(self):
+        new_albums = set()
+        for artist in self.artists:
+            if not artist.check_stat: continue
+            for album in artist.get_new_albums(all_artist_keys=self.all_artist_keys):
+                new_albums.add(album)
+        return new_albums

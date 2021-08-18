@@ -1,5 +1,6 @@
 
-from ytmusic import ytmusic
+from album import Album
+from opts import ytmusic
 import opts
 
 class Artist:
@@ -55,34 +56,48 @@ class Artist:
         for song in self.songs:
             song.artist_name = name
             song.sort()
+        for album in known_albums:
+            album.artist_name = name
 
     def get_albums_using_artist_id(self):
         now_albums = set()
         for key in self.keys:
             albums_data = ytmusic.get_artist(key)["albums"]["results"]
             for album_data in albums_data:
-                album = Album(album_data["title"], album_data["browseId"], key)
-                album.playlist_id = album_data["playlistId"]
+                album = Album(album_data["title"], album_data["browseId"], self.name, key)
+                # album.playlist_id = album_data["playlistId"] # cant get playlist_id from here
                 now_albums.add(album)
         return now_albums
     
-    def get_albums(self):
+    def get_albums(self, all_artist_keys=None):
         if self.use_get_artist: return self.get_albums_using_artist_id()
+
+        if all_artist_keys != None:
+            search_limit = opts.musitracker_search_limit_first_time
+        elif any(key not in all_artist_keys for key in self.keys):
+            search_limit = opts.musitracker_search_limit_first_time
+            for key in self.keys:
+                if key not in all_artist_keys: all_artist_keys.add(key)
+        else: search_limit = opts.musitracker_search_limit
+
         albums_data = ytmusic.search(self.name, filter="albums", limit=search_limit, ignore_spelling=True)
         now_albums = set()
         for album_data in albums_data:
             for artist_data in album_data["artists"]:
                 if artist_data["id"] in self.keys:
-                    album = Album(album_data["title"], album_data["browseId"], artist_data["id"])
-                    album.playlist_id = album_data["playlistId"]
+                    album = Album(album_data["title"], album_data["browseId"], self.name, artist_data["id"])
                     now_albums.add(album)
+                    # album.playlist_id = album_data["playlistId"] # cant get playlist_id from here
                     # same album can go in multiple artists if album has multiple artists
         return now_albums
     
-    def get_new_albums(self, now_albums):
+    # return and add new albums to artist
+    def get_new_albums(self, all_artist_keys=None):
+        now_albums = self.get_albums(all_artist_keys)
         new_albums = set()
         for album in now_albums:
             if album not in self.known_albums:
                 new_albums.add(album)
                 self.known_albums.add(album)
+        if not self.known_albums: self.known_albums.add(Album("no albums", "no albums", self.name, "no albums"))
         return new_albums
