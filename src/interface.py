@@ -26,14 +26,14 @@ class Interface:
 
     def append_albums_to_plist(self, albums, skip_perm=False):
         self.plist.clear_items_with_permission(skip_perm=False)
-        print()
+        print("")
         for album in albums:
             print(album)
             songs = "-songs--->"
             for song in album.get_songs():
                 songs += f"{song}, "
             print(songs)
-            print()
+            print("")
             if not skip_perm: perm = input("want this album in playlist? y/n: ")
             else: perm = "y"
             if perm == "y":
@@ -44,7 +44,7 @@ class Interface:
         artists = [artist for artist in self.tracker.artists if kinda_similar(name, artist.name) and artist.check_stat]
         if name == "": artists = self.tracker.artists
         for i, artist in enumerate(artists): print(i, artist.name)
-        print()
+        print("")
         indices = input("artist indices plz: ").split(", ")
         indices = [int(index) for index in indices]
         artists = [artists[index] for index in indices]
@@ -81,7 +81,7 @@ class Interface:
         artists = [artist for artist in self.tracker.artists if kinda_similar(name, artist.name) and artist.check_stat]
         if name == "": artists = self.tracker.artists
         for i, artist in enumerate(artists): print(i, artist.name)
-        print()
+        print("")
         index = int(input("artist index plz: "))
         artist = artists[index]
         albums = artist.get_albums()
@@ -94,12 +94,12 @@ class Interface:
         # yeet the albums that are definitely not from the required artist
         artists = [artist for artist in artists if kinda_similar(name, artist.name)]
         for i, artist in enumerate(artists): print(i, artist)
-        print()
+        print("")
         indices = input("artist indices plz: ").split(", ")
         indices = [int(index) for index in indices]
         artist = artists[indices.pop(0)]
         print([album.name for album in artist.get_albums_using_artist_id()])
-        print()
+        print("")
         corr = input("this correct? y/n: ")
         if corr != "y":
             self.add_artist_using_search()
@@ -112,7 +112,7 @@ class Interface:
             except Exception as e:
                 print(f"index {index} failed", "\n", e)
                 continue
-            print()
+            print("")
             corr = input("this correct? y/n: ")
             if corr == "y":
                 artist.keys.add(artists[index].keys)
@@ -130,12 +130,12 @@ class Interface:
         index = int(input("\nwhat index?: "))
         artist = artists[index]
         print(artist)
-        print()
+        print("")
         
         artists = list(search_for_artists_on_ytmusic_albums(artist.name))
         artists = [artist for artist in artists if kinda_similar(name, artist.name)]
         for i, artist in enumerate(artists): print(i, artist)
-        print()
+        print("")
         indices = input("artist indices plz: ").split(", ")
         indices = [int(index) for index in indices]
         for index in indices:
@@ -145,7 +145,7 @@ class Interface:
                 print(f"index {index} failed")
                 print(e)
                 continue
-            print()
+            print("")
             rep = input("this correct? y/n: ")
             if rep == "n": continue
             

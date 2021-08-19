@@ -248,7 +248,7 @@ class Song:
         print(self)
         import pprint
         pprint.pprint(self.info.__dict__)
-        print()
+        print("")
         title = input("title plz")
         self.title = title
         self.title_lock = True
