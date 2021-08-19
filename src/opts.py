@@ -2,8 +2,7 @@
 
 # PATHS WITH SEPERATORS(at end) PLZ
 
-# musi_path = "/storage/F804-272A/däta/music(issac315)/IsBac/" # path where music should be stored and stuff
-musi_path = "/sdcard/Documents/IsBac/" # path where music should be stored and stuff
+musi_path = "/storage/F804-272A/däta/music(issac315)/IsBac/" # path where music should be stored and stuff
 musi_ext = "m4a"
 musimanager_directory = "/sdcard/BKUP/newpipe/musimanager/" # directory where musimanager can store files
 newpipe_bkup_directory = "/sdcard/BKUP/newpipe/"

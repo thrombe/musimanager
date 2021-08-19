@@ -1,7 +1,8 @@
 
 
-from song import Song
+from song import Song, kinda_similar
 from album import Album
+from artist import Artist
 import opts
 from opts import ytmusic
 
@@ -53,7 +54,23 @@ def search_for_artists_on_ytmusic_albums(name):
     albums = ytmusic.search(name, filter="albums", limit=opts.musitracker_search_limit_first_time, ignore_spelling=False)
     artists = set()
     for album in albums:
-        for artist in album["artists"]:
-            artist = Artist(artist["name"], artist["id"])
+        # try:
+        #     if kinda_similar(name, album["artists"][0]["name"]): print(album, "\n")
+        # except: print(album, "\n")
+        for artist_data in album["artists"]:
+            artist = Artist(artist_data["name"], artist_data["id"])
+            if artist.keys == None: continue
             artists.add(artist)
     return artists
+
+def search_albums_on_yt(name):
+    albums = ytmusic.search(name, filter="albums", limit=opts.musitracker_search_limit_first_time, ignore_spelling=False)
+    artists = set()
+    for album in albums:
+        try:
+            album.pop("thumbnails")
+        except:pass
+        try:
+            if kinda_similar(name, album["artists"][0]["name"]): print(album, "\n")
+        except: print(album, "\n")
+    

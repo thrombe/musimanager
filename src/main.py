@@ -4,8 +4,10 @@ import sys
 
 import opts
 from manager import Manager
+from ytmusic import search_albums_on_yt
 from opts import ytmusic
 from interface import Interface
+from artist import Artist
 from tracker import Tracker
 from song import kinda_similar
 
@@ -60,7 +62,7 @@ class Launcher:
 
         manager.save()
 
-    def chech_sort(self, help_text=False):
+    def check_sort(self, help_text=False):
         if help_text: return "check if all songs are sorted properly and update the db"
         manager = Manager()
         manager.load()
@@ -90,6 +92,18 @@ class Launcher:
 
         interface.save()
 
+    def search_artist_and_append_albums(self, help_text=False):
+        if help_text: return "search for artist, and add songs to yt playlist, no changes to db"
+        interface = Interface()
+        interface.load()
+        artist = interface.get_artist_using_search()
+        interface.append_albums_to_plist(artist.get_albums(), skip_perm=True)
+
+    def search_albums_on_yt(self, help_text=False):
+        if help_text: return "search albums on youtube music (and nothing else, just filter search)"
+        name = input("name plz: ")
+        search_albums_on_yt(name)
+
     # just to check out artist add all songs to plist but not to db
     def add_songs_to_plist_using_song_key(self, help_text=False):
         if help_text: return "enter song key, and all songs from the same channel wil appear in the yt playlist"
@@ -101,12 +115,12 @@ class Launcher:
         # interface.save()
     
     # this dosent get stored in the db
-    def append_all_albums_to_plist_for_a_artist(self, help_text=False):
-        if help_text: return "choose an artist from db and all the songs get added to the yt playlist"
+    def append_all_albums_to_plist_for_an_artist(self, help_text=False):
+        if help_text: return "choose an artist from db and all the songs get added to the yt playlist but dosent affect db"
         interface = Interface()
         interface.load()
 
-        interface.add_songs_to_plist_using_song_key()
+        interface.append_all_albums_to_plist_for_an_artist()
 
     # confirm the names of unconfirmed artist names
     def confirm_artist_names(self, help_text=False):
@@ -136,17 +150,13 @@ class Launcher:
         interface.add_alt_keys_to_artist()
 
         interface.save()
+    
     """
     # search songs and ask user to choose keys to add to artist + artist name
     def add_artist_using_song_key(self, help_text=False):
         if help_text: return "dosent do anything rn"
         pass
     
-    # artist.use_artist_id_for_albums = True
-    def toggle_get_album_from_key(self, help_text=False):
-        if help_text: return "dosent do anything rn"
-        pass
-
     def combine_artists(self, help_text=False):
         if help_text: return "dosent do anything rn"
         pass

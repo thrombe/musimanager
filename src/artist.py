@@ -11,7 +11,6 @@ class Artist:
         else: self.keys = None
         self.check_stat = True
         self.ignore_no_songs = False # wont be removed from db even if no songs in it (only tracking for new albums)
-        self.use_artist_id_for_albums = False
         self.name_confirmation_status = False
         
         self.known_albums = set()
@@ -70,7 +69,8 @@ class Artist:
     def get_albums_using_artist_id(self):
         now_albums = set()
         for key in self.keys:
-            albums_data = ytmusic.get_artist(key)["albums"]["results"]
+            try: albums_data = ytmusic.get_artist(key)["albums"]["results"]
+            except: continue
             for album_data in albums_data:
                 album = Album(album_data["title"], album_data["browseId"], self.name, key)
                 # album.playlist_id = album_data["playlistId"] # cant get playlist_id from here
@@ -78,8 +78,6 @@ class Artist:
         return now_albums
     
     def get_albums(self, all_artist_keys=None):
-        if self.use_artist_id_for_albums: return self.get_albums_using_artist_id()
-
         if all_artist_keys == None:
             search_limit = opts.musitracker_search_limit_first_time
         elif any(key not in all_artist_keys for key in self.keys):
@@ -89,7 +87,8 @@ class Artist:
         else: search_limit = opts.musitracker_search_limit
 
         albums_data = ytmusic.search(self.name, filter="albums", limit=search_limit, ignore_spelling=True)
-        now_albums = set()
+        # now_albums = set()
+        now_albums = self.get_albums_using_artist_id()
         for album_data in albums_data:
             for artist_data in album_data["artists"]:
                 if artist_data["id"] in self.keys:

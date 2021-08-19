@@ -56,7 +56,6 @@ class Tracker:
             artist = Artist(json_artist["name"], json_artist["keys"])
             artist.check_stat = json_artist["check_stat"]
             artist.ignore_no_songs = json_artist["ignore_no_songs"]
-            artist.use_artist_id_for_albums = json_artist["use_artist_id_for_albums"]
             artist.name_confirmation_status = json_artist["name_confirmation_status"]
 
             for json_album in json_artist["known_albums"]:

@@ -76,7 +76,7 @@ class Interface:
         self.plist.clear_items_with_permission()
         self.append_albums_to_plist(albums, skip_perm=True)
 
-    def append_all_albums_to_plist_for_a_artist(self):
+    def append_all_albums_to_plist_for_an_artist(self):
         name = input("name plz: ")
         artists = [artist for artist in self.tracker.artists if kinda_similar(name, artist.name) and artist.check_stat]
         if name == "": artists = self.tracker.artists
@@ -85,11 +85,11 @@ class Interface:
         index = int(input("artist index plz: "))
         artist = artists[index]
         albums = artist.get_albums()
-        self.plist.clear_items_with_permission()
+        # self.plist.clear_items_with_permission()
         self.append_albums_to_plist(albums, skip_perm=True)
 
-    def add_artist_using_search(self):
-        name = input("name plz(this will be used as the artist name in db): ")
+    def get_artist_using_search(self):
+        name = input("name plz(this will be used as the artist name): ")
         artists = list(search_for_artists_on_ytmusic_albums(name))
         # yeet the albums that are definitely not from the required artist
         artists = [artist for artist in artists if kinda_similar(name, artist.name)]
@@ -116,6 +116,10 @@ class Interface:
             corr = input("this correct? y/n: ")
             if corr == "y":
                 artist.keys.add(artists[index].keys)
+        return artist
+        
+    def add_artist_using_search(self):
+        artist = self.get_artist_using_search()
         self.tracker.add_artist(artist)
 
     def add_alt_keys_to_artist(self):
