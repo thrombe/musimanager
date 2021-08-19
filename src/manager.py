@@ -8,7 +8,7 @@ from song import Song, song_info
 from tracker import Tracker
 from artist import Artist
 
-class manager:
+class Manager:
     def __init__(self):
         self.musi_path = opts.musi_path
         self.np_playlists = opts.newpipe_playlists

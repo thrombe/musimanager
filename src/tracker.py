@@ -21,8 +21,8 @@ class Tracker:
     
     def add_artist(self, artist):
         self.artists.add(artist)
-        for key in artist.keys:
-            self.all_artist_keys.add(key)
+        # for key in artist.keys:
+        #     self.all_artist_keys.add(key)
        
     def save(self):
         if opts.debug_no_edits_to_db: return
@@ -56,7 +56,7 @@ class Tracker:
             artist = Artist(json_artist["name"], json_artist["keys"])
             artist.check_stat = json_artist["check_stat"]
             artist.ignore_no_songs = json_artist["ignore_no_songs"]
-            artist.use_get_artist = json_artist["use_get_artist"]
+            artist.use_artist_id_for_albums = json_artist["use_artist_id_for_albums"]
             artist.name_confirmation_status = json_artist["name_confirmation_status"]
 
             for json_album in json_artist["known_albums"]:
@@ -102,6 +102,10 @@ class Tracker:
             for song in artist.songs:
                 self.all_song_keys.add(song.key)
     
+    def confirm_artist_names(self):
+        for artist in self.artists:
+            if artist.name_confirmation_status: continue
+            artist.confirm_name()
 
 
     def get_new_albums(self):

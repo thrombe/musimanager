@@ -50,7 +50,7 @@ class yt_plist:
 
 
 def search_for_artists_on_ytmusic_albums(name):
-    albums = ytmusic.search(name, filter="albums", limit=opts.musitracker_search_limit, ignore_spelling=False)
+    albums = ytmusic.search(name, filter="albums", limit=opts.musitracker_search_limit_first_time, ignore_spelling=False)
     artists = set()
     for album in albums:
         for artist in album["artists"]:
