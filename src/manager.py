@@ -37,6 +37,7 @@ class Manager:
                 if song.key in self.tracker.all_song_keys: continue
                 song.download()
                 song.sort_using_tracker(self.tracker) # sets the correct artist name and adds self to tracker
+                print("")
 
     # check if any song removed and notify user + handle that in tracker +
     # check if sorted correctly(eg if i change some stuff in artist keywords and stuff)

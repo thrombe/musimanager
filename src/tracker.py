@@ -102,10 +102,10 @@ class Tracker:
                 self.all_song_keys.add(song.key)
     
     def confirm_artist_names(self):
-        for artist in self.artists:
+        artists_copy = self.artists.copy() # the artist method edits this
+        for artist in artists_copy:
             if artist.name_confirmation_status: continue
-            artist.confirm_name()
-
+            artist.confirm_name_using_tracker(self)
 
     def get_new_albums(self):
         new_albums = set()

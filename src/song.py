@@ -10,7 +10,7 @@ import opts
 
 def kinda_similar(str1, str2, threshold=0.4):
     # this func is terrible, use a different one
-    perc = SequenceMatcher(None, str1, str2).ratio()
+    perc = SequenceMatcher(None, str1.lower(), str2.lower()).ratio()
     if perc >= threshold: return True
     else: return False
 
@@ -231,6 +231,8 @@ class Song:
     # assumes that the song is newly added
     def sort_using_tracker(self, tracker):
         artist = self.get_suitable_artist_using_tracker(tracker)
+
+        from artist import Artist
 
         if not artist:
             # new artist ig

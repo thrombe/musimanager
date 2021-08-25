@@ -26,6 +26,30 @@ class Artist:
     def __eq__(self, other):
         #if not isinstance(other, type(self)): return False
         return list(self.keys).sort() == list(other.keys).sort() # sorting to eliminate position probs
+
+    def merge_into(self, artist):
+        for key in self.keys:
+            artist.add_key(key, "<ignore>")
+        for album in self.known_albums:
+            album.artist_name = artist.name
+            artist.add_album(album)
+        for song in self.songs:
+            song.artist_name = artist.name
+            song.sort()
+            song.tag()
+            artist.add_song(song)
+        if self.keywords:
+            print(self.keywords)
+            yesorno = input(f"wanna add these keywords to the artist - {artist} ?? y/n: ")
+            if yesorno == "y":
+                for word in self.keywords:
+                    artist.add_keyword(word)
+    
+    def add_keyword(self, word):
+        self.keywords.add(word)
+    
+    def add_album(self, album):
+        self.known_albums.add(album)
         
     def add_song(self, song):
         self.songs.add(song)
@@ -44,6 +68,7 @@ class Artist:
     # artist_names only for printing
     def add_key(self, key, artist_names):
         if key == None: return
+        if key in self.keys: return
         if self.keys == None: self.keys = set()
         print(f"adding key {key} to {self.name}, artist names - {artist_names}")
         self.keys.add(key)
@@ -55,16 +80,33 @@ class Artist:
         for song in self.songs:
             song.artist_name = name
             song.sort()
-        for album in known_albums:
+            song.tag()
+        for album in self.known_albums:
             album.artist_name = name
 
-    def confirm_name(self):
-        print(self)
-        name = input("enter name/y to confirm name: ")
+    def confirm_name(self, name=None):
+        if not name: print(self)
+        if not name: name = input("enter name/y to confirm name: ")
+        new_name = self.name.replace(" - Topic", "")
         if name != "y": self.set_new_name(name)
+        elif self.name != new_name: self.set_new_name(new_name)
         self.name_confirmation_status = True
         print("name confirmed")
         print(self)
+    
+    def confirm_name_using_tracker(self, tracker):
+        print(self)
+        name = input("enter name/y to confirm name (' - Topic' will be removed): ")
+        if name == "y":
+            self.confirm_name(name=name)
+            return
+        for artist in tracker.artists:
+            if name == artist.name and artist.name_confirmation_status and artist != self:
+                self.merge_into(artist)
+                tracker.artists.remove(self)
+                print("merged with", artist)
+                return
+        self.confirm_name(name=name)
 
     def get_albums_using_artist_id(self):
         now_albums = set()
