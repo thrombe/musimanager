@@ -9,6 +9,9 @@ plan:
     . have to wait too long for this to finish
     . Queen Bee - ten - missing (eg holy war)
     . regional content stuff?
+  . get songs from newpipe playlist and add it to yt_playlist
+    . remove duplicates
+    . sort acc to artist or something
 
 dependency graph thing:
   . THIS IS OUT DATED

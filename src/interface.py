@@ -125,7 +125,7 @@ class Interface:
     def add_alt_keys_to_artist(self):
         name = input("artist name: ")
         # look for artist with similar name
-        artists = [artist for artist in tracker.artists if kinda_similar(name, artist.name)]
+        artists = [artist for artist in self.tracker.artists if kinda_similar(name, artist.name)]
         for i, artist in enumerate(artists): print(i, artist.name)
         index = int(input("\nwhat index?: "))
         artist = artists[index]
@@ -134,7 +134,7 @@ class Interface:
         
         artists = list(search_for_artists_on_ytmusic_albums(artist.name))
         artists = [artist for artist in artists if kinda_similar(name, artist.name)]
-        for i, artist in enumerate(artists): print(i, artist)
+        for i, artiste in enumerate(artists): print(i, artiste)
         print("")
         indices = input("artist indices plz: ").split(", ")
         indices = [int(index) for index in indices]
@@ -150,4 +150,17 @@ class Interface:
             if rep == "n": continue
             
             for key in artists[index].keys:
-                artist.keys.add(key)
+                artist.add_key(key, artists[index].name)
+        """
+        for artisty in self.tracker.artists:
+            if artisty.name == artist.name:
+                self.tracker.artists.remove(artisty)
+                self.tracker.artists.add(artist)
+                break
+        
+        for artisty in self.tracker.artists:
+            if artisty.name == artist.name:
+                print()
+                print("yay")
+        print("nay", artist)
+        """

@@ -22,7 +22,8 @@ class Album:
 
     def get_playlist_id(self): # if we add album to a yt_playlist, we need this
         if self.playlist_id: return self.playlist_id
-        self.playlist_id = ytmusic.get_album(self.key)["playlistId"]
+        try: self.playlist_id = ytmusic.get_album(self.key)["playlistId"]
+        except: self.playlist_id = ytmusic.get_album(self.key)["audioPlaylistId"]
         return self.playlist_id
 
     def get_artist_from_tracker(self, tracker):

@@ -106,7 +106,7 @@ class Launcher:
 
     # just to check out artist add all songs to plist but not to db
     def add_songs_to_plist_using_song_key(self, help_text=False):
-        if help_text: return "enter song key, and all songs from the same channel wil appear in the yt playlist"
+        if help_text: return "enter song key, and all songs from the same channel wil appear in the yt playlist, no changes in db"
         interface = Interface()
         interface.load()
 
