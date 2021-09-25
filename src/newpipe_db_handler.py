@@ -6,7 +6,7 @@ import os
 
 import opts
 
-class newpipe_db_handler:
+class NewpipeDBHandler:
     def __init__(self):
         self.bkup_directory = opts.newpipe_bkup_directory
         self.playlists = opts.newpipe_playlists
@@ -35,14 +35,14 @@ class newpipe_db_handler:
 
     # {playlistname: [[songname, channel_name, song_key]]}
     def extract_from_db(self, db_path):
-        return getLinks(
+        return get_links(
             db_path, 
             'playlists', 
             'streams', 
             'playlist_stream_join', 
             self.playlists, 
-            artistname="", 
-            songname="",
+            artist_name="", 
+            song_name="",
             quiet=True,
             )
 
@@ -54,7 +54,7 @@ streams- 0stream-uid, 2link, 3name, 6channel
 playlistJoin- 0playlist-uid, 1stream-uid
 playlist- 0playlist-uid, 1playlist-name
 '''
-def dbExtract(db, tablename):
+def db_extract(db, tablename):
     sql = sqlite3.connect(db)
     cursor = sql.cursor()
     cursor.execute(f'SELECT * FROM {tablename}')
@@ -62,8 +62,8 @@ def dbExtract(db, tablename):
          yield result
     sql.close()
 
-def retrieveLists(db, Playlist): # returns dict
-    playlist = dbExtract(db, Playlist)
+def retrieve_lists(db, playlist): # returns dict
+    playlist = db_extract(db, playlist)
     playlists = []
     while True:
         try: plist = next(playlist)
@@ -71,25 +71,25 @@ def retrieveLists(db, Playlist): # returns dict
         playlists.append(plist)
     return playlists
 
-def getLinks(db, Playlist, Streams, PlaylistJoin, playlistname, artistname, songname, quiet=False):
-    playlistJoin = retrieveLists(db, PlaylistJoin)
-    streams = retrieveLists(db, Streams)
-    streamUids = {}
-    playlistWithVideoID = {}
-    for item in retrieveLists(db, Playlist): # gives a dict with all stream uid with playlist name
-        streamUids[item[1]] = [video[1] for video in playlistJoin if video[0] == item[0]]
+def get_links(db, playlist, streams, playlist_join, playlist_name, artist_name, song_name, quiet=False):
+    playlist_join = retrieve_lists(db, playlist_join)
+    streams = retrieve_lists(db, streams)
+    stream_uids = {}
+    playlist_with_videoids = {}
+    for item in retrieve_lists(db, playlist): # gives a dict with all stream uid with playlist name
+        stream_uids[item[1]] = [video[1] for video in playlist_join if video[0] == item[0]]
     # streamUids -> playlistname: list of uid
-    if not quiet: print('total videos in playlists:\n', {key: len(value) for key, value in streamUids.items()}) # print no. of links in each playlist
+    if not quiet: print('total videos in playlists:\n', {key: len(value) for key, value in stream_uids.items()}) # print no. of links in each playlist
     # streams -> video uid: video details
     streams = {plist[0]: [plist[3], plist[6], plist[2][plist[2].find('=') + 1: ]] for plist in streams} # sort streams into a dict
     
     songcount = {}
-    for plistName, uidList in streamUids.items():
-        if plistName not in playlistname and playlistname: continue
-        playlistWithVideoID[plistName] = [streams[uid] for uid in uidList if artistname in streams[uid][1].lower() and songname in streams[uid][0].lower()]
-        if not playlistWithVideoID[plistName]:
-            del playlistWithVideoID[plistName]
+    for i_playlist_name, i_uid_list in stream_uids.items():
+        if i_playlist_name not in playlist_name and playlist_name: continue
+        playlist_with_videoids[i_playlist_name] = [streams[uid] for uid in i_uid_list if artist_name in streams[uid][1].lower() and song_name in streams[uid][0].lower()]
+        if not playlist_with_videoids[i_playlist_name]:
+            del playlist_with_videoids[i_playlist_name]
             continue
-        songcount[plistName] = len(playlistWithVideoID[plistName])
+        songcount[i_playlist_name] = len(playlist_with_videoids[i_playlist_name])
     if not quiet: print('\nfound:\n', songcount, '\n')
-    return playlistWithVideoID
+    return playlist_with_videoids

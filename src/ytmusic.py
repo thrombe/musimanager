@@ -6,7 +6,7 @@ from artist import Artist
 import opts
 from opts import ytmusic
 
-class yt_plist:
+class YTPlaylist:
     def __init__(self):
         self.name = opts.musitracker_plist_name
         self.playlist_id = None
@@ -21,20 +21,20 @@ class yt_plist:
                 return self.playlist_id
         return self.create_playlist()
 
-    def create(self):
-        self.playlist_id = ytmusic.create_playlist(plist_name, "", privacy_status="UNLISTED")
+    def create(self, playlist_name):
+        self.playlist_id = ytmusic.create_playlist(playlist_name, "", privacy_status="UNLISTED")
         return self.playlist_id
 
     def delete(self):
         ytmusic.delete_playlist(self.playlist_id)
 
     def add_songs(self, keys):
-        if type(keys) == type(["key"]): pass
-        elif type(keys) == type("key"): keys = [keys]
+        if type(keys) != type(["key"]): 
+            keys = [keys]
         ytmusic.add_playlist_items(self.playlist_id, keys, duplicates=False)
 
     def get_songs(self):
-        plist = ytmusic.get_playlist(key, limit=2000)
+        plist = ytmusic.get_playlist(self.playlist_id, limit=2000)
         # plist- tracks, title, trackCount
         songs = [Song(track["title"], track["videoId"], None) for track in plist["tracks"]] #setvideoid required for editing songs or something
         return songs

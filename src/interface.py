@@ -3,7 +3,7 @@ import opts
 from tracker import Tracker
 from song import kinda_similar, Song
 from album import Album
-from ytmusic import yt_plist, search_for_artists_on_ytmusic_albums
+from ytmusic import YTPlaylist, search_for_artists_on_ytmusic_albums
 from artist import Artist
 from tracker import Tracker
 
@@ -11,7 +11,7 @@ from tracker import Tracker
 class Interface:
     def __init__(self):
         self.tracker = Tracker()
-        self.plist = yt_plist()
+        self.plist = YTPlaylist()
 
     def load(self):
         self.plist.get_plist_id()
@@ -22,7 +22,7 @@ class Interface:
 
     def append_new_albums_to_plist(self, skip_perm=False):
         new_albums = self.tracker.get_new_albums()
-        self.append_albums_to_plist(albums, skip_perm=skip_perm)
+        self.append_albums_to_plist(new_albums, skip_perm=skip_perm)
 
     def append_albums_to_plist(self, albums, skip_perm=False):
         self.plist.clear_items_with_permission(skip_perm=False)

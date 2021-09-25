@@ -162,9 +162,5 @@ class Launcher:
         pass
     """
 
-def launch():
-    launcher = Launcher()
-    launcher.launch()
-    
 if __name__ == "__main__":
-    launch()
+    Launcher().launch()

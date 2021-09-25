@@ -3,8 +3,8 @@
 import os
 
 import opts
-from newpipe_db_handler import newpipe_db_handler
-from song import Song, song_info
+from newpipe_db_handler import NewpipeDBHandler
+from song import Song, SongInfo
 from tracker import Tracker
 from artist import Artist
 
@@ -29,7 +29,7 @@ class Manager:
     def download_new_from_newpipe_db(self):
         # self.tracker.gen_extra_data() # to make sure data is updated
 
-        np_db = newpipe_db_handler()
+        np_db = NewpipeDBHandler()
         playlists = np_db.extract_from_zip()
         for songs_data in playlists.values():
             for song_data in songs_data:

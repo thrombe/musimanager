@@ -12,6 +12,16 @@ plan:
   . get songs from newpipe playlist and add it to yt_playlist
     . remove duplicates
     . sort acc to artist or something
+  
+dev_plan: 
+  . add fucking typer
+  . allow import of cookies and tokens using cli
+  . add hooks/functions for external programs to use this as a microservice/package.
+  . allow import from .txt and .json files (idk if this actually exists in the code)
+  . make code more atomic (late goal, probably after this is stable.)
+
+
+
 
 dependency graph thing:
   . THIS IS OUT DATED

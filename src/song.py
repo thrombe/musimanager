@@ -14,7 +14,7 @@ def kinda_similar(str1, str2, threshold=0.4):
     if perc >= threshold: return True
     else: return False
 
-class Ytdl:
+class YTdl:
     def __init__(self, path, ext):
         self.ext = ext
         self.path = path
@@ -35,9 +35,9 @@ class Ytdl:
         # self.yt_url = "https://www.youtube.com/watch?v="
 
 # global ytdl for all songs to use    
-ytdl = Ytdl(opts.musi_path, opts.musi_ext)
+ytdl = YTdl(opts.musi_path, opts.musi_ext)
 
-class song_info: # all metadata that i might care about
+class SongInfo: # all metadata that i might care about
 
     def __init__(self):
         self.titles = None
@@ -130,14 +130,14 @@ class Song:
     
     def get_info(self, force=False):
         if self.info != None and not force: return self.info
-        self.info = song_info()
+        self.info = SongInfo()
         self.info.load(ytdl.ytd.extract_info(self.url(), download=False))
         return self.info
     
     def get_info_from_tags_m4a(self):
         vid = MP4(self.path())
         self.title = vid.tags["\xa9nam"][0]
-        self.info = song_info()
+        self.info = SongInfo()
         self.info.album = vid.tags.get("\xa9alb", " ")[0]
 
     def get_info_from_tags(self):
