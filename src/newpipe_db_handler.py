@@ -6,7 +6,7 @@ import os
 
 import opts
 
-class NewPipeDBHandler:
+class NewpipeDBHandler:
     def __init__(self):
         self.bkup_directory = opts.newpipe_bkup_directory
         self.playlists = opts.newpipe_playlists
