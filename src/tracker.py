@@ -4,7 +4,7 @@ import json
 import opts
 from artist import Artist
 from album import Album
-from song import Song, get_song, song_info
+from song import Song, get_song, SongInfo
 from opts import ytmusic
 
 def to_json(obj):
@@ -66,7 +66,7 @@ class Tracker:
             for song_data in json_artist["songs"]:
                 song = Song(song_data["title"], song_data["key"], song_data["artist_name"])
                 song.title_lock = song_data["title_lock"]
-                song.info = song_info()
+                song.info = SongInfo()
                 song.info.__dict__ = song_data["info"]
                 artist.songs.add(song)
             artist.keywords = set(json_artist["keywords"])
