@@ -1,0 +1,4 @@
+ytmusicapi
+mutagen
+youtube_dl
+

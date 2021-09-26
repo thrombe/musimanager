@@ -1,6 +1,19 @@
 
+bugs:
+  . remove unnecessary inputs from --add-songs-to-plist-using-song-key
+    . asks for clearingbthe plist twice
+    . asks for choosing artist name for some reason
+  . cant init a new database, it expects that user already has the files there
+    . create --init-new-db
+  . if download fails -> retry else skip + notify user
+    . check if song exists before downloading (to prevent rehdownloading due to crashes)
+      . just need to check if there is a file at the required path
+      . need to figure out the path tho. maybe find_path() or something
+  . np-download should ask for artist name confirming
+    . dont forget check-sort after name confirming
 
 plan:
+  . append-albums-manual whatever - if input == "" then only show artists which dont have any known albums
   . maybe artist.show() for debug, that shows what all the keys point to?
     . like maybe confirm if its the correct artist by showing its albums
   . ytmusic.get_album(key){["releaseDate"], ["trackCount"], ["tracks"]}

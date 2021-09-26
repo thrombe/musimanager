@@ -35,7 +35,8 @@ class Manager:
             for song_data in songs_data:
                 song = Song(song_data[0], song_data[2], song_data[1])
                 if song.key in self.tracker.all_song_keys: continue
-                song.download()
+                path = song.find_path()
+                if path is None: song.download()
                 song.sort_using_tracker(self.tracker) # sets the correct artist name and adds self to tracker
                 print("")
 
