@@ -5,6 +5,7 @@ from mutagen.mp4  import MP4, MP4Cover
 from mutagen.id3 import ID3, APIC, TALB, TIT2, TPE1
 import youtube_dl
 from difflib import SequenceMatcher
+from PIL import Image
 
 import opts
 
@@ -156,7 +157,17 @@ class Song:
 
     def tag_m4a(self):
         video = MP4(self.path())
+
         img = requests.get(self.info.thumbnail_url).content
+        cover_path = opts.musi_path + "cover.jpeg"
+        with open(cover_path, "wb") as f:
+            f.write(img)
+        img = Image.open(cover_path).convert("RGB").save(cover_path)
+        with open(cover_path, "rb") as f:
+            img = f.read()
+        if os.path.isfile(cover_path):
+            os.remove(cover_path)
+        
         video["\xa9nam"] = self.title
         video["\xa9ART"] = self.artist_name
         video["\xa9alb"] = self.info.album
@@ -165,7 +176,18 @@ class Song:
         
     def tag_mp3(self):
         audio = ID3(self.path())
+
         img = requests.get(self.info.thumbnail_url).content
+        cover_path = opts.musi_path + "cover.jpeg"
+        with open(cover_path, "wb") as f:
+            f.write(img)
+        img = Image.open(cover_path).convert("RGB").save(cover_path)
+        with open(cover_path, "rb") as f:
+            img = f.read()
+        if os.path.isfile(cover_path):
+            os.remove(cover_path)
+
+        
         audio['TIT2'] = TIT2(encoding=3, text=self.title)
         audio['TPE1'] = TPE1(encoding=3, text=self.artist_name)
         audio['TALB'] = TALB(encoding=3, text=self.info.album)
