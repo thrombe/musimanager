@@ -141,6 +141,12 @@ class Song:
         self.info = SongInfo()
         self.info.album = vid.tags.get("\xa9alb", " ")[0]
 
+    def get_info_from_tags_mp3(self):
+        audio = ID3(self.path())
+        self.title = audio["TIT2"].text[0]
+        self.info = SongInfo()
+        self.info.album = getattr(audio.get("TALB", ""), "text", [""])[0]
+
     def get_info_from_tags(self):
         if ytdl.ext == "m4a": self.get_info_from_tags_m4a()
         elif ytdl.ext == "mp3": self.get_info_from_tags_mp3()
