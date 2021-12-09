@@ -9,8 +9,11 @@ from tracker import Tracker
 
 
 class Interface:
-    def __init__(self):
-        self.tracker = Tracker()
+    def __init__(self, tracker=None):
+        if tracker is None:
+            self.tracker = Tracker()
+        else:
+            self.tracker = tracker
         self.plist = YTPlaylist()
 
     def load(self):

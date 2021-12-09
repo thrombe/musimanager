@@ -9,13 +9,16 @@ from tracker import Tracker
 from artist import Artist
 
 class Manager:
-    def __init__(self):
+    def __init__(self, tracker=None):
         self.musi_path = opts.musi_path
         self.np_playlists = opts.newpipe_playlists
         self.musisorter_path = opts.musisorter_path
         self.musicache_path = opts.musicache_path
 
-        self.tracker = Tracker()
+        if tracker is None:
+            self.tracker = Tracker()
+        else:
+            self.tracker = tracker
 
     def new(self):
         self.tracker.new()
