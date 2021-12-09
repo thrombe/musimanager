@@ -3,6 +3,7 @@ import argparse
 import sys
 
 import opts
+import cui_handle
 from manager import Manager
 from ytmusic import search_albums_on_yt
 from opts import ytmusic
@@ -151,6 +152,11 @@ class Launcher:
 
         interface.save()
     
+    def launch_cui(self, help_text=False):
+        if help_text: return "launches command line ui based on py_cui"
+        cui = cui_handle.CUI_handle()
+        cui.start()
+
     """
     # search songs and ask user to choose keys to add to artist + artist name
     def add_artist_using_song_key(self, help_text=False):
