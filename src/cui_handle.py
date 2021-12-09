@@ -5,6 +5,9 @@ import ueberzug.lib.v0 as ueberzug
 import time
 from wcwidth import wcwidth, wcswidth
 
+import pydub
+import pydub.playback
+import simpleaudio
 
 import tracker
 
@@ -49,15 +52,37 @@ class CUI_handle:
         if getattr(self, "pycui", None) is None: self.setup_cui()
         
         with ueberzug.Canvas() as canvas:
-            self.image_placement = canvas.create_placement('album_art', scaler=ueberzug.ScalerOption.FIT_CONTAIN.value, width=20, height=50)
+            # TODO: crop the pic to be square so things are predictable (album art is generally square too)
+            self.image_placement = canvas.create_placement('album_art', scaler=ueberzug.ScalerOption.FIT_CONTAIN.value)
             self.image_placement.visibility = ueberzug.Visibility.INVISIBLE
             self.pycui.set_refresh_timeout(0.1)
             self.pycui.set_on_draw_update_func(self.redraw)
+            self.pycui.add_key_command(py_cui.keys.KEY_SPACE, self.stop)
             self.pycui.start()
 
+    def stop(self):
+        self.playback.stop()
+        self.playback.stop()
+        self.time -= 10
+        timep = (round(time.time()-self.time))*1000
+        # self.time = time.time() 
+        song = self.song[timep:] # check for seg fault
+        self.playback = simpleaudio.play_buffer(
+            song.raw_data,
+            num_channels=song.channels,
+            bytes_per_sample=song.sample_width,
+            sample_rate=song.frame_rate
+            )
+
     def redraw(self):
-        self.image_placement.x = self.play_window._start_x+3
-        self.image_placement.y = self.play_window._start_y+1
+        self.border_padding_x = 3
+        self.border_padding_y_top = 1
+        self.border_padding_y_bottom = 2
+        self.lines_of_song_info = 3
+        self.image_placement.x = self.play_window._start_x + self.border_padding_x
+        self.image_placement.y = self.play_window._start_y + self.border_padding_y_top
+        self.image_placement.width = self.play_window._stop_x - self.play_window._start_x - self.border_padding_x*2
+        self.image_placement.height = self.play_window._stop_y - self.play_window._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info
 
     def load_right(self):
         self.curr_artist_index = self.browse_window.get_selected_item_index()
@@ -73,8 +98,10 @@ class CUI_handle:
         for _ in range(self.curr_artist_index): self.browse_window._scroll_down(3)
 
     def play(self):
+        blank = self.play_window._stop_y - self.play_window._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info + 1
+
         self.play_window.clear()
-        self.play_window.add_item_list(list(" "*15))
+        self.play_window.add_item_list(list(" "*blank))
         song = self.songs[self.browse_window.get_selected_item_index()]
         self.play_window.add_item(f"title: {song.title}")
         self.play_window.add_item(f"album: {song.info.album}")
@@ -85,4 +112,18 @@ class CUI_handle:
         self.image_placement.y = self.play_window._start_y+1
         self.image_placement.path = image_path
         self.image_placement.visibility = ueberzug.Visibility.VISIBLE
+
+        # len(song) is ~~ (duration of song in seconds (milliseconds in decimal))*1000
+        self.song = pydub.AudioSegment.from_file("/home/issac/Music/AjesoBGztF8.m4a", "m4a")
+        self.time = time.time()
+        # print(len(self.song.raw_data))
+        self.song_length = len(self.song)*0.001 # seconds
+        self.playback = simpleaudio.play_buffer(
+            self.song.raw_data,
+            num_channels=self.song.channels,
+            bytes_per_sample=self.song.sample_width,
+            sample_rate=self.song.frame_rate
+            )
+        # pydub.playback.play(song[258212:])
+
             
