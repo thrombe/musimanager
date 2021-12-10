@@ -4,7 +4,10 @@ import enum
 
 import platform
 LUUNIX = platform.system() == "Linux"
+ASCII_ART = False or not LUUNIX
+# ASCII_ART = True
 if LUUNIX: import ueberzug.lib.v0 as ueberzug
+if ASCII_ART: import ascii_magic
 
 import io
 import os
@@ -58,7 +61,7 @@ class CUI_handle:
         # TODO: add a queue widget + shortcut to disable it
         # TODO: shortcut to send songs to queue
         # TODO: shortcuts to quickly navigate to other widgets (without escape button)
-        
+
         self.player_widget = PlayerWidget(self.pycui.add_scroll_menu('Player', 0, 1, row_span=1, column_span=1, padx = 1, pady = 0))
         self.browser_widget = BrowserWidget(
             self.pycui.add_scroll_menu('Browser',  0, 0, row_span=1, column_span=1, padx = 1, pady = 0),
@@ -71,7 +74,7 @@ class CUI_handle:
     def start(self):
         if getattr(self, "pycui", None) is None: self.setup()
 
-        if LUUNIX:
+        if LUUNIX and not ASCII_ART:
             with ueberzug.Canvas() as canvas:
                 # TODO: crop the pic to be square so things are predictable (album art is generally square too)
                 self.player_widget.image_placement = canvas.create_placement('album_art', scaler=ueberzug.ScalerOption.FIT_CONTAIN.value)
@@ -144,7 +147,9 @@ class PlayerWidget:
         self.player = Player()
 
     def refresh(self):
-        if LUUNIX: self.image_refresh()
+        self.scroll_menu.clear()
+        if ASCII_ART: self.ascii_image_refresh()
+        elif LUUNIX: self.image_refresh()
         if self.player.current_song is not None: self.print_song_metadata(self.player.current_song)
 
     def image_refresh(self):
@@ -152,7 +157,7 @@ class PlayerWidget:
         #   self.play_window.get_absolute_{start, stop}_pos() -> (x, y)
         #       or .get_start_position(), not sure
         #   self.play_window.get_padding() ?????
-        # TODO: center the image in the y axis ????
+        # TODO: center the image and text in the y axis ????
         self.image_placement.y = self.scroll_menu._start_y + self.border_padding_y_top
         self.image_placement.width = self.scroll_menu._stop_x - self.scroll_menu._start_x - self.border_padding_x*2
         self.image_placement.height = self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info - 2
@@ -160,9 +165,22 @@ class PlayerWidget:
         if round(a/2) > 2: self.image_placement.x = round(a/2) + self.scroll_menu._start_x + self.border_padding_x - 1
         else: self.image_placement.x = self.scroll_menu._start_x + self.border_padding_x
 
+    def ascii_image_refresh(self):
+        if self.player.current_song is None: return
+        x_blank = self.scroll_menu._stop_x - self.scroll_menu._start_x - self.border_padding_x*2
+        center = lambda text: int((x_blank-len(text))/2)*" "+text
+        img = Image.open(opts.musimanager_directory+"img.jpeg")
+        columns = min(
+            x_blank,
+            int(2.2 * (self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info + 2)),
+        )
+        textimg = ascii_magic.from_image(img, mode=ascii_magic.Modes.ASCII, columns=columns)
+        for line in textimg.splitlines():
+            self.scroll_menu.add_item(center(line))
+
     def play(self, song):
         self.player.play(song)
-        if LUUNIX: self.replace_album_art(song)
+        self.replace_album_art(song)
         self.print_song_metadata(song)
 
     def replace_album_art(self, song):
@@ -178,15 +196,15 @@ class PlayerWidget:
         img = img.crop(box)
         img.save(img_path)
 
-        self.image_placement.path = img_path
-        self.image_placement.visibility = ueberzug.Visibility.VISIBLE
+        if not ASCII_ART:
+            self.image_placement.path = img_path
+            self.image_placement.visibility = ueberzug.Visibility.VISIBLE
 
     def print_song_metadata(self, song):
-        self.scroll_menu.clear()
         x_blank = self.scroll_menu._stop_x - self.scroll_menu._start_x - self.border_padding_x*2
         center = lambda text: int((x_blank-len(text))/2)*" "+text
         right = lambda text: int(x_blank-int(len(text)))*" "+text
-        if LUUNIX:
+        if LUUNIX and not ASCII_ART:
             # blank = self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info + 1
             blank = min(
                 self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info,

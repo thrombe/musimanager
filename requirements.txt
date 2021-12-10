@@ -5,3 +5,4 @@ py_cui
 pydub
 wcwidth
 pygame
+ascii-magic
