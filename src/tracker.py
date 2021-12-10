@@ -51,9 +51,10 @@ class Tracker:
 
     def load(self):
         if not os.path.exists(opts.musitracker_path):
+            if opts.debug_no_edits_to_db: return
             with open(opts.musitracker_path, "w") as f:
                 f.write('{"all_artist_keys": [], "artists": [] }')
-                return
+            return
             
         with open(opts.musitracker_path, "r") as f:
             celf = json.load(f)
@@ -91,10 +92,10 @@ class Tracker:
             data = dikt.get(artist.name, None)
             if not data:
                 for key, val in dikt.items():
-                    if any(
+                    if any([
                         list(artist.keys).sort() == val["keys"].sort(),
                         list(artist.keywords).sort() == val["keywords"].sort(),
-                        ):
+                    ]):
                         data = val
                         artist.set_new_name(key)
                         break

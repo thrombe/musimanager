@@ -1,6 +1,8 @@
 
 
 db/
+db_main/
+src-ui/
 
 
 # Byte-compiled / optimized / DLL files

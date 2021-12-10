@@ -112,7 +112,6 @@ class Song:
     def path(self, before=False, after=False):
         if opts.do_not_sort:
             path = self.get_unsorted_path()
-            print(path)
             return path
 
         path_before_sort = f"{ytdl.path}{self.key}.{ytdl.ext}"
@@ -146,7 +145,6 @@ class Song:
         if self.info != None and not force: return self.info
         self.info = SongInfo()
         ytdl_data = ytdl.ytd.extract_info(self.url(), download=False)
-        print(ytdl_data["channel_id"])
         self.info.load(ytdl_data)
         return self.info
     
