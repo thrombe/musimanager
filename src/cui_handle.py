@@ -2,17 +2,19 @@
 import logging
 import enum
 
-import py_cui
-import time
 import platform
 LUUNIX = platform.system() == "Linux"
 if LUUNIX: import ueberzug.lib.v0 as ueberzug
-from wcwidth import wcwidth, wcswidth
-import os
 
+import io
+import os
+import py_cui
 import pydub
 import pydub.playback
-import simpleaudio
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+import pygame.mixer as mixer
+
+from wcwidth import wcwidth, wcswidth
 
 import tracker
 import opts
@@ -44,7 +46,6 @@ class CUI_handle:
         # self.master.toggle_live_debug_mode()
         self.pycui.set_refresh_timeout(0.1)
         self.pycui.set_on_draw_update_func(self.refresh)
-        # self.pycui.add_key_command(py_cui.keys.KEY_SPACE, self.stop)
 
 
         # TODO: try these
@@ -65,7 +66,7 @@ class CUI_handle:
     def start(self):
         if getattr(self, "pycui", None) is None: self.setup()
 
-        if LUUNIX: # add condition for linux here
+        if LUUNIX:
             with ueberzug.Canvas() as canvas:
                 # TODO: crop the pic to be square so things are predictable (album art is generally square too)
                 self.player_widget.image_placement = canvas.create_placement('album_art', scaler=ueberzug.ScalerOption.FIT_CONTAIN.value)
@@ -79,9 +80,7 @@ class CUI_handle:
 
 class Player:
     def __init__(self):
-        self.psuedo_song_start_time = None
-        self.pause_start_time = None
-        self.song_duration = None
+        self.is_paused = True
         
         self.current_song = None # musimanager song
         self.pydub_audio_segment = None
@@ -95,38 +94,26 @@ class Player:
         self.current_song = song
         song_path = song.path()
         self.pydub_audio_segment = pydub.AudioSegment.from_file(song_path, song_path.split(os.path.sep)[-1].split(".")[-1])
-        self.song_duration = len(self.pydub_audio_segment)*0.001 # seconds
-        self.playback_handle = simpleaudio.play_buffer(
-            self.pydub_audio_segment.raw_data,
-            num_channels=self.pydub_audio_segment.channels,
-            bytes_per_sample=self.pydub_audio_segment.sample_width,
-            sample_rate=self.pydub_audio_segment.frame_rate
-            )
-        self.psuedo_song_start_time = time.perf_counter()
-        # pydub.playback.play(song[258212:])
+        filelike = io.BytesIO()
+        mixer.init()
+        self.playback_handle = mixer.music
+        filelike = self.pydub_audio_segment.export(filelike, format="wav")
+        filelike.seek(0)
+        self.playback_handle.load(filelike, namehint="wav")
+        self.playback_handle.play()
+        self.is_paused = False
 
     def stop(self):
         self.playback_handle.stop()
+        self.is_paused = True
 
     def toggle_pause(self):
-        if self.pause_start_time is None:
-            self.playback_handle.stop()
-            self.pause_start_time = time.perf_counter()
+        if self.is_paused:
+            self.playback_handle.unpause()
+            self.is_paused = False
         else:
-            now = time.perf_counter()
-            tme = now - self.pause_start_time
-            self.psuedo_song_start_time += tme
-            tme = now - self.psuedo_song_start_time
-            start_pos = int(1000*tme) + 1
-            if tme >= self.song_duration: self.play_next()
-            audio = self.pydub_audio_segment[start_pos:]
-            self.playback_handle = simpleaudio.play_buffer(
-                audio.raw_data,
-                num_channels=audio.channels,
-                bytes_per_sample=audio.sample_width,
-                sample_rate=audio.frame_rate
-            )
-            self.pause_start_time = None
+            self.playback_handle.pause()
+            self.is_paused = True
 
     def try_seek(secs):
         pass
