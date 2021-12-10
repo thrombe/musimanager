@@ -157,6 +157,12 @@ class Launcher:
         cui = cui_handle.CUI_handle()
         cui.start()
 
+    def update_unsorted_db(self, help_text=False):
+        if help_text: return "update stored song db in unsorted mode"
+        manager = Manager()
+        manager.update_unsorted_db()
+        manager.save()
+
     """
     # search songs and ask user to choose keys to add to artist + artist name
     def add_artist_using_song_key(self, help_text=False):

@@ -92,6 +92,9 @@ class Song:
         self.artist_name = artist_name # the local name - i.e the folder name
         self.title_lock = False
         self.info = None
+
+        # TODO: rename these with better names
+        self.unsorted_path = ""
     
     def __str__(self):
         return f"{self.title} {self.key} {self.artist_name}"
@@ -107,6 +110,11 @@ class Song:
         return f"{ytdl.ytm_url}{self.key}"
 
     def path(self, before=False, after=False):
+        if opts.do_not_sort:
+            path = self.get_unsorted_path()
+            print(path)
+            return path
+
         path_before_sort = f"{ytdl.path}{self.key}.{ytdl.ext}"
         path_after_sort = f"{ytdl.path}{self.artist_name}{os.path.sep}{self.key}.{ytdl.ext}"
         if after: return path_after_sort
@@ -116,6 +124,11 @@ class Song:
         if before: return path_before_sort
         if after: return path_after_sort
         return None
+    
+    def get_unsorted_path(self):
+        if os.path.exists(self.unsorted_path): return self.unsorted_path
+        self.unsorted_path = self.find_path()
+        return self.unsorted_path
 
     def find_path(self):
         for dir, subdir, files in os.walk(ytdl.path):
@@ -132,20 +145,24 @@ class Song:
     def get_info(self, force=False):
         if self.info != None and not force: return self.info
         self.info = SongInfo()
-        self.info.load(ytdl.ytd.extract_info(self.url(), download=False))
+        ytdl_data = ytdl.ytd.extract_info(self.url(), download=False)
+        print(ytdl_data["channel_id"])
+        self.info.load(ytdl_data)
         return self.info
     
     def get_info_from_tags_m4a(self):
         vid = MP4(self.path())
         self.title = vid.tags["\xa9nam"][0]
         self.info = SongInfo()
-        self.info.album = vid.tags.get("\xa9alb", " ")[0]
+        self.info.album = vid.tags.get("\xa9alb", "")[0]
+        if self.artist_name is None: self.artist_name = vid.tags.get("\xa9ART", "")[0]
 
     def get_info_from_tags_mp3(self):
         audio = ID3(self.path())
         self.title = audio["TIT2"].text[0]
         self.info = SongInfo()
         self.info.album = getattr(audio.get("TALB", ""), "text", [""])[0]
+        if self.artist_name is None: self.artist_name = getattr(audio.get("TPE1", ""), "text", [""])[0]
 
     def get_info_from_tags(self):
         if ytdl.ext == "m4a": self.get_info_from_tags_m4a()

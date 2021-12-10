@@ -1,6 +1,7 @@
 # download, sort and do managing stuff with music files
 
 import os
+import copy
 
 import opts
 from newpipe_db_handler import NewpipeDBHandler
@@ -122,70 +123,56 @@ class Manager:
                 if not opts.debug_no_edits_to_stored:
                     os.rmdir(directory)
 
-
-        """
-        # check if all songs are sorted properly - ie if i change something in sorter
-        for songs in musidata.values():
-            for song in songs:
-                found = False
+    def update_unsorted_db(self):
+        _, song_paths = get_directory(opts.musi_path)
+        songs = []
+        for path in song_paths:
+            key = path.split(os.path.sep)[-1].split(".")[0]
+            song = Song(None, key, None)
+            song.get_info_from_tags()
+            # song.title = song.info.titles[0]
+            # song.artist_name = song.info.artist_names[0]
+            songs.append(song)
+        
+        self.tracker.load()
+        known_artist_names = [artist.name for artist in self.tracker.artists]
+        for song in songs:
+            if song.key in self.tracker.all_song_keys: continue
+            song_clone = copy.copy(song)
+            song_clone.get_info(force=True)
+            if song.info.album != "": song_clone.info.album = song.info.album
+            song_clone.title = song.title
+            if song.artist_name is not None: song_clone.artist_name = song.artist_name
+            song = song_clone
+            self.tracker.all_song_keys.add(song.key)
+            if song.artist_name in known_artist_names:
                 for artist in self.tracker.artists:
-                    for song_t in artist.songs:
-                        if song.key == song_t.key:
-                            found = True
-                            song.title = song_t.title # notice that newly added songs (not in tracker) will not have a title
-                            suitable_artist = song_t.get_suitable_artist_using_tracker(self.tracker)
-                            if song.artist_name != suitable_artist.name:
-                                song_t.sort(current_path=song.path())
-                            break
-                    if found: break
-
-        # check if a new songs in dir
-        for songs in musidata.values(): #### nect time this func runs, how do i gurantee it wont try to sort it properly ??
-            for song in songs:
-                if song.title: continue
-                current_path = song.path(after=True)
-                found = False
-                for artist in self.tracker.artists: # if its one of the newly created artist from a few lines below
-                    if song.artist_name == artist.name:
-                        found = True
-                        # song.tag()
-                        try: song.tag()
-                        except Exception as e:
-                            print(e, "  ", song)
-                            song.get_info_from_tags()
-                            artist.songs.add(song)
-                            break
-                        artist.songs.add(song)
-                        artist.add_key(song.info.channel_id, song.info.artist_names)
+                    if artist.name == song.artist_name:
+                        artist.add_song(song)
                         break
-                if found: continue
-                print(f"found new song, so assuming that the artist name is currect and stuff {song}")
-                # song.tag()
-                try: song.tag()
-                except Exception as e:
-                    print(e, "   ", song)
-                    song.get_info_from_tags()
-                    continue
+            else:
+                # print(song_clone.info.channel_id/)
                 artist = Artist(song.artist_name, song.info.channel_id)
-                artist.add_key(song.info.channel_id, song.info.artist_names) # just to print it out
-                artist.name_confirmation_status = True
-                artist.songs.add(song)
-                self.tracker.artists.add(artist)
-
-        # check if all items in tracker are in the dir
-        for artist in self.tracker.artists:
-            songs = artist.songs.copy()
-            for song in songs:
-                if not os.path.exists(song.path(after=True)):
-                    print(f"song not found in directory - {song}")
-                    print("removing the song from db")
-                    artist.songs.remove(song)
-                    if artist.ignore_no_songs: continue
-                    if not artist.songs:
-                        print(f"no songs found in artist, so removing {artist}")
-                        self.tracker.remove(artist)
-        """
+                artist.add_song(song)
+                # print(artist)
+                self.tracker.add_artist(artist)
+                known_artist_names.append(song.artist_name)
 
 
+def get_directory(dir: str, ext: list=['mp3', 'wav', 'flac', 'm4a', 'aac', 'ogg']) -> tuple[list, list]:
+    # https://stackoverflow.com/a/59803793
+    subfolders, files = [], []
 
+    for f in os.scandir(dir):
+        if f.is_dir():
+            subfolders.append(f.path)
+        if f.is_file():
+            if os.path.splitext(f.name)[1].lower().replace('.', "") in ext:  # NOSONAR
+                files.append(f.path)
 
+    for dir in list(subfolders):
+        sf, f = get_directory(dir, ext)
+        subfolders.extend(sf)
+        files.extend(f)
+
+    return subfolders, files

@@ -1,5 +1,6 @@
 
 import json
+import os
 
 import opts
 from artist import Artist
@@ -15,6 +16,7 @@ class Tracker:
     def __init__(self):
         self.artists = set()
 
+        # TODO: yeet these as not in use anymore
         # do i even need these?
         self.all_artist_keys = set() # handled by get_albums
         self.all_song_keys = set() # gen on load(if song in artists.songs, then we already have the artist) # so that only new songs are tested for artist
@@ -48,6 +50,11 @@ class Tracker:
         pass
 
     def load(self):
+        if not os.path.exists(opts.musitracker_path):
+            with open(opts.musitracker_path, "w") as f:
+                f.write('{"all_artist_keys": [], "artists": [] }')
+                return
+            
         with open(opts.musitracker_path, "r") as f:
             celf = json.load(f)
         self.all_artist_keys = set(celf["all_artist_keys"])
@@ -66,6 +73,7 @@ class Tracker:
             for song_data in json_artist["songs"]:
                 song = Song(song_data["title"], song_data["key"], song_data["artist_name"])
                 song.title_lock = song_data["title_lock"]
+                song.unsorted_path = song_data.get("unsorted_path", "")
                 song.info = SongInfo()
                 song.info.__dict__ = song_data["info"]
                 artist.songs.add(song)

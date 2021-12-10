@@ -13,6 +13,7 @@ bugs:
     . dont forget check-sort after name confirming
 
 plan:
+  . use pathlib.path
   . add another playlist from which things can be downloaded (replacement for newpipe-download)
   . append-albums-manual whatever - if input == "" then only show artists which dont have any known albums
   . maybe artist.show() for debug, that shows what all the keys point to?
