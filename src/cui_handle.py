@@ -8,6 +8,7 @@ import platform
 LUUNIX = platform.system() == "Linux"
 if LUUNIX: import ueberzug.lib.v0 as ueberzug
 from wcwidth import wcwidth, wcswidth
+import os
 
 import pydub
 import pydub.playback
@@ -58,8 +59,8 @@ class CUI_handle:
             self.player_widget,
             )
 
-        self.browser_widget.setup()
         self.player_widget.setup()
+        self.browser_widget.setup()
 
     def start(self):
         if getattr(self, "pycui", None) is None: self.setup()
@@ -79,10 +80,12 @@ class CUI_handle:
 class Player:
     def __init__(self):
         self.psuedo_song_start_time = None
+        self.pause_start_time = None
+        self.song_duration = None
+        
         self.current_song = None # musimanager song
         self.pydub_audio_segment = None
         self.playback_handle = None
-        self.song_duration = None
         self.current_queue = None
 
 
@@ -90,8 +93,8 @@ class Player:
         if self.playback_handle is not None: self.playback_handle.stop()
         # len(song) is ~~ (duration of song in seconds (milliseconds in decimal))*1000
         self.current_song = song
-        self.pydub_audio_segment = pydub.AudioSegment.from_file(song.path(), opts.musi_ext)
-        self.psuedo_song_start_time = time.time()
+        song_path = song.path()
+        self.pydub_audio_segment = pydub.AudioSegment.from_file(song_path, song_path.split(os.path.sep)[-1].split(".")[-1])
         self.song_duration = len(self.pydub_audio_segment)*0.001 # seconds
         self.playback_handle = simpleaudio.play_buffer(
             self.pydub_audio_segment.raw_data,
@@ -99,13 +102,31 @@ class Player:
             bytes_per_sample=self.pydub_audio_segment.sample_width,
             sample_rate=self.pydub_audio_segment.frame_rate
             )
+        self.psuedo_song_start_time = time.perf_counter()
         # pydub.playback.play(song[258212:])
 
     def stop(self):
         self.playback_handle.stop()
 
     def toggle_pause(self):
-        pass
+        if self.pause_start_time is None:
+            self.playback_handle.stop()
+            self.pause_start_time = time.perf_counter()
+        else:
+            now = time.perf_counter()
+            tme = now - self.pause_start_time
+            self.psuedo_song_start_time += tme
+            tme = now - self.psuedo_song_start_time
+            start_pos = int(1000*tme) + 1
+            if tme >= self.song_duration: self.play_next()
+            audio = self.pydub_audio_segment[start_pos:]
+            self.playback_handle = simpleaudio.play_buffer(
+                audio.raw_data,
+                num_channels=audio.channels,
+                bytes_per_sample=audio.sample_width,
+                sample_rate=audio.frame_rate
+            )
+            self.pause_start_time = None
 
     def try_seek(secs):
         pass
@@ -170,6 +191,7 @@ class BrowserWidget:
     def setup(self):
         self.scroll_menu.add_key_command(py_cui.keys.KEY_RIGHT_ARROW, self.try_load_right)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_LEFT_ARROW, self.try_load_left)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_P_LOWER, self.player_widget.player.toggle_pause)
         # self.scroll_menu.add_key_command(py_cui.keys.KEY_ENTER, self.play)
         self.scroll_menu.set_selected_color(py_cui.MAGENTA_ON_CYAN)
 
@@ -222,16 +244,7 @@ class MainProvider(SongProvider):
     def get_at(self, index):
         self.current_index = index
         return self.data_list[index]
-        # match self.data_list[index].content_type:
-        #     case WindowContentType.ARTISTS:
-        #         return self.data_list[index]
-        #     case WindowContentType.PLAYLISTS:
-        #         return 0
-        #     case WindowContentType.QUEUES:
-        #         return 0
-        #     case WindowContentType.SONGS:
-        #         return 0
-    
+
     def get_current_name_list(self):
         return ["Artists", "Songs", "Playlists", "Queues", "File Explorer"]
 

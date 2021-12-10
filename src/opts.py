@@ -31,4 +31,5 @@ debug_no_edits_to_db = False
 
 
 import ytmusicapi
+# https://ytmusicapi.readthedocs.io/en/latest/setup.html
 ytmusic = ytmusicapi.YTMusic(ytmusic_headers_path)
