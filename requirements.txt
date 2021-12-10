@@ -4,5 +4,4 @@ youtube_dl
 py_cui
 pydub
 wcwidth
-simpleaudio
-
+pygame

@@ -8,6 +8,7 @@ if LUUNIX: import ueberzug.lib.v0 as ueberzug
 
 import io
 import os
+from PIL import Image
 import py_cui
 import pydub
 import pydub.playback
@@ -54,6 +55,10 @@ class CUI_handle:
         # TODO: set quit, pause, seek, ... as global shortcuts (i.e, set them on every widget + master)
         # TODO: select browser widget by default
 
+        # TODO: add a queue widget + shortcut to disable it
+        # TODO: shortcut to send songs to queue
+        # TODO: shortcuts to quickly navigate to other widgets (without escape button)
+        
         self.player_widget = PlayerWidget(self.pycui.add_scroll_menu('Player', 0, 1, row_span=1, column_span=1, padx = 1, pady = 0))
         self.browser_widget = BrowserWidget(
             self.pycui.add_scroll_menu('Browser',  0, 0, row_span=1, column_span=1, padx = 1, pady = 0),
@@ -76,7 +81,7 @@ class CUI_handle:
             self.pycui.start()
 
     def refresh(self):
-        if LUUNIX: self.player_widget.refresh()
+        self.player_widget.refresh()
 
 class Player:
     def __init__(self):
@@ -139,14 +144,21 @@ class PlayerWidget:
         self.player = Player()
 
     def refresh(self):
+        if LUUNIX: self.image_refresh()
+        if self.player.current_song is not None: self.print_song_metadata(self.player.current_song)
+
+    def image_refresh(self):
         # TODO: use these instead
         #   self.play_window.get_absolute_{start, stop}_pos() -> (x, y)
         #       or .get_start_position(), not sure
         #   self.play_window.get_padding() ?????
-        self.image_placement.x = self.scroll_menu._start_x + self.border_padding_x
+        # TODO: center the image in the y axis ????
         self.image_placement.y = self.scroll_menu._start_y + self.border_padding_y_top
         self.image_placement.width = self.scroll_menu._stop_x - self.scroll_menu._start_x - self.border_padding_x*2
-        self.image_placement.height = self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info
+        self.image_placement.height = self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info - 2
+        a = self.image_placement.width - 2.1*self.image_placement.height
+        if round(a/2) > 2: self.image_placement.x = round(a/2) + self.scroll_menu._start_x + self.border_padding_x - 1
+        else: self.image_placement.x = self.scroll_menu._start_x + self.border_padding_x
 
     def play(self, song):
         self.player.play(song)
@@ -154,20 +166,37 @@ class PlayerWidget:
         self.print_song_metadata(song)
 
     def replace_album_art(self, song):
-        self.image_placement.x = self.scroll_menu._start_x+3
-        self.image_placement.y = self.scroll_menu._start_y+1
-        self.image_placement.path = '/home/issac/Pictures/Screenshot_20211122_221759.png'
+        img_path = opts.musimanager_directory + "img.jpeg"
+        img = song.get_album_art_as_jpeg_bytes()
+        img = Image.open(io.BytesIO(img))
+        
+        # crop image into a square
+        x, y = img.size
+        a = (x-y)/2
+        if a > 0: box = (a, 0, x - a, y)
+        else: box = (0, -a, x, y+a)
+        img = img.crop(box)
+        img.save(img_path)
+
+        self.image_placement.path = img_path
         self.image_placement.visibility = ueberzug.Visibility.VISIBLE
 
     def print_song_metadata(self, song):
-        blank = self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info + 1
         self.scroll_menu.clear()
-        self.scroll_menu.add_item_list(list(" "*blank))
-        # TODO: format this in a nicer way, perhaps bold + centered and stuff
-        self.scroll_menu.add_item(f"title: {song.title}")
-        self.scroll_menu.add_item(f"album: {song.info.album}")
-        self.scroll_menu.add_item(f"artist: {song.artist_name}")
-
+        x_blank = self.scroll_menu._stop_x - self.scroll_menu._start_x - self.border_padding_x*2
+        center = lambda text: int((x_blank-len(text))/2)*" "+text
+        right = lambda text: int(x_blank-int(len(text)))*" "+text
+        if LUUNIX:
+            # blank = self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info + 1
+            blank = min(
+                self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info,
+                int(1/2.1 * (x_blank)),
+            ) + 1
+            self.scroll_menu.add_item_list(list(" "*blank))
+        # TODO: format this in a nicer way, perhaps bold and stuff
+        self.scroll_menu.add_item(center(f"title: {song.title}"))
+        self.scroll_menu.add_item(center(f"album: {song.info.album}"))
+        self.scroll_menu.add_item(center(f"artist: {song.artist_name}"))
 
 class BrowserWidget:
     def __init__(self, widget, player_widget):
@@ -253,6 +282,8 @@ class ArtistProvider(SongProvider):
         songs = list(artist.songs)
         songs.sort(key=lambda x: x.title)
         return SongProvider(songs)
+
+# TODO: impliment more SongProviders
 
 class WidgetContentType(enum.Enum):
     MAIN = enum.auto()

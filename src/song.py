@@ -6,6 +6,8 @@ from mutagen.id3 import ID3, APIC, TALB, TIT2, TPE1
 import youtube_dl
 from difflib import SequenceMatcher
 from PIL import Image
+from io import BytesIO
+
 
 import opts
 
@@ -214,6 +216,17 @@ class Song:
         audio['TALB'] = TALB(encoding=3, text=self.info.album)
         audio['APIC'] = APIC(encoding=3, mime='image/jpeg', type=3, desc='Cover', data=img)
         audio.save()
+
+    def get_album_art_as_jpeg_bytes(self):
+        song_path = self.path()
+        if song_path.split(".")[-1] == "mp3":
+            tags = ID3(song_path)
+            pict = tags.get("APIC:").data
+        elif song_path.split(".")[-1] == "m4a":
+            vid = MP4(song_path)
+            pict = vid.get("covr")[0]
+        im = bytes(pict)
+        return im
 
     # moves song with some basic checks/error prints
     def move(self, from_path, to_path, quiet=False):
