@@ -19,8 +19,10 @@ musitracker_plist_name = "musitracker"
 musitracker_search_limit = 75 # 200 uplimit with returns (300 in case of aimer but whatever)
 musitracker_search_limit_first_time = 300
 
-
+# cui only
 do_not_sort = True
+force_ascii_art = False # linux only (cuz theres ueberzug too)
+disable_ascii_art = False
 
 # debugs
 # manager_sort_debug = True
@@ -29,6 +31,9 @@ debug_no_edits_to_stored = True
 debug_no_edits_to_db = False
 
 
+import platform
+LUUNIX = platform.system() == "Linux"
+ASCII_ART = ((False or not LUUNIX) or force_ascii_art) and not disable_ascii_art
 
 import ytmusicapi
 # https://ytmusicapi.readthedocs.io/en/latest/setup.html
