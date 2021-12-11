@@ -14,7 +14,7 @@ import os
 from PIL import Image
 import py_cui
 import pydub
-import pydub.playback
+# import pydub.playback
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame.mixer as mixer
 
@@ -29,7 +29,7 @@ def pad(string):
     zwsp = "\u200b" # zero width space character or something
     pads = 0
     for char in string:
-        p = wcswidth(char)-len(char)
+        p = wcwidth(char)-len(char)
         if p != 0: print("lol")###################
         pads += p
     # print(len(string+zwsp*pads))
@@ -123,14 +123,20 @@ class Player:
             self.playback_handle.pause()
             self.is_paused = True
 
-    def try_seek(secs):
+    def try_seek(self, secs):
         pass
 
     def play_next(self):
-        pass
+        next = self.current_queue.next()
+        if next is not None:
+            self.play(next)
+        # else:
+        #     self.current_queue = None
 
     def play_prev(self):
-        pass
+        prev = self.current_queue.previous()
+        if prev is not None:
+            self.play(prev)
 
 class PlayerWidget:
     def __init__(self, widget):
@@ -151,6 +157,8 @@ class PlayerWidget:
         if ASCII_ART: self.ascii_image_refresh()
         elif LUUNIX: self.image_refresh()
         if self.player.current_song is not None: self.print_song_metadata(self.player.current_song)
+
+        # TODO: check if song ended and call next
 
     def image_refresh(self):
         # TODO: use these instead
@@ -182,6 +190,9 @@ class PlayerWidget:
         self.player.play(song)
         self.replace_album_art(song)
         self.print_song_metadata(song)
+
+    def set_queue(self, queue):
+        self.player.current_queue = queue
 
     def replace_album_art(self, song):
         img_path = opts.musimanager_directory + "img.jpeg"
@@ -226,16 +237,20 @@ class BrowserWidget:
         self.scroll_menu.add_key_command(py_cui.keys.KEY_RIGHT_ARROW, self.try_load_right)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_LEFT_ARROW, self.try_load_left)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_P_LOWER, self.player_widget.player.toggle_pause)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_O_LOWER, self.try_add_song_to_playlist)
         # self.scroll_menu.add_key_command(py_cui.keys.KEY_ENTER, self.play)
         self.scroll_menu.set_selected_color(py_cui.MAGENTA_ON_CYAN)
 
         self.scroll_menu.add_item_list(self.content_state_stack[0].get_current_name_list())
 
-
     def try_load_right(self):
         content = self.content_state_stack[-1].get_at(self.scroll_menu.get_selected_item_index())
         if content.content_type is WidgetContentType.SONG:
             self.player_widget.play(content)
+            self.player_widget.set_queue(self.content_state_stack[-1])
+            potential_queue_provider = self.content_state_stack[-2]
+            if potential_queue_provider.content_type is WidgetContentType.QUEUES:
+                potential_queue_provider.yeet_selected_queue()
             return
         self.content_state_stack.append(content)
         self.refresh_names(content)
@@ -253,12 +268,25 @@ class BrowserWidget:
         self.scroll_menu.add_item_list(name_list)
         for _ in range(content.current_index): self.scroll_menu._scroll_down(min(3, len(name_list)-1))
 
+    def try_add_song_to_playlist(self):
+        playlist_provider = self.content_state_stack[0].data_list[2]
+        song = self.content_state_stack[-1].get_at(self.scroll_menu.get_selected_item_index())
+        if song.content_type is not WidgetContentType.SONG: return
+        if len(playlist_provider.data_list) == 0:
+            playlist_provider.add_playlist([song], "test")
+        else:
+            playlist_provider.data_list[0].add_song(song) ################## TODO: test
+
 # using this as a trait
 class SongProvider:
-    def __init__(self, data):
+    def __init__(self, data, name):
         self.content_type = WidgetContentType.SONGS
         self.data_list = data
         self.current_index = 0
+        self.name = name
+
+    def add_song(self, song):
+        self.data_list.append(song)
 
     def get_at(self, index):
         self.current_index = index
@@ -268,11 +296,24 @@ class SongProvider:
 
     def get_current_name_list(self):
         return [song.title for song in self.data_list]
+    
+    def next(self):
+        self.current_index += 1
+        if self.current_index >= len(self.data_list): return None
+        return self.data_list[self.current_index]
+
+    def previous(self):
+        self.current_index -= 1
+        if self.current_index < 0: return None
+        return self.data_list[self.current_index]
+
+    def get_current(self):
+        return self.data_list[self.current_index]
 
 class MainProvider(SongProvider):
     def __init__(self):
-        data = [ArtistProvider(), 0, 0, 0, 0]
-        super().__init__(data)
+        data = [ArtistProvider(), None, PlaylistProvider(), QueueProvider(), None]
+        super().__init__(data, None)
         self.content_type = WidgetContentType.MAIN
 
     def get_at(self, index):
@@ -288,7 +329,7 @@ class ArtistProvider(SongProvider):
         _tracker.load()
         data = list(_tracker.artists)
         data.sort(key=lambda x: x.name)
-        super().__init__(data)
+        super().__init__(data, None)
         self.content_type = WidgetContentType.ARTISTS
     
     def get_current_name_list(self):
@@ -299,7 +340,7 @@ class ArtistProvider(SongProvider):
         artist = self.data_list[index]
         songs = list(artist.songs)
         songs.sort(key=lambda x: x.title)
-        return SongProvider(songs)
+        return SongProvider(songs, f"songs by {artist.name}")
 
 # TODO: impliment more SongProviders
 
@@ -309,10 +350,54 @@ class WidgetContentType(enum.Enum):
     ARTISTS = enum.auto()
     PLAYLISTS = enum.auto()
     QUEUES = enum.auto() # like playlist but remembers position and deletes itself when finished
-    AUTOSEARCH_SONGS = enum.auto()
+    # AUTOSEARCH_SONGS = enum.auto()
 
     SONGS = enum.auto()
 
-    FILE_EXPLORER = enum.auto()
+    # FILE_EXPLORER = enum.auto()
 
     SONG = enum.auto()
+
+class PlaylistProvider(SongProvider):
+    def __init__(self):
+        playlists = []
+        super().__init__(playlists, None)
+        self.content_type = WidgetContentType.PLAYLISTS
+    
+    def add_playlist(self, songs, name):
+        self.data_list.append(SongProvider(songs, name))
+
+    def get_current_name_list(self):
+        return [pad(playlist.name) for playlist in self.data_list]
+    
+    def get_at(self, index):
+        self.current_index = index
+        song_provider = self.data_list[index]
+        return song_provider
+
+# 1 queue is store in player, rest here, if new queue created, the older one gets sent here
+# if queue selected from here, send it to player and yeet it from here
+# when queue complete, yeet it from player too
+class QueueProvider(SongProvider):
+    def __init__(self):
+        queues = []
+        super().__init__(queues, None)
+        self.content_type = WidgetContentType.QUEUES
+
+    def get_current_name_list(self):
+        return [pad(queue.name) for queue in self.data_list]
+
+    def add_queues(self, songs, name):
+        self.data_list.append(SongProvider(songs, name))
+
+    def get_at(self, index):
+        self.current_index = index
+        song_provider = self.data_list[index]
+        return song_provider
+
+    def yeet_selected_queue(self):
+        self.yeet_queue_at(self.current_index)
+        self.current_index = 0
+
+    def yeet_queue_at(self, index):
+        self.data_list.pop(index)
