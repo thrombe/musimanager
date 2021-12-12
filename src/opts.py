@@ -20,6 +20,7 @@ musitracker_search_limit = 75 # 200 uplimit with returns (300 in case of aimer b
 musitracker_search_limit_first_time = 300
 
 # cui only
+get_access_under = "/home/issac/Music/"
 do_not_sort = True
 force_ascii_art = False # linux only (cuz theres ueberzug too)
 disable_ascii_art = False

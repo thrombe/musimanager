@@ -1,10 +1,12 @@
 
 import enum
 
+import os
 from wcwidth import wcwidth, wcswidth
 
+import opts
 import tracker
-
+import song
 
 # 2 width chars are counted as 1 width by len(), so causes probs
 # https://github.com/jupiterbjy/CUIAudioPlayer/
@@ -33,7 +35,7 @@ class SongProvider:
     def get_at(self, index):
         self.current_index = index
         song = self.data_list[index]
-        song.content_type = WidgetContentType.SONG
+        # song.content_type = WidgetContentType.SONG
         return song
 
     def get_current_name_list(self):
@@ -54,7 +56,7 @@ class SongProvider:
 
 class MainProvider(SongProvider):
     def __init__(self):
-        data = [ArtistProvider(), None, PlaylistProvider(), QueueProvider(), None]
+        data = [ArtistProvider(), None, PlaylistProvider(), QueueProvider(), FileExplorer.new()]
         super().__init__(data, None)
         self.content_type = WidgetContentType.MAIN
 
@@ -86,6 +88,7 @@ class ArtistProvider(SongProvider):
 
 # TODO: impliment more SongProviders
 
+# TODO: this is not really needed now, cuz is_instance_of or something would work fine too
 class WidgetContentType(enum.Enum):
     MAIN = enum.auto()
 
@@ -96,9 +99,9 @@ class WidgetContentType(enum.Enum):
 
     SONGS = enum.auto()
 
-    # FILE_EXPLORER = enum.auto()
+    FILE_EXPLORER = enum.auto()
 
-    SONG = enum.auto()
+    # SONG = enum.auto()
 
 class PlaylistProvider(SongProvider):
     def __init__(self):
@@ -113,9 +116,10 @@ class PlaylistProvider(SongProvider):
         return [pad(playlist.name) for playlist in self.data_list]
     
     def get_at(self, index):
-        self.current_index = index
-        song_provider = self.data_list[index]
-        return song_provider
+        return super().get_at(index)
+        # self.current_index = index
+        # song_provider = self.data_list[index]
+        # return song_provider
 
 # 1 queue is store in player, rest here, if new queue created, the older one gets sent here
 # if queue selected from here, send it to player and yeet it from here
@@ -133,9 +137,10 @@ class QueueProvider(SongProvider):
         self.data_list.append(SongProvider(songs, name))
 
     def get_at(self, index):
-        self.current_index = index
-        song_provider = self.data_list[index]
-        return song_provider
+        return super().get_at(index)
+        # self.current_index = index
+        # song_provider = self.data_list[index]
+        # return song_provider
 
     def yeet_selected_queue(self):
         self.yeet_queue_at(self.current_index)
@@ -143,3 +148,55 @@ class QueueProvider(SongProvider):
 
     def yeet_queue_at(self, index):
         self.data_list.pop(index)
+
+class Folder:
+    def __init__(self, path, subfolders, files):
+        self.path = path
+        self.subfolders = subfolders
+        self.files = files
+    
+    def new(base_path):
+        base_path = base_path.rstrip(os.path.sep)
+        folder = Folder(base_path, [], [])
+        for f in os.scandir(base_path):
+            if f.name.startswith("."):
+                continue
+            if f.is_dir():
+                try: folder.subfolders.append(Folder.new(f.path))
+                except: pass
+            elif f.is_file():
+                if f.name.split(".")[-1] not in ["mp3", "m4a"]: continue # other file formats not yet supported for the metadata
+                folder.files.append(f.name)
+        if folder.subfolders == []: folder.subfolder = None
+        if folder.files == []: folder.files = None
+        return folder
+    
+    def name(self):
+        return self.path.split(os.path.sep)[-1]
+
+class FileExplorer(SongProvider):
+    def __init__(self, folder):
+        self.folder = folder
+        if folder.subfolders is not None: data = [sf.name() for sf in folder.subfolders]
+        else: data = []
+        if folder.files is not None: data.extend(folder.files)
+        super().__init__(data, None)
+        self.content_type = WidgetContentType.FILE_EXPLORER
+    
+    def new():
+        return FileExplorer(Folder.new(opts.get_access_under))
+        
+    # send either FileExplorer or SongProvider with single song
+    def get_at(self, index):
+        self.current_index = index
+        num_folders = len(self.folder.subfolders)
+        if index >= num_folders:
+            key = self.data_list[index].split(".")[0]
+            s = song.Song(None, key, None)
+            s.get_info_from_tags()
+            return SongProvider([s], None)
+        else:
+            return FileExplorer(self.folder.subfolders[index])
+
+    def get_current_name_list(self):
+        return self.data_list

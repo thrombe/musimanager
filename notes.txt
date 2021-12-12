@@ -13,6 +13,7 @@ bugs:
     . dont forget check-sort after name confirming
 
 plan:
+  . musimanager fix the .ext prob (support more music formats)
   . use pathlib.path
   . add another playlist from which things can be downloaded (replacement for newpipe-download)
   . append-albums-manual whatever - if input == "" then only show artists which dont have any known albums

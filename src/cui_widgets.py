@@ -54,6 +54,7 @@ class Player:
         pass
 
     def play_next(self):
+        if self.current_queue is None: return
         next = self.current_queue.next()
         if next is not None:
             self.play(next)
@@ -61,6 +62,7 @@ class Player:
         #     self.current_queue = None
 
     def play_prev(self):
+        if self.current_queue is None: return
         prev = self.current_queue.previous()
         if prev is not None:
             self.play(prev)
@@ -171,8 +173,9 @@ class BrowserWidget:
         self.scroll_menu.add_item_list(self.content_state_stack[0].get_current_name_list())
 
     def try_load_right(self):
-        content = self.content_state_stack[-1].get_at(self.scroll_menu.get_selected_item_index())
-        if content.content_type is cui_content_providers.WidgetContentType.SONG:
+        content_provider = self.content_state_stack[-1]
+        content = content_provider.get_at(self.scroll_menu.get_selected_item_index())
+        if content_provider.content_type is cui_content_providers.WidgetContentType.SONGS:
             self.player_widget.play(content)
             self.player_widget.set_queue(self.content_state_stack[-1])
             potential_queue_provider = self.content_state_stack[-2]
@@ -180,10 +183,11 @@ class BrowserWidget:
                 potential_queue_provider.yeet_selected_queue()
             return
         self.content_state_stack.append(content)
+        # TODO: maybe add a "content.play_now()"(SongProvider.play_pow()) that returns a bool that makes it start playing the the song_provider and not make user select the song
         self.refresh_names(content)
 
     def try_load_left(self):
-        content = self.content_state_stack[-1].get_at(self.scroll_menu.get_selected_item_index())
+        content = self.content_state_stack[-1]#.get_at(self.scroll_menu.get_selected_item_index())
         if content.content_type is cui_content_providers.WidgetContentType.MAIN:
             return
         self.content_state_stack.pop()
@@ -196,9 +200,11 @@ class BrowserWidget:
         for _ in range(content.current_index): self.scroll_menu._scroll_down(min(3, len(name_list)-1))
 
     def try_add_song_to_playlist(self):
-        playlist_provider = self.content_state_stack[0].data_list[2]
-        song = self.content_state_stack[-1].get_at(self.scroll_menu.get_selected_item_index())
-        if song.content_type is not cui_content_providers.WidgetContentType.SONG: return
+        main_provider = self.content_state_stack[0]
+        playlist_provider = main_provider.data_list[2]
+        content_provider = self.content_state_stack[-1]
+        song = content_provider.get_at(self.scroll_menu.get_selected_item_index())
+        if content_provider.content_type is not cui_content_providers.WidgetContentType.SONGS: return
         if len(playlist_provider.data_list) == 0:
             playlist_provider.add_playlist([song], "test")
         else:
