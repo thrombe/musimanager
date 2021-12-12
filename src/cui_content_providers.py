@@ -7,6 +7,7 @@ from wcwidth import wcwidth, wcswidth
 import opts
 import tracker
 import song
+import manager
 
 # 2 width chars are counted as 1 width by len(), so causes probs
 # https://github.com/jupiterbjy/CUIAudioPlayer/
@@ -56,7 +57,7 @@ class SongProvider:
 
 class MainProvider(SongProvider):
     def __init__(self):
-        data = [ArtistProvider(), None, PlaylistProvider(), QueueProvider(), FileExplorer.new()]
+        data = [ArtistProvider(), AutoSearchSongs(), PlaylistProvider(), QueueProvider(), FileExplorer.new()]
         super().__init__(data, None)
         self.content_type = WidgetContentType.MAIN
 
@@ -65,7 +66,7 @@ class MainProvider(SongProvider):
         return self.data_list[index]
 
     def get_current_name_list(self):
-        return ["Artists", "Songs", "Playlists", "Queues", "File Explorer"]
+        return ["Artists", "All Songs", "Playlists", "Queues", "File Explorer"]
 
 class ArtistProvider(SongProvider):
     def __init__(self):
@@ -117,9 +118,6 @@ class PlaylistProvider(SongProvider):
     
     def get_at(self, index):
         return super().get_at(index)
-        # self.current_index = index
-        # song_provider = self.data_list[index]
-        # return song_provider
 
 # 1 queue is store in player, rest here, if new queue created, the older one gets sent here
 # if queue selected from here, send it to player and yeet it from here
@@ -138,9 +136,6 @@ class QueueProvider(SongProvider):
 
     def get_at(self, index):
         return super().get_at(index)
-        # self.current_index = index
-        # song_provider = self.data_list[index]
-        # return song_provider
 
     def yeet_selected_queue(self):
         self.yeet_queue_at(self.current_index)
@@ -163,6 +158,8 @@ class FileExplorer(SongProvider):
                 if f.name.split(".")[-1] not in ["mp3", "m4a"]: continue # other file formats not yet supported for the metadata
                 self.files.append(f.name)
         data = []
+        self.folders.sort()
+        self.files.sort()
         data.extend(self.folders)
         data.extend(self.files)
         super().__init__(data, None)
@@ -180,9 +177,29 @@ class FileExplorer(SongProvider):
             key = self.data_list[index].split(".")[0]
             s = song.Song(None, key, None)
             s.get_info_from_tags()
-            return SongProvider([s], None)
+            self.content_type = WidgetContentType.SONGS # so that songs play instantly
+            # return SongProvider([s], None)
+            return s
         else:
             return FileExplorer(os.path.join(self.base_path, self.folders[index]))
 
     def get_current_name_list(self):
         return self.data_list
+
+class AutoSearchSongs(SongProvider):
+    def __init__(self):
+        self.song_paths = manager.get_song_paths(opts.get_access_under.rstrip(os.path.sep))
+        data = [s.split(os.path.sep)[-1] for s in self.song_paths]
+        super().__init__(data, "all songs")
+        self.content_type = WidgetContentType.SONGS # this needs to behave like a queue
+
+    def get_at(self, index):
+        self.current_index = index
+        key = self.data_list[index].split(".")[0]
+        s = song.Song(None, key, None)
+        s.get_info_from_tags()
+        return s
+
+    def get_current_name_list(self):
+        return self.data_list
+    

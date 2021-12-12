@@ -2,7 +2,7 @@
 
 # PATHS WITH SEPERATORS(at end) PLZ
 
-musi_path = "/home/issac/Music/" # path where music should be stored and stuff
+musi_path = "/home/issac/" # path where music should be stored and stuff
 musi_ext = "m4a"
 musimanager_directory = "./db/" # directory where musimanager can store files
 newpipe_bkup_directory = "/sdcard/BKUP/newpipe/"

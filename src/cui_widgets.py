@@ -198,6 +198,7 @@ class BrowserWidget:
         self.scroll_menu.clear()
         name_list = content.get_current_name_list()
         self.scroll_menu.add_item_list(name_list)
+        # TODO: fix the scroll 3 issue / do the scroll thing properly
         for _ in range(content.current_index): self.scroll_menu._scroll_down(min(3, len(name_list)-1))
 
     def try_add_song_to_playlist(self):
