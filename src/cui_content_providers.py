@@ -87,9 +87,6 @@ class ArtistProvider(SongProvider):
         songs.sort(key=lambda x: x.title)
         return SongProvider(songs, f"songs by {artist.name}")
 
-# TODO: impliment more SongProviders
-
-# TODO: this is not really needed now, cuz is_instance_of or something would work fine too
 class WidgetContentType(enum.Enum):
     MAIN = enum.auto()
 
@@ -150,6 +147,7 @@ class FileExplorer(SongProvider):
         self.folders = []
         self.files = []
         for f in os.scandir(self.base_path):
+            # TODO: allow enabling hidden files on the fly or per boot maybe
             if f.name.startswith("."):
                 continue
             if f.is_dir():
@@ -174,7 +172,7 @@ class FileExplorer(SongProvider):
         self.current_index = index
         num_folders = len(self.folders)
         if index >= num_folders:
-            key = self.data_list[index].split(".")[0]
+            key = self.data_list[index].rstrip("m4ap3").rstrip(".")
             s = song.Song(None, key, None)
             s.get_info_from_tags()
             self.content_type = WidgetContentType.SONGS # so that songs play instantly
@@ -195,7 +193,7 @@ class AutoSearchSongs(SongProvider):
 
     def get_at(self, index):
         self.current_index = index
-        key = self.data_list[index].split(".")[0]
+        key = self.data_list[index].rstrip("m4ap3").rstrip(".")
         s = song.Song(None, key, None)
         s.get_info_from_tags()
         return s

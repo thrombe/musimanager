@@ -24,6 +24,7 @@ get_access_under = "/home/issac/"
 do_not_sort = True
 force_ascii_art = False # linux only (cuz theres ueberzug too)
 disable_ascii_art = False
+default_album_art = musimanager_directory + "img.jpeg"
 
 # debugs
 # manager_sort_debug = True

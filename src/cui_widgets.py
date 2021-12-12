@@ -27,7 +27,7 @@ class Player:
         if self.playback_handle is not None: self.playback_handle.stop()
         # len(song) is ~~ (duration of song in seconds (milliseconds in decimal))*1000
         self.current_song = song
-        song_path = song.path()
+        song_path = song.get_unsorted_path(find_under=opts.get_access_under)
         self.pydub_audio_segment = pydub.AudioSegment.from_file(song_path, song_path.split(os.path.sep)[-1].split(".")[-1])
         filelike = io.BytesIO()
         mixer.init()
@@ -77,6 +77,8 @@ class PlayerWidget:
         self.border_padding_y_top = 1
         self.border_padding_y_bottom = 2
         self.lines_of_song_info = 3
+        # TODO: allow to disable album art for the songs that do not have one
+        # TODO: show song progress bar
 
     def setup(self):
         self.player = Player()
@@ -126,7 +128,8 @@ class PlayerWidget:
     def replace_album_art(self, song):
         img_path = opts.musimanager_directory + "img.jpeg"
         img = song.get_album_art_as_jpeg_bytes()
-        img = Image.open(io.BytesIO(img))
+        if img is None: img = Image.open(opts.default_album_art)
+        else: img = Image.open(io.BytesIO(img))
         
         # crop image into a square
         x, y = img.size

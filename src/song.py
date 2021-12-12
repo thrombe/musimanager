@@ -126,15 +126,16 @@ class Song:
         if after: return path_after_sort
         return None
     
-    def get_unsorted_path(self):
+    def get_unsorted_path(self, find_under=None):
         if os.path.exists(self.unsorted_path): return self.unsorted_path
-        self.unsorted_path = self.find_path()
+        if find_under is None: self.unsorted_path = self.find_path()
+        else: self.unsorted_path = self.find_path(find_under=find_under)
         return self.unsorted_path
 
-    def find_path(self):
-        for dir, subdir, files in os.walk(ytdl.path):
+    def find_path(self, find_under=opts.musi_path):
+        for dir, subdir, files in os.walk(find_under):
             for file in files:
-                key = file[0:-len(".m4a")]
+                key = file.rstrip("m4ap3").rstrip(".")
                 if key == self.key:
                     return os.path.join(dir, file)
         return None
@@ -152,21 +153,22 @@ class Song:
     
     def get_info_from_tags_m4a(self):
         vid = MP4(self.path())
-        self.title = vid.tags["\xa9nam"][0]
+        self.title = vid.tags.get("\xa9nam", "")[0]
         self.info = SongInfo()
         self.info.album = vid.tags.get("\xa9alb", "")[0]
         if self.artist_name is None: self.artist_name = vid.tags.get("\xa9ART", "")[0]
 
     def get_info_from_tags_mp3(self):
         audio = ID3(self.path())
-        self.title = audio["TIT2"].text[0]
+        self.title = getattr(audio.get("TIT2", ""), "text", [""])[0]
         self.info = SongInfo()
         self.info.album = getattr(audio.get("TALB", ""), "text", [""])[0]
         if self.artist_name is None: self.artist_name = getattr(audio.get("TPE1", ""), "text", [""])[0]
 
     def get_info_from_tags(self):
-        if ytdl.ext == "m4a": self.get_info_from_tags_m4a()
-        elif ytdl.ext == "mp3": self.get_info_from_tags_mp3()
+        song_path = self.path()
+        if song_path.split(".")[-1] == "mp3": self.get_info_from_tags_mp3()
+        elif song_path.split(".")[-1] == "m4a": self.get_info_from_tags_m4a()
 
     def tag(self):
         print(f"tagging {self}")
@@ -221,10 +223,11 @@ class Song:
         song_path = self.path()
         if song_path.split(".")[-1] == "mp3":
             tags = ID3(song_path)
-            pict = tags.get("APIC:").data
+            pict = getattr(tags.get("APIC:"), "data", None)
         elif song_path.split(".")[-1] == "m4a":
             vid = MP4(song_path)
             pict = vid.get("covr")[0]
+        if pict is None: return None
         im = bytes(pict)
         return im
 

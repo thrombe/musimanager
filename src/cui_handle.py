@@ -48,7 +48,6 @@ class CUI_handle:
 
         if opts.LUUNIX and not opts.ASCII_ART:
             with ueberzug.Canvas() as canvas:
-                # TODO: crop the pic to be square so things are predictable (album art is generally square too)
                 self.player_widget.image_placement = canvas.create_placement('album_art', scaler=ueberzug.ScalerOption.FIT_CONTAIN.value)
                 self.player_widget.image_placement.visibility = ueberzug.Visibility.INVISIBLE
                 self.pycui.start()
