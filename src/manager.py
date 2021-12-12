@@ -124,7 +124,7 @@ class Manager:
                     os.rmdir(directory)
 
     def update_unsorted_db(self):
-        _, song_paths = get_directory(opts.musi_path)
+        song_paths = get_song_paths(opts.musi_path)
         songs = []
         for path in song_paths:
             key = path.split(os.path.sep)[-1].split(".")[0]
@@ -158,21 +158,10 @@ class Manager:
                 self.tracker.add_artist(artist)
                 known_artist_names.append(song.artist_name)
 
-
-def get_directory(dir: str, ext: list=['mp3', 'wav', 'flac', 'm4a', 'aac', 'ogg']) -> tuple[list, list]:
-    # https://stackoverflow.com/a/59803793
-    subfolders, files = [], []
-
-    for f in os.scandir(dir):
-        if f.is_dir():
-            subfolders.append(f.path)
-        if f.is_file():
-            if os.path.splitext(f.name)[1].lower().replace('.', "") in ext:  # NOSONAR
-                files.append(f.path)
-
-    for dir in list(subfolders):
-        sf, f = get_directory(dir, ext)
-        subfolders.extend(sf)
-        files.extend(f)
-
-    return subfolders, files
+def get_song_paths(dir: str, ext: list=['mp3', 'm4a']):
+    song_paths = []
+    for basepath, _, files in os.walk(dir):
+        for f in files:
+            if f.split(".")[-1] in ext:
+                song_paths.append(os.path.join(basepath, f))
+    return song_paths

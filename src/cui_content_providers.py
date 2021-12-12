@@ -162,8 +162,7 @@ class Folder:
             if f.name.startswith("."):
                 continue
             if f.is_dir():
-                try: folder.subfolders.append(Folder.new(f.path))
-                except: pass
+                folder.subfolders.append(f.name)
             elif f.is_file():
                 if f.name.split(".")[-1] not in ["mp3", "m4a"]: continue # other file formats not yet supported for the metadata
                 folder.files.append(f.name)
@@ -171,14 +170,21 @@ class Folder:
         if folder.files == []: folder.files = None
         return folder
     
+    # def new(base_path):
+    #     base_path = base_path.rstrip(os.path.sep)
+    #     folder = Folder(base_path, [], [])
+    #     for folder_path, folders, files in os.walk(base_path):
+    #         folder.subfolders.extend(folders)
+    #         folder.files.extend([file for file in files if file.split(".")[-1] in ["mp3", "m4a"]])
+
     def name(self):
         return self.path.split(os.path.sep)[-1]
 
 class FileExplorer(SongProvider):
     def __init__(self, folder):
         self.folder = folder
-        if folder.subfolders is not None: data = [sf.name() for sf in folder.subfolders]
-        else: data = []
+        data = []
+        if folder.subfolders is not None: data.extend(folder.subfolders)
         if folder.files is not None: data.extend(folder.files)
         super().__init__(data, None)
         self.content_type = WidgetContentType.FILE_EXPLORER
@@ -196,7 +202,7 @@ class FileExplorer(SongProvider):
             s.get_info_from_tags()
             return SongProvider([s], None)
         else:
-            return FileExplorer(self.folder.subfolders[index])
+            return FileExplorer(Folder.new(os.path.join(self.folder.path, self.folder.subfolders[index])))
 
     def get_current_name_list(self):
         return self.data_list
