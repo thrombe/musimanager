@@ -149,60 +149,40 @@ class QueueProvider(SongProvider):
     def yeet_queue_at(self, index):
         self.data_list.pop(index)
 
-class Folder:
-    def __init__(self, path, subfolders, files):
-        self.path = path
-        self.subfolders = subfolders
-        self.files = files
-    
-    def new(base_path):
-        base_path = base_path.rstrip(os.path.sep)
-        folder = Folder(base_path, [], [])
-        for f in os.scandir(base_path):
+class FileExplorer(SongProvider):
+    def __init__(self, base_path):
+        self.base_path = base_path.rstrip(os.path.sep)
+        self.folders = []
+        self.files = []
+        for f in os.scandir(self.base_path):
             if f.name.startswith("."):
                 continue
             if f.is_dir():
-                folder.subfolders.append(f.name)
+                self.folders.append(f.name)
             elif f.is_file():
                 if f.name.split(".")[-1] not in ["mp3", "m4a"]: continue # other file formats not yet supported for the metadata
-                folder.files.append(f.name)
-        if folder.subfolders == []: folder.subfolder = None
-        if folder.files == []: folder.files = None
-        return folder
-    
-    # def new(base_path):
-    #     base_path = base_path.rstrip(os.path.sep)
-    #     folder = Folder(base_path, [], [])
-    #     for folder_path, folders, files in os.walk(base_path):
-    #         folder.subfolders.extend(folders)
-    #         folder.files.extend([file for file in files if file.split(".")[-1] in ["mp3", "m4a"]])
-
-    def name(self):
-        return self.path.split(os.path.sep)[-1]
-
-class FileExplorer(SongProvider):
-    def __init__(self, folder):
-        self.folder = folder
+                self.files.append(f.name)
         data = []
-        if folder.subfolders is not None: data.extend(folder.subfolders)
-        if folder.files is not None: data.extend(folder.files)
+        data.extend(self.folders)
+        data.extend(self.files)
         super().__init__(data, None)
         self.content_type = WidgetContentType.FILE_EXPLORER
     
     def new():
-        return FileExplorer(Folder.new(opts.get_access_under))
+        return FileExplorer(opts.get_access_under)
         
     # send either FileExplorer or SongProvider with single song
     def get_at(self, index):
+        if len(self.data_list) == 0: return None
         self.current_index = index
-        num_folders = len(self.folder.subfolders)
+        num_folders = len(self.folders)
         if index >= num_folders:
             key = self.data_list[index].split(".")[0]
             s = song.Song(None, key, None)
             s.get_info_from_tags()
             return SongProvider([s], None)
         else:
-            return FileExplorer(Folder.new(os.path.join(self.folder.path, self.folder.subfolders[index])))
+            return FileExplorer(os.path.join(self.base_path, self.folders[index]))
 
     def get_current_name_list(self):
         return self.data_list

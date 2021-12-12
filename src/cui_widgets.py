@@ -175,6 +175,7 @@ class BrowserWidget:
     def try_load_right(self):
         content_provider = self.content_state_stack[-1]
         content = content_provider.get_at(self.scroll_menu.get_selected_item_index())
+        if content is None: return
         if content_provider.content_type is cui_content_providers.WidgetContentType.SONGS:
             self.player_widget.play(content)
             self.player_widget.set_queue(self.content_state_stack[-1])
