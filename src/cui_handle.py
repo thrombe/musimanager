@@ -8,14 +8,18 @@ import cui_widgets
 
 if opts.LUUNIX: import ueberzug.lib.v0 as ueberzug
 
+pycui = None
+
 class CUI_handle:
     def __init__(self):
-        self.picui = None
+        self.pycui = None
         self.player_widget = None
         self.browser_widget = None
 
     def setup(self):
         self.pycui = py_cui.PyCUI(1, 2)
+        global pycui 
+        pycui = self.pycui # to make it accessible globally
         self.pycui.toggle_unicode_borders()
         self.pycui.set_title('CUI TODO List')
         # self.master.enable_logging(logging_level=logging.ERROR)
@@ -56,3 +60,4 @@ class CUI_handle:
 
     def refresh(self):
         self.player_widget.refresh()
+        if not self.pycui._in_focused_mode: self.pycui.move_focus(self.browser_widget.scroll_menu) # hacky way to force focus on browser widget

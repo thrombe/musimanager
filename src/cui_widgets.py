@@ -6,22 +6,26 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame.mixer as mixer
 from PIL import Image
 import py_cui
+import time
 
 import opts
 import cui_content_providers
+import cui_handle
 
 if opts.ASCII_ART: import ascii_magic
 if opts.LUUNIX: import ueberzug.lib.v0 as ueberzug
 
 class Player:
     def __init__(self):
-        self.is_paused = True
+        self.is_paused_since = None
+        self.song_duration = None
+        self.song_psuedo_start_time = None
+        self.song_progress_bar = 0
         
         self.current_song = None # musimanager song
         self.pydub_audio_segment = None
         self.playback_handle = None
         self.current_queue = None
-
 
     def play(self, song):
         if self.playback_handle is not None: self.playback_handle.stop()
@@ -29,6 +33,8 @@ class Player:
         self.current_song = song
         song_path = song.get_unsorted_path(find_under=opts.get_access_under)
         self.pydub_audio_segment = pydub.AudioSegment.from_file(song_path, song_path.split(os.path.sep)[-1].split(".")[-1])
+        self.song_duration = len(self.pydub_audio_segment)*0.001 # seconds
+        self.song_psuedo_start_time = time.time()
         filelike = io.BytesIO()
         mixer.init()
         self.playback_handle = mixer.music
@@ -43,12 +49,13 @@ class Player:
         self.is_paused = True
 
     def toggle_pause(self):
-        if self.is_paused:
+        if self.is_paused_since is not None:
             self.playback_handle.unpause()
-            self.is_paused = False
+            self.song_psuedo_start_time += time.time() - self.is_paused_since
+            self.is_paused_since = None
         else:
             self.playback_handle.pause()
-            self.is_paused = True
+            self.is_paused_since = time.time()
 
     def try_seek(self, secs):
         pass
@@ -76,7 +83,7 @@ class PlayerWidget:
         self.border_padding_x = 3
         self.border_padding_y_top = 1
         self.border_padding_y_bottom = 2
-        self.lines_of_song_info = 3
+        self.lines_of_song_info = 4
         # TODO: allow to disable album art for the songs that do not have one
         # TODO: show song progress bar
 
@@ -99,7 +106,7 @@ class PlayerWidget:
         # TODO: center the image and text in the y axis ????
         self.image_placement.y = self.scroll_menu._start_y + self.border_padding_y_top
         self.image_placement.width = self.scroll_menu._stop_x - self.scroll_menu._start_x - self.border_padding_x*2
-        self.image_placement.height = self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info - 2
+        self.image_placement.height = self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info - 0
         a = self.image_placement.width - 2.1*self.image_placement.height
         if round(a/2) > 2: self.image_placement.x = round(a/2) + self.scroll_menu._start_x + self.border_padding_x - 1
         else: self.image_placement.x = self.scroll_menu._start_x + self.border_padding_x
@@ -111,7 +118,7 @@ class PlayerWidget:
         img = Image.open(opts.musimanager_directory+"img.jpeg")
         columns = min(
             x_blank,
-            int(2.2 * (self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info + 2)),
+            round(2.2 * (self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info + 1)),
         )
         textimg = ascii_magic.from_image(img, mode=ascii_magic.Modes.ASCII, columns=columns)
         for line in textimg.splitlines():
@@ -158,6 +165,10 @@ class PlayerWidget:
         self.scroll_menu.add_item(center(f"title: {song.title}"))
         self.scroll_menu.add_item(center(f"album: {song.info.album}"))
         self.scroll_menu.add_item(center(f"artist: {song.artist_name}"))
+        if self.player.is_paused_since is None:
+            self.player.song_progress_bar = (time.time()-self.player.song_psuedo_start_time)/self.player.song_duration
+        self.scroll_menu.add_item(f"{'█' * round(x_blank * self.player.song_progress_bar)}")
+        # "█", "▄", "▀", "■", "▓", 
 
 class BrowserWidget:
     def __init__(self, widget, player_widget):
@@ -170,7 +181,6 @@ class BrowserWidget:
         self.scroll_menu.add_key_command(py_cui.keys.KEY_LEFT_ARROW, self.try_load_left)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_P_LOWER, self.player_widget.player.toggle_pause)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_O_LOWER, self.try_add_song_to_playlist)
-        # self.scroll_menu.add_key_command(py_cui.keys.KEY_ENTER, self.play)
         self.scroll_menu.set_selected_color(py_cui.MAGENTA_ON_CYAN)
 
         self.scroll_menu.add_item_list(self.content_state_stack[0].get_current_name_list())
@@ -210,7 +220,19 @@ class BrowserWidget:
         content_provider = self.content_state_stack[-1]
         song = content_provider.get_at(self.scroll_menu.get_selected_item_index())
         if content_provider.content_type is not cui_content_providers.WidgetContentType.SONGS: return
-        if len(playlist_provider.data_list) == 0:
-            playlist_provider.add_playlist([song], "test")
-        else:
-            playlist_provider.data_list[0].add_song(song) ################## TODO: test
+        # TODO: allow to choose playlist name
+        # TODO: show what playlists the song is in when selecting and allow to remove the song from the playlists
+
+        # text_on_opposite_sides = lambda x, y: x+y
+        with_a_tick = lambda x, y: x + " ✔"*y
+        def helper_func2(p): playlist_provider.add_playlist([song], p)
+        def helper_func1(x):
+            if x == "add new": cui_handle.pycui.show_text_box_popup(x, helper_func2)
+            for i, pl in enumerate(playlist_provider.data_list):
+                if pl.name == x:
+                    playlist_provider.data_list[i].add_song(song)
+        options = ["add new"]
+        options.extend([with_a_tick(pl.name, pl.contains_song(song)) for pl in playlist_provider.data_list])
+        cui_handle.pycui.show_menu_popup("choose/create playlist", options, helper_func1)
+        cui_handle.pycui._popup.set_selected_color(py_cui.MAGENTA_ON_CYAN)
+        

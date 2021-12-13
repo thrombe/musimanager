@@ -22,6 +22,20 @@ def pad(string):
     # if pads != 0: print(len(string+zwsp*pads))#################
     return string + zwsp*pads
 
+class WidgetContentType(enum.Enum):
+    MAIN = enum.auto()
+
+    ARTISTS = enum.auto()
+    PLAYLISTS = enum.auto()
+    QUEUES = enum.auto() # like playlist but remembers position and deletes itself when finished
+    # AUTOSEARCH_SONGS = enum.auto()
+
+    SONGS = enum.auto()
+
+    FILE_EXPLORER = enum.auto()
+
+    # SONG = enum.auto()
+
 # using this as a trait
 class SongProvider:
     def __init__(self, data, name):
@@ -55,6 +69,13 @@ class SongProvider:
     def get_current(self):
         return self.data_list[self.current_index]
 
+    def contains_song(self, song):
+        if self.content_type is not WidgetContentType.SONGS: return False
+        for s in self.data_list:
+            if s.key == song.key:
+                return True
+        return False
+
 class MainProvider(SongProvider):
     def __init__(self):
         data = [ArtistProvider(), AutoSearchSongs(), PlaylistProvider(), QueueProvider(), FileExplorer.new()]
@@ -87,20 +108,7 @@ class ArtistProvider(SongProvider):
         songs.sort(key=lambda x: x.title)
         return SongProvider(songs, f"songs by {artist.name}")
 
-class WidgetContentType(enum.Enum):
-    MAIN = enum.auto()
-
-    ARTISTS = enum.auto()
-    PLAYLISTS = enum.auto()
-    QUEUES = enum.auto() # like playlist but remembers position and deletes itself when finished
-    # AUTOSEARCH_SONGS = enum.auto()
-
-    SONGS = enum.auto()
-
-    FILE_EXPLORER = enum.auto()
-
-    # SONG = enum.auto()
-
+# TODO: use picui.run_on_exit func to save playlists and stuff
 class PlaylistProvider(SongProvider):
     def __init__(self):
         playlists = []
@@ -201,3 +209,4 @@ class AutoSearchSongs(SongProvider):
     def get_current_name_list(self):
         return self.data_list
     
+# TODO: online albums/songs search
