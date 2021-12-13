@@ -42,27 +42,36 @@ class SongProvider:
         self.content_type = WidgetContentType.SONGS
         self.data_list = data
         self.current_index = 0
+        self.current_scroll_top_index = 0
         self.name = name
 
     def add_song(self, song):
         self.data_list.append(song)
 
-    def get_at(self, index):
+    def get_at(self, index, top_view):
         self.current_index = index
+        self.current_scroll_top_index = top_view
         song = self.data_list[index]
         # song.content_type = WidgetContentType.SONG
         return song
+
+    def reset_indices(self):
+        self.current_index = 0
+        self.current_scroll_top_index = 0
 
     def get_current_name_list(self):
         return [song.title for song in self.data_list]
     
     def next(self):
         self.current_index += 1
+        self.current_scroll_top_index += 1
         if self.current_index >= len(self.data_list): return None
         return self.data_list[self.current_index]
 
     def previous(self):
         self.current_index -= 1
+        if self.current_scroll_top_index > 0:
+            self.current_scroll_top_index -= 1
         if self.current_index < 0: return None
         return self.data_list[self.current_index]
 
@@ -82,7 +91,7 @@ class MainProvider(SongProvider):
         super().__init__(data, None)
         self.content_type = WidgetContentType.MAIN
 
-    def get_at(self, index):
+    def get_at(self, index, _):
         self.current_index = index
         return self.data_list[index]
 
@@ -101,8 +110,9 @@ class ArtistProvider(SongProvider):
     def get_current_name_list(self):
         return [pad(artist.name) for artist in self.data_list]
     
-    def get_at(self, index):
+    def get_at(self, index, top_view):
         self.current_index = index
+        self.current_scroll_top_index = top_view
         artist = self.data_list[index]
         songs = list(artist.songs)
         songs.sort(key=lambda x: x.title)
@@ -121,8 +131,8 @@ class PlaylistProvider(SongProvider):
     def get_current_name_list(self):
         return [pad(playlist.name) for playlist in self.data_list]
     
-    def get_at(self, index):
-        return super().get_at(index)
+    def get_at(self, index, top_view):
+        return super().get_at(index, top_view)
 
 # 1 queue is store in player, rest here, if new queue created, the older one gets sent here
 # if queue selected from here, send it to player and yeet it from here
@@ -139,8 +149,8 @@ class QueueProvider(SongProvider):
     def add_queues(self, songs, name):
         self.data_list.append(SongProvider(songs, name))
 
-    def get_at(self, index):
-        return super().get_at(index)
+    def get_at(self, index, top_view):
+        return super().get_at(index, top_view)
 
     def yeet_selected_queue(self):
         self.yeet_queue_at(self.current_index)
@@ -175,9 +185,10 @@ class FileExplorer(SongProvider):
         return FileExplorer(opts.get_access_under)
         
     # send either FileExplorer or SongProvider with single song
-    def get_at(self, index):
+    def get_at(self, index, top_view):
         if len(self.data_list) == 0: return None
         self.current_index = index
+        self.current_scroll_top_index = top_view
         num_folders = len(self.folders)
         if index >= num_folders:
             key = self.data_list[index].rstrip("m4ap3").rstrip(".")
@@ -199,8 +210,9 @@ class AutoSearchSongs(SongProvider):
         super().__init__(data, "all songs")
         self.content_type = WidgetContentType.SONGS # this needs to behave like a queue
 
-    def get_at(self, index):
+    def get_at(self, index, top_view):
         self.current_index = index
+        self.current_scroll_top_index = top_view
         key = self.data_list[index].rstrip("m4ap3").rstrip(".")
         s = song.Song(None, key, None)
         s.get_info_from_tags()

@@ -32,7 +32,9 @@ class CUI_handle:
             # picui.set_border_color()
             # picui.set_focus_border_color()
         # TODO: set quit, pause, seek, ... as global shortcuts (i.e, set them on every widget + master)
-        # TODO: select browser widget by default
+        # TODO: add a popup for showing shortcuts
+        # TODO: do something useful about the bottom statusbar
+        # TODO: on selection change show song info without playing (allow to enable/disable with shortcut)
 
         # TODO: add a queue widget + shortcut to disable it
         # TODO: shortcut to send songs to queue
@@ -61,3 +63,11 @@ class CUI_handle:
     def refresh(self):
         self.player_widget.refresh()
         if not self.pycui._in_focused_mode: self.pycui.move_focus(self.browser_widget.scroll_menu) # hacky way to force focus on browser widget
+
+        # disable ueberzug album art while popups are up (as the image sits on top of the ui)
+        if not opts.LUUNIX: return
+        if self.player_widget.image_placement.path is None: return
+        if self.pycui._popup is not None:
+            self.player_widget.image_placement.visibility = ueberzug.Visibility.INVISIBLE
+        elif self.player_widget.image_placement.visibility == ueberzug.Visibility.INVISIBLE:
+            self.player_widget.image_placement.visibility = ueberzug.Visibility.VISIBLE

@@ -35,6 +35,7 @@ class Player:
         self.pydub_audio_segment = pydub.AudioSegment.from_file(song_path, song_path.split(os.path.sep)[-1].split(".")[-1])
         self.song_duration = len(self.pydub_audio_segment)*0.001 # seconds
         self.song_psuedo_start_time = time.time()
+        self.is_paused_since = None
         filelike = io.BytesIO()
         mixer.init()
         self.playback_handle = mixer.music
@@ -187,7 +188,7 @@ class BrowserWidget:
 
     def try_load_right(self):
         content_provider = self.content_state_stack[-1]
-        content = content_provider.get_at(self.scroll_menu.get_selected_item_index())
+        content = content_provider.get_at(self.scroll_menu.get_selected_item_index(), self.scroll_menu._top_view)
         if content is None: return
         if content_provider.content_type is cui_content_providers.WidgetContentType.SONGS:
             self.player_widget.play(content)
@@ -201,7 +202,9 @@ class BrowserWidget:
         self.refresh_names(content)
 
     def try_load_left(self):
-        content = self.content_state_stack[-1]#.get_at(self.scroll_menu.get_selected_item_index())
+        content = self.content_state_stack[-1]
+        if content.content_type is not cui_content_providers.WidgetContentType.SONGS:
+            content.reset_indices()
         if content.content_type is cui_content_providers.WidgetContentType.MAIN:
             return
         self.content_state_stack.pop()
@@ -212,13 +215,14 @@ class BrowserWidget:
         name_list = content.get_current_name_list()
         self.scroll_menu.add_item_list(name_list)
         # TODO: fix the scroll 3 issue / do the scroll thing properly
-        for _ in range(content.current_index): self.scroll_menu._scroll_down(min(3, len(name_list)-1))
+        self.scroll_menu.set_selected_item_index(content.current_index)
+        self.scroll_menu._top_view = content.current_scroll_top_index
 
     def try_add_song_to_playlist(self):
         main_provider = self.content_state_stack[0]
         playlist_provider = main_provider.data_list[2]
         content_provider = self.content_state_stack[-1]
-        song = content_provider.get_at(self.scroll_menu.get_selected_item_index())
+        song = content_provider.get_at(self.scroll_menu.get_selected_item_index(), self.scroll_menu._top_view)
         if content_provider.content_type is not cui_content_providers.WidgetContentType.SONGS: return
         # TODO: allow to choose playlist name
         # TODO: show what playlists the song is in when selecting and allow to remove the song from the playlists
@@ -235,4 +239,20 @@ class BrowserWidget:
         options.extend([with_a_tick(pl.name, pl.contains_song(song)) for pl in playlist_provider.data_list])
         cui_handle.pycui.show_menu_popup("choose/create playlist", options, helper_func1)
         cui_handle.pycui._popup.set_selected_color(py_cui.MAGENTA_ON_CYAN)
+
+"""
+        x_blank = cui_handle.pycui._popup._stop_x - cui_handle.pycui._popup._start_x - self.border_padding_x*2
+        text_on_opposite_sides = lambda x: x[0]+(x_blank-len(x[0])-len(x[1])+x[1])
+        with_a_tick = lambda x, y: (x, "✔"*y)
+        def helper_func2(p): playlist_provider.add_playlist([song], p)
+        def helper_func1(x):
+            if x == "add new": cui_handle.pycui.show_text_box_popup(x, helper_func2)
+            for i, pl in enumerate(playlist_provider.data_list):
+                if pl.name == x:
+                    playlist_provider.data_list[i].add_song(song)
+        options = ["add new"]
+        options.extend([text_on_opposite_sides(with_a_tick(pl.name, pl.contains_song(song))) for pl in playlist_provider.data_list])
+        cui_handle.pycui.show_menu_popup("choose/create playlist", options, helper_func1)
+        cui_handle.pycui._popup.set_selected_color(py_cui.MAGENTA_ON_CYAN)
         
+"""
