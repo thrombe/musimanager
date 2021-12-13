@@ -2,7 +2,8 @@
 
 db/
 db_main/
-src-ui/
+src/py_cui
+py_cui/
 
 
 # Byte-compiled / optimized / DLL files
