@@ -197,6 +197,12 @@ class FileExplorer(SongProvider):
     def get_current_name_list(self):
         return self.data_list
 
+    def previous(self):
+        pass
+
+    def next(self):
+        pass
+
 class AutoSearchSongs(SongProvider):
     def __init__(self):
         self.song_paths = manager.get_song_paths(opts.get_access_under.rstrip(os.path.sep))
@@ -212,5 +218,13 @@ class AutoSearchSongs(SongProvider):
 
     def get_current_name_list(self):
         return self.data_list
-    
+
+    def previous(self):
+        if self.current_index-1 < 0: return None
+        return self.get_at(self.current_index-1, self.current_scroll_top_index)
+
+    def next(self):
+        if self.current_index+1 >= len(self.data_list): return None
+        return self.get_at(self.current_index+1, self.current_scroll_top_index)
+
 # TODO: online albums/songs search

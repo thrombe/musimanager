@@ -7,6 +7,7 @@ import pygame.mixer as mixer
 from PIL import Image
 import py_cui
 import time
+import copy
 
 import opts
 import cui_content_providers
@@ -22,8 +23,11 @@ class Player:
         self.song_psuedo_start_time = None
         self.song_progress_bar = 0
         
+        mixer.init()
+        
         self.current_song = None # musimanager song
         self.pydub_audio_segment = None
+        self.flac_filelike_copy = None
         self.playback_handle = None
         self.current_queue = None
 
@@ -36,13 +40,15 @@ class Player:
         self.song_duration = len(self.pydub_audio_segment)*0.001 # seconds
         self.song_psuedo_start_time = time.time()
         self.is_paused_since = None
-        filelike = io.BytesIO()
-        mixer.init()
+        flac_filelike = io.BytesIO()
         self.playback_handle = mixer.music
-        filelike = self.pydub_audio_segment.export(filelike, format="wav")
-        filelike.seek(0)
-        self.playback_handle.load(filelike, namehint="wav")
+
+        flac_filelike = self.pydub_audio_segment.export(flac_filelike, format="flac")
+        self.flac_filelike_copy = copy.deepcopy(flac_filelike)
+        flac_filelike.seek(0)
+        self.playback_handle.load(flac_filelike, namehint="flac")
         self.playback_handle.play()
+        
         self.is_paused = False
 
     def stop(self):
@@ -59,21 +65,47 @@ class Player:
             self.is_paused_since = time.time()
 
     def try_seek(self, secs):
-        pass
+        tme = time.time() - self.song_psuedo_start_time
+        if tme > self.song_duration:
+            flac_filelike = copy.deepcopy(self.flac_filelike_copy)
+            flac_filelike.seek(0)
+            self.playback_handle.load(flac_filelike, namehint="flac")
+            self.playback_handle.play()
+        
+        self.song_psuedo_start_time -= secs
+        tme = time.time() - self.song_psuedo_start_time
+        if tme > self.song_duration:
+            tme = self.song_duration-0.1
+            self.song_psuedo_start_time = time.time()-self.song_duration - 0.1
+        elif tme < 0:
+            tme = 0.1
+            self.song_psuedo_start_time = time.time() + 0.1
+        self.playback_handle.set_pos(tme)
+
+    def seek_10_secs_forward(self):
+        self.try_seek(10)
+
+    def seek_10_secs_behind(self):
+        self.try_seek(-10)
 
     def play_next(self):
-        if self.current_queue is None: return
+        if self.current_queue is None: return False
         next = self.current_queue.next()
         if next is not None:
             self.play(next)
-        # else:
-        #     self.current_queue = None
+            return True
+        else:
+            self.current_queue = None
+            return False
 
     def play_prev(self):
-        if self.current_queue is None: return
+        if self.current_queue is None: return False
         prev = self.current_queue.previous()
         if prev is not None:
             self.play(prev)
+            return True
+        else:
+            return False
 
 class PlayerWidget:
     def __init__(self, widget):
@@ -96,8 +128,6 @@ class PlayerWidget:
         if opts.ASCII_ART: self.ascii_image_refresh()
         elif opts.LUUNIX: self.image_refresh()
         if self.player.current_song is not None: self.print_song_metadata(self.player.current_song)
-
-        # TODO: check if song ended and call next
 
     def image_refresh(self):
         # TODO: use these instead
@@ -178,13 +208,52 @@ class BrowserWidget:
         self.player_widget = player_widget # needs to be able to change songs at any time
 
     def setup(self):
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_Q_LOWER, cui_handle.pycui.stop)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_RIGHT_ARROW, self.try_load_right)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_LEFT_ARROW, self.try_load_left)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_P_LOWER, self.player_widget.player.toggle_pause)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_O_LOWER, self.try_add_song_to_playlist)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_J_LOWER, self.player_widget.player.seek_10_secs_behind)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_K_LOWER, self.player_widget.player.seek_10_secs_forward)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_H_LOWER, self.play_prev)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_L_LOWER, self.play_next)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_N_LOWER, self.view_down)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_M_LOWER, self.view_up)
         self.scroll_menu.set_selected_color(py_cui.MAGENTA_ON_CYAN)
 
         self.scroll_menu.add_item_list(self.content_state_stack[0].get_current_name_list())
+
+    def refresh(self):
+        self.player_widget.refresh()
+        
+        # if current song ended, play next
+        if self.player_widget.player.song_psuedo_start_time is None: return
+        tme = time.time() - self.player_widget.player.song_psuedo_start_time
+        if tme > self.player_widget.player.song_duration:
+            self.play_next()
+
+    def view_down(self):
+        content_provider = self.content_state_stack[-1]
+        length = len(content_provider.data_list)
+        content_provider.current_scroll_top_index += 1
+        if content_provider.current_scroll_top_index >= length:
+            content_provider.current_scroll_top_index = length-1
+        self.refresh_names(content_provider)
+
+    def view_up(self):
+        content_provider = self.content_state_stack[-1]
+        content_provider.current_scroll_top_index -= 1
+        if content_provider.current_scroll_top_index < 0:
+            content_provider.current_scroll_top_index = 0
+        self.refresh_names(content_provider)
+
+    def play_next(self):
+        if self.player_widget.player.play_next():
+            self.refresh_names(self.content_state_stack[-1])
+
+    def play_prev(self):
+        if self.player_widget.player.play_prev(): 
+            self.refresh_names(self.content_state_stack[-1])
 
     def try_load_right(self):
         content_provider = self.content_state_stack[-1]

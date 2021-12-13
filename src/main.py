@@ -2,15 +2,12 @@
 import argparse
 import sys
 
-import opts
 import cui_handle
 from manager import Manager
 from ytmusic import search_albums_on_yt
 from opts import ytmusic
 from interface import Interface
-from artist import Artist
 from tracker import Tracker
-from song import kinda_similar
 
 class Launcher:
     def __init__(self):
