@@ -34,8 +34,6 @@ class WidgetContentType(enum.Enum):
 
     FILE_EXPLORER = enum.auto()
 
-    # SONG = enum.auto()
-
 # using this as a trait
 class SongProvider:
     def __init__(self, data, name):
@@ -52,7 +50,6 @@ class SongProvider:
         self.current_index = index
         self.current_scroll_top_index = top_view
         song = self.data_list[index]
-        # song.content_type = WidgetContentType.SONG
         return song
 
     def reset_indices(self):
@@ -91,9 +88,8 @@ class MainProvider(SongProvider):
         super().__init__(data, None)
         self.content_type = WidgetContentType.MAIN
 
-    def get_at(self, index, _):
-        self.current_index = index
-        return self.data_list[index]
+    def get_at(self, index, top_view):
+        return super().get_at(index, top_view)
 
     def get_current_name_list(self):
         return ["Artists", "All Songs", "Playlists", "Queues", "File Explorer"]
@@ -111,9 +107,7 @@ class ArtistProvider(SongProvider):
         return [pad(artist.name) for artist in self.data_list]
     
     def get_at(self, index, top_view):
-        self.current_index = index
-        self.current_scroll_top_index = top_view
-        artist = self.data_list[index]
+        artist = super().get_at(index, top_view)
         songs = list(artist.songs)
         songs.sort(key=lambda x: x.title)
         return SongProvider(songs, f"songs by {artist.name}")
@@ -211,9 +205,7 @@ class AutoSearchSongs(SongProvider):
         self.content_type = WidgetContentType.SONGS # this needs to behave like a queue
 
     def get_at(self, index, top_view):
-        self.current_index = index
-        self.current_scroll_top_index = top_view
-        key = self.data_list[index].rstrip("m4ap3").rstrip(".")
+        key = super().get_at(index, top_view).rstrip("m4ap3").rstrip(".")
         s = song.Song(None, key, None)
         s.get_info_from_tags()
         return s
