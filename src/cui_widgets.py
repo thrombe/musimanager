@@ -118,7 +118,6 @@ class PlayerWidget:
         self.border_padding_y_bottom = 2
         self.lines_of_song_info = 4
         # TODO: allow to disable album art for the songs that do not have one
-        # TODO: show song progress bar
 
     def setup(self):
         self.player = Player()
@@ -267,7 +266,6 @@ class BrowserWidget:
                 potential_queue_provider.yeet_selected_queue()
             return
         self.content_state_stack.append(content)
-        # TODO: maybe add a "content.play_now()"(SongProvider.play_pow()) that returns a bool that makes it start playing the the song_provider and not make user select the song
         self.refresh_names(content)
 
     def try_load_left(self):
@@ -296,8 +294,7 @@ class BrowserWidget:
         content_provider = self.content_state_stack[-1]
         song = content_provider.get_at(self.scroll_menu.get_selected_item_index(), self.scroll_menu._top_view)
         if content_provider.content_type is not cui_content_providers.WidgetContentType.SONGS: return
-        # TODO: allow to choose playlist name
-        # TODO: show what playlists the song is in when selecting and allow to remove the song from the playlists
+        # TODO: allow to remove the song from the playlists that already have it
 
         # text_on_opposite_sides = lambda x, y: x+y
         with_a_tick = lambda x, y: x + " ✔"*y
