@@ -16,10 +16,7 @@ def pad(string):
     pads = 0
     for char in string:
         p = wcwidth(char)-len(char)
-        if p != 0: print("lol")###################
         pads += p
-    # print(len(string+zwsp*pads))
-    # if pads != 0: print(len(string+zwsp*pads))#################
     return string + zwsp*pads
 
 class WidgetContentType(enum.Enum):
@@ -57,7 +54,7 @@ class SongProvider:
         self.current_scroll_top_index = 0
 
     def get_current_name_list(self):
-        return [song.title for song in self.data_list]
+        return [pad(song.title) for song in self.data_list]
     
     def next(self):
         self.current_index += 1
