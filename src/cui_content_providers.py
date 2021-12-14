@@ -79,6 +79,19 @@ class SongProvider:
                 return True
         return False
 
+    # TODO: slightly different implimentation for playlist and queue since edits to queue should not be reflected in actual playlists
+        # changes to playlist should not be reflected in playlist too
+        # disable the live selection change for anything but a queue?
+            # can be simply done using deepclone of content_provider
+            # can just clone when any changes happen
+            # or maybe just clone it at the start (except if its a queue)
+    # TODO: dont forget to move the current_index too
+    def move_item_up(self, index):
+        pass
+
+    def move_item_down(self, index):
+        pass
+
 class MainProvider(SongProvider):
     def __init__(self):
         data = [ArtistProvider(), AutoSearchSongs(), PlaylistProvider(), QueueProvider(), FileExplorer.new()]
@@ -124,6 +137,10 @@ class PlaylistProvider(SongProvider):
     
     def get_at(self, index, top_view):
         return super().get_at(index, top_view)
+
+# TODO: (maybe) add any songprovider as queue (till its in player.current_queue)
+  # it will be accessible with queue view shortcut
+# TODO: if some queue is switched without one being finished, save it in queueprovider with a smol bufer (a few queues)
 
 # 1 queue is store in player, rest here, if new queue created, the older one gets sent here
 # if queue selected from here, send it to player and yeet it from here
@@ -224,4 +241,13 @@ class AutoSearchSongs(SongProvider):
         if self.current_index+1 >= len(self.data_list): return None
         return self.get_at(self.current_index+1, self.current_scroll_top_index)
 
+# TODO: devour code from non-cui musimanager and edit tracker and stuff specially for cui, yeet unimportant stuff from cui branches
+
 # TODO: online albums/songs search
+    # AlbumSearchYTM
+        # search for albums from some artist
+    # ArtistAlbumSearchYTM (tracker)
+        # get all albums for selected artist (all keys)
+    # ArtistSearchYTM
+        # search for artist then get all albums from them (probably single key)
+        # provide shortcut to add to tracker/add key to some artist (sort with key=kinda_similar so similar come first in list)

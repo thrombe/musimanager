@@ -39,4 +39,4 @@ ASCII_ART = ((False or not LUUNIX) or force_ascii_art) and not disable_ascii_art
 
 import ytmusicapi
 # https://ytmusicapi.readthedocs.io/en/latest/setup.html
-ytmusic = ytmusicapi.YTMusic(ytmusic_headers_path)
+ytmusic = ytmusicapi.YTMusic(auth=ytmusic_headers_path)

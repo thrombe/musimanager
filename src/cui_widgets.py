@@ -206,6 +206,8 @@ class BrowserWidget:
         self.scroll_menu = widget
         self.player_widget = player_widget # needs to be able to change songs at any time
 
+    # TODO: provide shortcut to search (sort using kinda_similar)
+
     def setup(self):
         self.scroll_menu.add_key_command(py_cui.keys.KEY_Q_LOWER, cui_handle.pycui.stop)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_RIGHT_ARROW, self.try_load_right)
@@ -295,33 +297,41 @@ class BrowserWidget:
         song = content_provider.get_at(self.scroll_menu.get_selected_item_index(), self.scroll_menu._top_view)
         if content_provider.content_type is not cui_content_providers.WidgetContentType.SONGS: return
         # TODO: allow to remove the song from the playlists that already have it
-
-        # text_on_opposite_sides = lambda x, y: x+y
-        with_a_tick = lambda x, y: x + " ✔"*y
-        def helper_func2(p): playlist_provider.add_playlist([song], p)
+            # how? the popups dont allow shortcuts
+                # maybe another button to press to try remove?
+                # only show the ones with tick
+        
+        helper_func2 = lambda p: playlist_provider.add_playlist([song], p.rstrip(" "))
         def helper_func1(x):
-            if x == "add new": cui_handle.pycui.show_text_box_popup(x, helper_func2)
-            for i, pl in enumerate(playlist_provider.data_list):
-                if pl.name == x:
-                    playlist_provider.data_list[i].add_song(song)
-        options = ["add new"]
-        options.extend([with_a_tick(pl.name, pl.contains_song(song)) for pl in playlist_provider.data_list])
-        cui_handle.pycui.show_menu_popup("choose/create playlist", options, helper_func1)
-        cui_handle.pycui._popup.set_selected_color(py_cui.MAGENTA_ON_CYAN)
-
-"""
-        x_blank = cui_handle.pycui._popup._stop_x - cui_handle.pycui._popup._start_x - self.border_padding_x*2
-        text_on_opposite_sides = lambda x: x[0]+(x_blank-len(x[0])-len(x[1])+x[1])
-        with_a_tick = lambda x, y: (x, "✔"*y)
-        def helper_func2(p): playlist_provider.add_playlist([song], p)
-        def helper_func1(x):
-            if x == "add new": cui_handle.pycui.show_text_box_popup(x, helper_func2)
-            for i, pl in enumerate(playlist_provider.data_list):
-                if pl.name == x:
-                    playlist_provider.data_list[i].add_song(song)
-        options = ["add new"]
-        options.extend([text_on_opposite_sides(with_a_tick(pl.name, pl.contains_song(song))) for pl in playlist_provider.data_list])
-        cui_handle.pycui.show_menu_popup("choose/create playlist", options, helper_func1)
+            i = int(x.split("|")[0]) - 1
+            if i == -1:
+                cui_handle.pycui.show_text_box_popup("add new", helper_func2)
+                return
+            playlist_provider.data_list[i].add_song(song)
+        
+        cui_handle.pycui.show_menu_popup("choose/create playlist", [], helper_func1)
         cui_handle.pycui._popup.set_selected_color(py_cui.MAGENTA_ON_CYAN)
         
-"""
+        x_blank = cui_handle.pycui._popup._stop_x - cui_handle.pycui._popup._start_x - self.player_widget.border_padding_x*2
+        with_a_tick = lambda x, y: (x, "✔"*y)
+        # text_on_both_sides = lambda x: x[0]+(x_blank-len(x[0])-len(x[1]))*" " + x[1]
+        options = ["0| add new"]
+        for i, pl in enumerate(playlist_provider.data_list):
+            a = with_a_tick(f"{i+1}| "+pl.name, pl.contains_song(song))
+            a = text_on_both_sides(a[0], a[1], x_blank)
+            options.append(a)
+        # options.extend([text_on_both_sides(with_a_tick(f"{i+1}| "+pl.name, pl.contains_song(song)), x_blank) for i, pl in enumerate(playlist_provider.data_list)])
+        cui_handle.pycui._popup.add_item_list(options)
+        
+def text_on_both_sides(x, y, x_blank):
+    if len(x)+len(y) > x_blank-2:
+        ex = len(x) > x_blank/2
+        yae = len(y) > x_blank/2
+        if ex and not yae:
+            x = py_cui.fit_text(x_blank-2-len(y), x)
+        elif not ex and yae:
+            y = py_cui.fit_text(x_blank-2-len(x), y)
+        elif ex and yae:
+            x_blanke = (x_blank-2)/2
+            x, y = py_cui.fit_text(x_blanke, x), py_cui.fit_text(x_blanke, y)
+    return x + (x_blank - len(x) - len(y))*" " + y
