@@ -154,8 +154,12 @@ class QueueProvider(SongProvider):
     def get_current_name_list(self):
         return [pad(queue.name) for queue in self.data_list]
 
-    def add_queues(self, songs, name):
+    def add_queue(self, songs, name):
         self.data_list.append(SongProvider(songs, name))
+
+    def add_queue(self, queue):
+        self.data_list = [queue] + self.data_list
+        if len(self.data_list) > 5: self.data_list.pop()
 
     def get_at(self, index, top_view):
         return super().get_at(index, top_view)

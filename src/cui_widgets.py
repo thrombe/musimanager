@@ -198,13 +198,14 @@ class PlayerWidget:
         if self.player.is_paused_since is None:
             self.player.song_progress_bar = (time.time()-self.player.song_psuedo_start_time)/self.player.song_duration
         self.scroll_menu.add_item(f"{'█' * round(x_blank * self.player.song_progress_bar)}")
-        # "█", "▄", "▀", "■", "▓", 
+        # "█", "▄", "▀", "■", "▓", "│", "▌", "▐", "─", 
 
 class BrowserWidget:
     def __init__(self, widget, player_widget):
         self.content_state_stack = [cui_content_providers.MainProvider()]
         self.scroll_menu = widget
         self.player_widget = player_widget # needs to be able to change songs at any time
+        self.current_queue_view = False
 
     # TODO: provide shortcut to search (sort using kinda_similar)
 
@@ -220,6 +221,7 @@ class BrowserWidget:
         self.scroll_menu.add_key_command(py_cui.keys.KEY_L_LOWER, self.play_next)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_N_LOWER, self.view_down)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_M_LOWER, self.view_up)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_U_LOWER, self.toggle_queue_view)
         self.scroll_menu.set_selected_color(py_cui.MAGENTA_ON_CYAN)
 
         self.scroll_menu.add_item_list(self.content_state_stack[0].get_current_name_list())
@@ -253,29 +255,35 @@ class BrowserWidget:
             self.refresh_names(self.content_state_stack[-1])
 
     def play_prev(self):
-        if self.player_widget.player.play_prev(): 
+        if self.player_widget.player.play_prev():
             self.refresh_names(self.content_state_stack[-1])
 
     def try_load_right(self):
+        if self.current_queue_view:
+            self.player_widget.play(self.player_widget.player.current_queue.get_at(self.scroll_menu.get_selected_item_index(), self.scroll_menu._top_view))
+            return
+
         content_provider = self.content_state_stack[-1]
         content = content_provider.get_at(self.scroll_menu.get_selected_item_index(), self.scroll_menu._top_view)
         if content is None: return
         if content_provider.content_type is cui_content_providers.WidgetContentType.SONGS:
             self.player_widget.play(content)
-            self.player_widget.set_queue(self.content_state_stack[-1])
             potential_queue_provider = self.content_state_stack[-2]
             if potential_queue_provider.content_type is cui_content_providers.WidgetContentType.QUEUES:
                 potential_queue_provider.yeet_selected_queue()
+            self.change_queue(copy.deepcopy(self.content_state_stack[-1]))
             return
         self.content_state_stack.append(content)
         self.refresh_names(content)
 
     def try_load_left(self):
+        if self.current_queue_view: return
+
         content = self.content_state_stack[-1]
-        if content.content_type is not cui_content_providers.WidgetContentType.SONGS:
-            content.reset_indices()
         if content.content_type is cui_content_providers.WidgetContentType.MAIN:
             return
+        if self.content_state_stack[-2].content_type is not cui_content_providers.WidgetContentType.QUEUES:
+            content.reset_indices()
         self.content_state_stack.pop()
         self.refresh_names(self.content_state_stack[-1])
 
@@ -290,6 +298,29 @@ class BrowserWidget:
         self.scroll_menu.set_selected_item_index(content.current_index)
         self.scroll_menu._top_view = content.current_scroll_top_index
 
+    def change_queue(self, queue):
+        current_queue = self.player_widget.player.current_queue
+        if current_queue is not None:
+            queue_provider = self.content_state_stack[0].data_list[3]
+            queue_provider.add_queue(current_queue)
+        self.player_widget.set_queue(queue)
+
+    def toggle_queue_view(self):
+        if self.current_queue_view:
+            self.current_queue_view = False
+            self.content_state_stack.pop()
+            self.scroll_menu.set_title("Browser")
+            self.refresh_names(self.content_state_stack[-1])
+        else:
+            if self.player_widget.player.current_queue is None: return
+            content_provider = self.content_state_stack[-1]
+            content_provider.current_index = self.scroll_menu.get_selected_item_index()
+            content_provider.current_scroll_top_index = self.scroll_menu._top_view
+            self.current_queue_view = True
+            self.content_state_stack.append(self.player_widget.player.current_queue)
+            self.scroll_menu.set_title(f"current queue: {self.content_state_stack[-1].name}")
+            self.refresh_names(self.content_state_stack[-1])
+
     def try_add_song_to_playlist(self):
         main_provider = self.content_state_stack[0]
         playlist_provider = main_provider.data_list[2]
@@ -303,7 +334,7 @@ class BrowserWidget:
         
         helper_func2 = lambda p: playlist_provider.add_playlist([song], p.rstrip(" "))
         def helper_func1(x):
-            i = int(x.split("|")[0]) - 1
+            i = int(x.split("│")[0]) - 1
             if i == -1:
                 cui_handle.pycui.show_text_box_popup("add new", helper_func2)
                 return
@@ -315,9 +346,9 @@ class BrowserWidget:
         x_blank = cui_handle.pycui._popup._stop_x - cui_handle.pycui._popup._start_x - self.player_widget.border_padding_x*2
         with_a_tick = lambda x, y: (x, "✔"*y)
         # text_on_both_sides = lambda x: x[0]+(x_blank-len(x[0])-len(x[1]))*" " + x[1]
-        options = ["0| add new"]
+        options = ["0│ add new"]
         for i, pl in enumerate(playlist_provider.data_list):
-            a = with_a_tick(f"{i+1}| "+pl.name, pl.contains_song(song))
+            a = with_a_tick(f"{i+1}│ "+pl.name, pl.contains_song(song))
             a = text_on_both_sides(a[0], a[1], x_blank)
             options.append(a)
         # options.extend([text_on_both_sides(with_a_tick(f"{i+1}| "+pl.name, pl.contains_song(song)), x_blank) for i, pl in enumerate(playlist_provider.data_list)])
