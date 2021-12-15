@@ -2,22 +2,11 @@
 import enum
 
 import os
-from wcwidth import wcwidth, wcswidth
 
 import opts
 import tracker
 import song
-import manager
-
-# 2 width chars are counted as 1 width by len(), so causes probs
-# https://github.com/jupiterbjy/CUIAudioPlayer/
-def pad(string):
-    zwsp = "\u200b" # zero width space character or something
-    pads = 0
-    for char in string:
-        p = wcwidth(char)-len(char)
-        pads += p
-    return string + zwsp*pads
+import helpers
 
 class WidgetContentType(enum.Enum):
     MAIN = enum.auto()
@@ -54,7 +43,7 @@ class SongProvider:
         self.current_scroll_top_index = 0
 
     def get_current_name_list(self):
-        return [pad(song.title) for song in self.data_list]
+        return [helpers.pad_zwsp(song.title) for song in self.data_list]
     
     def next(self):
         self.current_index += 1
@@ -125,7 +114,7 @@ class ArtistProvider(SongProvider):
         self.content_type = WidgetContentType.ARTISTS
     
     def get_current_name_list(self):
-        return [pad(artist.name) for artist in self.data_list]
+        return [helpers.pad_zwsp(artist.name) for artist in self.data_list]
     
     def get_at(self, index, top_view):
         artist = super().get_at(index, top_view)
@@ -144,7 +133,7 @@ class PlaylistProvider(SongProvider):
         self.data_list.append(SongProvider(songs, name))
 
     def get_current_name_list(self):
-        return [pad(playlist.name) for playlist in self.data_list]
+        return [helpers.pad_zwsp(playlist.name) for playlist in self.data_list]
     
     def get_at(self, index, top_view):
         return super().get_at(index, top_view)
@@ -163,7 +152,7 @@ class QueueProvider(SongProvider):
         self.content_type = WidgetContentType.QUEUES
 
     def get_current_name_list(self):
-        return [pad(queue.name) for queue in self.data_list]
+        return [helpers.pad_zwsp(queue.name) for queue in self.data_list]
 
     def add_queue(self, songs, name):
         self.data_list.append(SongProvider(songs, name))
@@ -234,7 +223,7 @@ class FileExplorer(SongProvider):
 
 class AutoSearchSongs(SongProvider):
     def __init__(self):
-        self.song_paths = manager.get_song_paths(opts.get_access_under.rstrip(os.path.sep))
+        self.song_paths = tracker.Tracker.get_song_paths(opts.get_access_under.rstrip(os.path.sep))
         data = [s.split(os.path.sep)[-1] for s in self.song_paths]
         super().__init__(data, "all songs")
         self.content_type = WidgetContentType.SONGS # this needs to behave like a queue

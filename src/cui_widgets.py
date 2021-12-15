@@ -12,6 +12,7 @@ import copy
 import opts
 import cui_content_providers
 import cui_handle
+import helpers
 
 if opts.ASCII_ART: import ascii_magic
 if opts.LUUNIX: import ueberzug.lib.v0 as ueberzug
@@ -308,7 +309,7 @@ class BrowserWidget:
         name_list = content.get_current_name_list()
         x_blank = self.scroll_menu._stop_x - self.scroll_menu._start_x - self.player_widget.border_padding_x*2
         self.scroll_menu.add_item_list([ # yes, pad is needed before and after fit_text (annoying 2 width chars)
-            cui_content_providers.pad(py_cui.fit_text(x_blank, name)) for name in name_list
+            helpers.pad_zwsp(py_cui.fit_text(x_blank, name)) for name in name_list
             ])
 
         self.scroll_menu.set_selected_item_index(content.current_index)

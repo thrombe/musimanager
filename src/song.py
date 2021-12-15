@@ -1,21 +1,9 @@
 
-import requests
-import os
-from mutagen.mp4  import MP4, MP4Cover
-from mutagen.id3 import ID3, APIC, TALB, TIT2, TPE1
-import youtube_dl
-from difflib import SequenceMatcher
-from PIL import Image
-from io import BytesIO
-
+import youtube_dl as ytdl
+# import serde
+import phrydy as tagg
 
 import opts
-
-def kinda_similar(str1, str2, threshold=0.4):
-    # this func is terrible, use a different one
-    perc = SequenceMatcher(None, str1.lower(), str2.lower()).ratio()
-    if perc >= threshold: return True
-    else: return False
 
 class YTdl:
     def __init__(self, path, ext):
@@ -33,7 +21,7 @@ class YTdl:
             "outtmpl": self.path + "%(id)s.%(ext)s"
             #"verbose": True
         }
-        self.ytd = youtube_dl.YoutubeDL(options)
+        self.ytd = ytdl.YoutubeDL(options)
         self.ytm_url = "https://music.youtube.com/watch?v="
         # self.yt_url = "https://www.youtube.com/watch?v="
 
@@ -51,14 +39,6 @@ class SongInfo: # all metadata that i might care about
         self.artist_names = None
         self.channel_id = None
         self.uploader_id = None
-
-    def __str__(self):
-        return f"{self.__dict__}"
-    
-    def __eq__(self, other):
-        if other == None:
-            return self.album == None
-        return self.__dict__ == other.__dict__
 
     def load(self, ytdl_data):
         # theres also track and alt_title in case of ytm
@@ -85,239 +65,22 @@ class SongInfo: # all metadata that i might care about
         # donno whats diff here
         self.channel_id = ytdl_data["channel_id"]
         self.uploader_id = ytdl_data["uploader_id"]
-    
 
 class Song:
     def __init__(self, title, key, artist_name):
-        self.title = title # local one
+        self.title = title
         self.key = key # videoid
-        self.artist_name = artist_name # the local name - i.e the folder name
-        self.title_lock = False
+        self.artist_name = artist_name
         self.info = None
+        self.last_known_path = None
 
-        # TODO: rename these with better names
-        self.unsorted_path = ""
+        self.title_lock = False
     
-    def __str__(self):
-        return f"{self.title} {self.key} {self.artist_name}"
-    
-    def __hash__(self):
-        return hash(self.__str__())
-    
-    def __eq__(self, other):
-        #if not isinstance(other, type(self)): return False
-        return self.__str__() == other.__str__() # sorting to eliminate position probs
+    def from_key(key):
+        pass
+
+    def from_key_offline(key): #????????
+        pass
 
     def url(self):
         return f"{ytdl.ytm_url}{self.key}"
-
-    def path(self, before=False, after=False):
-        if opts.do_not_sort:
-            path = self.get_unsorted_path()
-            return path
-
-        path_before_sort = f"{ytdl.path}{self.key}.{ytdl.ext}"
-        path_after_sort = f"{ytdl.path}{self.artist_name}{os.path.sep}{self.key}.{ytdl.ext}"
-        if after: return path_after_sort
-        if before: return path_before_sort
-        before = os.path.exists(path_before_sort)
-        after = os.path.exists(path_after_sort)
-        if before: return path_before_sort
-        if after: return path_after_sort
-        return None
-    
-    def get_unsorted_path(self, find_under=None):
-        if os.path.exists(self.unsorted_path): return self.unsorted_path
-        if find_under is None: self.unsorted_path = self.find_path()
-        else: self.unsorted_path = self.find_path(find_under=find_under)
-        return self.unsorted_path
-
-    def find_path(self, find_under=opts.musi_path):
-        for dir, subdir, files in os.walk(find_under):
-            for file in files:
-                key = file.rstrip("m4ap3").rstrip(".")
-                if key == self.key:
-                    return os.path.join(dir, file)
-        return None
-
-    def download(self):
-        print(f"downloading {self}")
-        ytdl.ytd.download([self.url()])
-    
-    def get_info(self, force=False):
-        if self.info != None and not force: return self.info
-        self.info = SongInfo()
-        ytdl_data = ytdl.ytd.extract_info(self.url(), download=False)
-        self.info.load(ytdl_data)
-        return self.info
-    
-    def get_info_from_tags_m4a(self):
-        vid = MP4(self.path())
-        self.title = vid.tags.get("\xa9nam", "")[0]
-        self.info = SongInfo()
-        self.info.album = vid.tags.get("\xa9alb", "")[0]
-        if self.artist_name is None: self.artist_name = vid.tags.get("\xa9ART", "")[0]
-
-    def get_info_from_tags_mp3(self):
-        audio = ID3(self.path())
-        self.title = getattr(audio.get("TIT2", ""), "text", [""])[0]
-        self.info = SongInfo()
-        self.info.album = getattr(audio.get("TALB", ""), "text", [""])[0]
-        if self.artist_name is None: self.artist_name = getattr(audio.get("TPE1", ""), "text", [""])[0]
-
-    def get_info_from_tags(self):
-        song_path = self.path()
-        if song_path.split(".")[-1] == "mp3": self.get_info_from_tags_mp3()
-        elif song_path.split(".")[-1] == "m4a": self.get_info_from_tags_m4a()
-
-    def tag(self):
-        print(f"tagging {self}")
-        self.get_info()
-        if not self.title_lock: self.title = self.info.titles[0]
-
-        if opts.debug_no_edits_to_stored: return
-
-        if ytdl.ext == "m4a": self.tag_m4a()
-        elif ytdl.ext == "mp3": self.tag_mp3()
-
-    def tag_m4a(self):
-        video = MP4(self.path())
-
-        img = requests.get(self.info.thumbnail_url).content
-        cover_path = opts.musi_path + "cover.jpeg"
-        with open(cover_path, "wb") as f:
-            f.write(img)
-        img = Image.open(cover_path).convert("RGB").save(cover_path)
-        with open(cover_path, "rb") as f:
-            img = f.read()
-        if os.path.isfile(cover_path):
-            os.remove(cover_path)
-        
-        video["\xa9nam"] = self.title
-        video["\xa9ART"] = self.artist_name
-        video["\xa9alb"] = self.info.album
-        video["covr"] = [MP4Cover(img, imageformat=MP4Cover.FORMAT_JPEG)]
-        video.save()
-        
-    def tag_mp3(self):
-        audio = ID3(self.path())
-
-        img = requests.get(self.info.thumbnail_url).content
-        cover_path = opts.musi_path + "cover.jpeg"
-        with open(cover_path, "wb") as f:
-            f.write(img)
-        img = Image.open(cover_path).convert("RGB").save(cover_path)
-        with open(cover_path, "rb") as f:
-            img = f.read()
-        if os.path.isfile(cover_path):
-            os.remove(cover_path)
-
-        
-        audio['TIT2'] = TIT2(encoding=3, text=self.title)
-        audio['TPE1'] = TPE1(encoding=3, text=self.artist_name)
-        audio['TALB'] = TALB(encoding=3, text=self.info.album)
-        audio['APIC'] = APIC(encoding=3, mime='image/jpeg', type=3, desc='Cover', data=img)
-        audio.save()
-
-    def get_album_art_as_jpeg_bytes(self):
-        song_path = self.path()
-        if song_path.split(".")[-1] == "mp3":
-            tags = ID3(song_path)
-            pict = getattr(tags.get("APIC:"), "data", None)
-        elif song_path.split(".")[-1] == "m4a":
-            vid = MP4(song_path)
-            pict = vid.get("covr")[0]
-        if pict is None: return None
-        im = bytes(pict)
-        return im
-
-    # moves song with some basic checks/error prints
-    def move(self, from_path, to_path, quiet=False):
-        if not os.path.exists(from_path):
-            print(f"file not here {from_path}")
-            return
-        new_dir = to_path.replace(os.path.basename(to_path), "")
-        if not quiet: print(f"moving {self.title} in {new_dir}")
-        if not os.path.exists(new_dir):
-            print(f"making a directory {new_dir}")#{self.artist_name}")
-            if not opts.debug_no_edits_to_stored:
-                os.mkdir(new_dir)
-        if not opts.debug_no_edits_to_stored:
-            os.rename(from_path, to_path)
-    
-    # moves song from current path to path with correct artist_name
-    def sort(self):
-        current_path = self.find_path()
-        path = self.path(after=True)
-        if os.path.exists(path):
-            print(f"song {self.key} already present")
-            return
-        print(f"sorting {self.title} in {self.artist_name}")
-        self.move(current_path, path, quiet=True)
-
-    def get_suitable_artist_using_tracker(self, tracker):
-        try: self.get_info()
-        except Exception as e:
-            print(f"{e}", self)
-            self.get_info_from_tags()
-        
-        # video unavailable
-        if self.info.channel_id == None:
-            for artist in tracker.artists:
-                if artist.name == self.artist_name: return artist
-
-        threshold = 0.75
-        for artist in tracker.artists:
-            if self.key in artist.keywords:
-                return artist
-        for artist in tracker.artists:
-            if self.info.channel_id in artist.keys:
-                return artist
-        for artist in tracker.artists:
-            # if any(kinda_similar(self.title.lower(), key.lower(), threshold) for key in artist.keywords):
-            if any(kinda_similar(word.lower(), name.lower(), threshold) for name in self.info.artist_names for word in artist.keywords):
-                return artist
-        for artist in tracker.artists:
-            if any([
-                # any(kinda_similar(word.lower(), name.lower(), threshold) for name in self.info.artist_names for word in artist.keywords),
-                any(kinda_similar(word.lower(), tag.lower(), threshold) for tag in self.info.tags for word in artist.keywords),
-                any(kinda_similar(word.lower(), title.lower(), threshold) for title in self.info.titles for word in artist.keywords),
-                ]):
-                return artist
-        
-        return None
-
-    # assumes that the song is newly added
-    def sort_using_tracker(self, tracker):
-        artist = self.get_suitable_artist_using_tracker(tracker)
-
-        from artist import Artist
-
-        if not artist:
-            # new artist ig
-            for char in "/:*.":
-                self.artist_name.replace(char, "  ")            
-            artist = Artist(self.artist_name, self.info.channel_id)
-            tracker.artists.add(artist)
-
-        self.artist_name = artist.name
-        self.tag()
-        self.sort()
-        artist.add_song(self)
-
-    def choose_better_title(self):
-        print(self)
-        import pprint
-        pprint.pprint(self.info.__dict__)
-        print("")
-        title = input("title plz")
-        self.title = title
-        self.title_lock = True
-        self.tag()
-
-def get_song(key):
-    song = Song(None, key, None)
-    song.get_info()
-    song.title = song.info.titles[0]
-    song.arrtist_name = song.info.artist_names[0]
-    return song
