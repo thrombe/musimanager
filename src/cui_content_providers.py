@@ -79,18 +79,21 @@ class SongProvider:
                 return True
         return False
 
-    # TODO: slightly different implimentation for playlist and queue since edits to queue should not be reflected in actual playlists
-        # changes to playlist should not be reflected in playlist too
-        # disable the live selection change for anything but a queue?
-            # can be simply done using deepclone of content_provider
-            # can just clone when any changes happen
-            # or maybe just clone it at the start (except if its a queue)
-    # TODO: dont forget to move the current_index too
-    def move_item_up(self, index):
-        pass
+    def move_item_up(self, index, y_blank, top_view):
+        if index == 0: return
+        if index == top_view: self.current_scroll_top_index -= 1
+        song = self.data_list.pop(index)
+        index -= 1
+        self.data_list.insert(index, song)
+        self.current_index = index
 
-    def move_item_down(self, index):
-        pass
+    def move_item_down(self, index, y_blank, top_view):
+        if index == len(self.data_list)-1: return
+        if index == y_blank+top_view: self.current_scroll_top_index += 1
+        song = self.data_list.pop(index)
+        index += 1
+        self.data_list.insert(index, song)
+        self.current_index = index
 
 class MainProvider(SongProvider):
     def __init__(self):
@@ -103,6 +106,14 @@ class MainProvider(SongProvider):
 
     def get_current_name_list(self):
         return ["Artists", "All Songs", "Playlists", "Queues", "File Explorer"]
+
+    # thou shall not move items here
+    def move_item_up(self, index, y_blank, top_view):
+        self.current_index = index
+        self.current_scroll_top_index = top_view
+    def move_item_down(self, index, y_blank, top_view):
+        self.current_index = index
+        self.current_scroll_top_index = top_view
 
 class ArtistProvider(SongProvider):
     def __init__(self):

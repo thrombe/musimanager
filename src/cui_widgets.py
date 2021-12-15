@@ -219,8 +219,10 @@ class BrowserWidget:
         self.scroll_menu.add_key_command(py_cui.keys.KEY_K_LOWER, self.player_widget.player.seek_10_secs_forward)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_H_LOWER, self.play_prev)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_L_LOWER, self.play_next)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_N_LOWER, self.view_down)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_M_LOWER, self.view_up)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_M_LOWER, self.view_down)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_N_LOWER, self.view_up)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_V_LOWER, self.move_item_down)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_B_LOWER, self.move_item_up)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_U_LOWER, self.toggle_queue_view)
         self.scroll_menu.set_selected_color(py_cui.MAGENTA_ON_CYAN)
 
@@ -248,6 +250,18 @@ class BrowserWidget:
         content_provider.current_scroll_top_index -= 1
         if content_provider.current_scroll_top_index < 0:
             content_provider.current_scroll_top_index = 0
+        self.refresh_names(content_provider)
+
+    def move_item_down(self):
+        content_provider = self.content_state_stack[-1]
+        y_blank = self.scroll_menu._stop_y - self.scroll_menu._start_y - self.player_widget.border_padding_y_top - self.player_widget.border_padding_y_bottom
+        content_provider.move_item_down(self.scroll_menu.get_selected_item_index(), y_blank, self.scroll_menu._top_view)
+        self.refresh_names(content_provider)
+
+    def move_item_up(self):
+        content_provider = self.content_state_stack[-1]
+        y_blank = self.scroll_menu._stop_y - self.scroll_menu._start_y - self.player_widget.border_padding_y_top - self.player_widget.border_padding_y_bottom
+        content_provider.move_item_up(self.scroll_menu.get_selected_item_index(), y_blank, self.scroll_menu._top_view)
         self.refresh_names(content_provider)
 
     def play_next(self):
