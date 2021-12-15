@@ -266,3 +266,7 @@ class AutoSearchSongs(SongProvider):
     # ArtistSearchYTM
         # search for artist then get all albums from them (probably single key)
         # provide shortcut to add to tracker/add key to some artist (sort with key=kinda_similar so similar come first in list)
+
+# TODO: songs should be able to decide if online/offline
+    # playlists/queues should support online songs without probs
+    # online songs can be directly converted in flac after download?

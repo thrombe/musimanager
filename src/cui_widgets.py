@@ -43,17 +43,18 @@ class Player:
         flac_filelike = io.BytesIO()
         self.playback_handle = mixer.music
 
-        flac_filelike = self.pydub_audio_segment.export(flac_filelike, format="flac")
+        # maybe TODO: try switching back to simpleaudio cuz converting to flac is slower than wav (about a second faster maybe)
+        convert_to = "flac"
+        # convert_to = "wav"
+        flac_filelike = self.pydub_audio_segment.export(flac_filelike, format=convert_to)
         self.flac_filelike_copy = copy.deepcopy(flac_filelike)
         flac_filelike.seek(0)
-        self.playback_handle.load(flac_filelike, namehint="flac")
+        self.playback_handle.load(flac_filelike, namehint=convert_to)
         self.playback_handle.play()
         
-        self.is_paused = False
-
-    def stop(self):
-        self.playback_handle.stop()
-        self.is_paused = True
+    # def stop(self):
+    #     self.playback_handle.stop()
+    #     self.is_paused_since = time.time()
 
     def toggle_pause(self):
         if self.is_paused_since is not None:
@@ -64,6 +65,7 @@ class Player:
             self.playback_handle.pause()
             self.is_paused_since = time.time()
 
+    # TODO: simplify this bs with self.playback_handle.get_pos()
     def try_seek(self, secs):
         tme = time.time() - self.song_psuedo_start_time
         if tme > self.song_duration:
@@ -234,7 +236,7 @@ class BrowserWidget:
         # if current song ended, play next
         if self.player_widget.player.song_psuedo_start_time is None: return
         tme = time.time() - self.player_widget.player.song_psuedo_start_time
-        if tme > self.player_widget.player.song_duration:
+        if tme > self.player_widget.player.song_duration: # playback_handle.get_pos() >= song_duration
             self.play_next()
 
     def view_down(self):
