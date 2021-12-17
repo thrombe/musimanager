@@ -4,6 +4,7 @@ import yt_dlp as ytdl
 import serde
 import phrydy as tagg
 import requests
+import os
 from PIL import Image
 import io
 
@@ -32,7 +33,7 @@ class YTdl:
         # self.yt_url = "https://www.youtube.com/watch?v="
 
 # global ytdl for all songs to use    
-ytdl = YTdl(opts.musi_path, opts.musi_ext)
+ytdl = YTdl(opts.musi_path, opts.musi_download_ext)
 musicache = None
 
 class SongInfo(serde.Model): # all metadata that i might care about
@@ -45,17 +46,17 @@ class SongInfo(serde.Model): # all metadata that i might care about
     channel_id: serde.fields.Str()
     uploader_id: serde.fields.Str()
 
-    # def new():
-    #     SongInfo(
-    #         titles = None,
-    #         video_id = None,
-    #         tags = None,
-    #         thumbnail_url = None,
-    #         album = None,
-    #         artist_names = None,
-    #         channel_id = None,
-    #         uploader_id = None,
-    #     )
+    def empty():
+        return SongInfo(
+            titles = [""],
+            video_id = "",
+            tags = [],
+            thumbnail_url = "",
+            album = "",
+            artist_names = [""],
+            channel_id = "",
+            uploader_id = "",
+        )
 
     def load(ytdl_data):
         # theres also track and alt_title in case of ytm
@@ -107,11 +108,19 @@ class Song(serde.Model):
         pass
     
     def download(self):
-        # ytdl.ytd.extract_info(self.url(), download=True)
         ytdl.ytd.download([self.url()])
         self.last_known_path = f"{ytdl.path}{self.key}.{ytdl.ext}"
 
-    def tag(self, path, img_bytes=None):
+    def download_and_get_info(self):
+        ytdl_data = ytdl.ytd.extract_info(self.url(), download=True)
+        self.last_known_path = f"{ytdl.path}{self.key}.{ytdl.ext}"
+        return self.get_info_ytdl_data(ytdl_data)
+
+    def tag(self, path=None, img_bytes=None):
+        if path is None:
+            path = self.last_known_path
+        else:
+            self.last_known_path = path
         mf = tagg.MediaFile(path)
         mf.album = self.info.album
         mf.artist = self.artist_name
@@ -128,6 +137,7 @@ class Song(serde.Model):
 
     def get_cover_image_from_metadata(self):
         mf = tagg.MediaFile(self.last_known_path)
+        if len(mf.images) == 0: return None
         return bytes(mf.images[0].data)
 
     def set_musicache_refrence(tracker):
@@ -135,14 +145,21 @@ class Song(serde.Model):
         musicache = tracker.musicache
 
     def from_key(key):
-        s = Song(None, key, None)
+        s = Song.new(None, key, None)
         s.get_info()
         s.title = s.info.titles[0]
         s.artist_name = s.info.artist_names[0]
         return s
 
-    def from_file(path): #????????
-        pass
+    # TODO: how to confirm if filename is key?
+    def from_file(path):
+        s = Song.new(None, path.split(os.path.sep)[-1].split(".")[0], None, path=path)
+        mf = tagg.MediaFile(path)
+        s.title = mf.title
+        s.artist_name = mf.artist
+        s.info = SongInfo.empty()
+        s.info.album = mf.album
+        return s
 
     def url(self):
         return f"{ytdl.ytm_url}{self.key}"
@@ -157,6 +174,9 @@ class Song(serde.Model):
 
     def get_info_yt(self):
         ytdl_data = ytdl.ytd.extract_info(self.url(), download=False)
+        return self.get_info_ytdl_data(ytdl_data)
+    
+    def get_info_ytdl_data(self, ytdl_data):
         if musicache is not None:
             musicache[f"{self.key}"] = ytdl_data
         self.info = SongInfo.load(ytdl_data)

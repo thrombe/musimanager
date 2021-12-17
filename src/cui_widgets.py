@@ -36,7 +36,7 @@ class Player:
         if self.playback_handle is not None: self.playback_handle.stop()
         # len(song) is ~~ (duration of song in seconds (milliseconds in decimal))*1000
         self.current_song = song
-        song_path = song.get_unsorted_path(find_under=opts.get_access_under)
+        song_path = song.last_known_path # TODO: handle path properly
         self.pydub_audio_segment = pydub.AudioSegment.from_file(song_path, song_path.split(os.path.sep)[-1].split(".")[-1])
         self.song_duration = len(self.pydub_audio_segment)*0.001 # seconds
         self.song_psuedo_start_time = time.time()
@@ -166,17 +166,14 @@ class PlayerWidget:
         self.player.current_queue = queue
 
     def replace_album_art(self, song):
+        img = song.get_cover_image_from_metadata()
+        if img is None:
+            img = Image.open(opts.default_album_art)
+        else:
+            img = helpers.chop_image_into_square(img)
+            img = Image.open(io.BytesIO(img))
+            
         img_path = opts.musimanager_directory + "img.jpeg"
-        img = song.get_album_art_as_jpeg_bytes()
-        if img is None: img = Image.open(opts.default_album_art)
-        else: img = Image.open(io.BytesIO(img))
-        
-        # crop image into a square
-        x, y = img.size
-        a = (x-y)/2
-        if a > 0: box = (a, 0, x - a, y)
-        else: box = (0, -a, x, y+a)
-        img = img.crop(box)
         img.save(img_path)
 
         if not opts.ASCII_ART:
@@ -362,13 +359,11 @@ class BrowserWidget:
         
         x_blank = cui_handle.pycui._popup._stop_x - cui_handle.pycui._popup._start_x - self.player_widget.border_padding_x*2
         with_a_tick = lambda x, y: (x, "✔"*y)
-        # text_on_both_sides = lambda x: x[0]+(x_blank-len(x[0])-len(x[1]))*" " + x[1]
         options = ["0│ add new"]
         for i, pl in enumerate(playlist_provider.data_list):
             a = with_a_tick(f"{i+1}│ "+pl.name, pl.contains_song(song))
             a = text_on_both_sides(a[0], a[1], x_blank)
             options.append(a)
-        # options.extend([text_on_both_sides(with_a_tick(f"{i+1}| "+pl.name, pl.contains_song(song)), x_blank) for i, pl in enumerate(playlist_provider.data_list)])
         cui_handle.pycui._popup.add_item_list(options)
         
 def text_on_both_sides(x, y, x_blank):

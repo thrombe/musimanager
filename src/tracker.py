@@ -80,7 +80,7 @@ class Tracker:
             for sng in artst.songs:
                 self.all_song_keys.add(sng.key)
     
-    def get_song_paths(dir: str, ext: list=['mp3', 'm4a']):
+    def get_song_paths(dir: str, ext: list=opts.search_exts):
         song_paths = []
         for basepath, _, files in os.walk(dir):
             for f in files:

@@ -86,7 +86,8 @@ class SongProvider:
 
 class MainProvider(SongProvider):
     def __init__(self):
-        data = [ArtistProvider(), AutoSearchSongs(), PlaylistProvider(), QueueProvider(), FileExplorer.new()]
+        # TODO: fix ArtistProvider
+        data = [ArtistProvider, AutoSearchSongs(), PlaylistProvider(), QueueProvider(), FileExplorer.new()]
         super().__init__(data, None)
         self.content_type = WidgetContentType.MAIN
 
@@ -183,7 +184,7 @@ class FileExplorer(SongProvider):
             if f.is_dir():
                 self.folders.append(f.name)
             elif f.is_file():
-                if f.name.split(".")[-1] not in ["mp3", "m4a"]: continue # other file formats not yet supported for the metadata
+                if f.name.split(".")[-1] not in opts.search_exts: continue # other file formats not yet supported for the metadata
                 self.files.append(f.name)
         data = []
         self.folders.sort()
@@ -196,20 +197,19 @@ class FileExplorer(SongProvider):
     def new():
         return FileExplorer(opts.get_access_under)
         
-    # send either FileExplorer or SongProvider with single song
+    # send either FileExplorer or single song
     def get_at(self, index, top_view):
         if len(self.data_list) == 0: return None
         self.current_index = index
         self.current_scroll_top_index = top_view
         num_folders = len(self.folders)
         if index >= num_folders:
-            key = self.data_list[index].rstrip("m4ap3").rstrip(".")
-            s = song.Song(None, key, None)
-            s.get_info_from_tags()
+            path = os.path.join(self.base_path, self.data_list[index])
+            s = song.Song.from_file(path)
             self.content_type = WidgetContentType.SONGS # so that songs play instantly
-            # return SongProvider([s], None)
             return s
         else:
+            self.content_type = WidgetContentType.FILE_EXPLORER
             return FileExplorer(os.path.join(self.base_path, self.folders[index]))
 
     def get_current_name_list(self):
@@ -229,9 +229,8 @@ class AutoSearchSongs(SongProvider):
         self.content_type = WidgetContentType.SONGS # this needs to behave like a queue
 
     def get_at(self, index, top_view):
-        key = super().get_at(index, top_view).rstrip("m4ap3").rstrip(".")
-        s = song.Song(None, key, None)
-        s.get_info_from_tags()
+        super().get_at(index, top_view)
+        s = song.Song.from_file(self.song_paths[index])
         return s
 
     def get_current_name_list(self):

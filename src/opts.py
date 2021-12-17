@@ -3,7 +3,7 @@
 # PATHS WITH SEPERATORS(at end) PLZ
 
 musi_path = "/home/issac/" # path where music should be stored and stuff
-musi_ext = "m4a"
+musi_download_ext = "m4a"
 musimanager_directory = "/home/issac/0Git/musimanager/db/" # directory where musimanager can store files
 temp_dir = musimanager_directory + "temp/"
 newpipe_bkup_directory = "/sdcard/BKUP/newpipe/"
@@ -22,6 +22,7 @@ musitracker_search_limit_first_time = 300
 
 # cui only
 get_access_under = "/home/issac/"
+search_exts = ["mp3", "m4a", "flac", "ogg"]
 do_not_sort = True
 force_ascii_art = False # linux only (cuz theres ueberzug too)
 disable_ascii_art = False
