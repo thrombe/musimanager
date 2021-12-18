@@ -2,6 +2,7 @@ from difflib import SequenceMatcher
 from wcwidth import wcwidth, wcswidth
 from PIL import Image
 import io
+import py_cui
 
 # 2 width chars are counted as 1 width by len(), so causes probs
 # https://github.com/jupiterbjy/CUIAudioPlayer/
@@ -35,3 +36,16 @@ def chop_image_into_square(imag):
     img = img.crop(box)
     img.save(imag, "jpeg")
     return imag.getvalue()
+
+def text_on_both_sides(x, y, width):
+    if len(x)+len(y) > width-2:
+        ex = len(x) > width/2
+        yae = len(y) > width/2
+        if ex and not yae:
+            x = py_cui.fit_text(width-2-len(y), x)
+        elif not ex and yae:
+            y = py_cui.fit_text(width-2-len(x), y)
+        elif ex and yae:
+            widthe = int((width-2)/2)
+            x, y = py_cui.fit_text(widthe + 1, x), py_cui.fit_text(widthe, y)
+    return x + (width - len(x) - len(y))*" " + y

@@ -1,6 +1,6 @@
 
 # import youtube_dl as ytdl
-import yt_dlp as ytdl
+import yt_dlp as yt_dl
 import serde
 import phrydy as tagg
 import requests
@@ -32,7 +32,7 @@ class YTdl:
             # "skip_playlist_after_errors": 5,
             "extract_flat": "in_playlist", # dont recursively seek for every video when in playlist
         }
-        self.ytd = ytdl.YoutubeDL(options)
+        self.ytd = yt_dl.YoutubeDL(options)
         self.ytm_url = "https://music.youtube.com/watch?v="
         # self.yt_url = "https://www.youtube.com/watch?v="
 

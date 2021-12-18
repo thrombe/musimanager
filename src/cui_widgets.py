@@ -292,7 +292,7 @@ class BrowserWidget:
                 content.search(search_term)
                 self.content_state_stack.append(content)
                 self.refresh_names(content)
-            cui_handle.pycui.show_text_box_popup("enter album/artist name", helper_func)
+            cui_handle.pycui.show_text_box_popup(content.search_box_title(), helper_func)
             return
         self.content_state_stack.append(content)
         self.refresh_names(content)
@@ -314,7 +314,7 @@ class BrowserWidget:
         x_blank = self.scroll_menu._stop_x - self.scroll_menu._start_x - self.player_widget.border_padding_x*2
         if len(name_list) != 0 and type(name_list[0]) == type(("", "")):
             self.scroll_menu.add_item_list([
-                text_on_both_sides(name[0], name[1], x_blank) for name in name_list
+                helpers.text_on_both_sides(name[0], name[1], x_blank) for name in name_list
             ])
         else:
             self.scroll_menu.add_item_list([ # yes, pad is needed before and after fit_text (annoying 2 width chars)
@@ -374,19 +374,7 @@ class BrowserWidget:
         options = ["0│ add new"]
         for i, pl in enumerate(playlist_provider.data_list):
             a = with_a_tick(f"{i+1}│ "+pl.name, pl.contains_song(song))
-            a = text_on_both_sides(a[0], a[1], x_blank)
+            a = helpers.text_on_both_sides(a[0], a[1], x_blank)
             options.append(a)
         cui_handle.pycui._popup.add_item_list(options)
         
-def text_on_both_sides(x, y, x_blank):
-    if len(x)+len(y) > x_blank-2:
-        ex = len(x) > x_blank/2
-        yae = len(y) > x_blank/2
-        if ex and not yae:
-            x = py_cui.fit_text(x_blank-2-len(y), x)
-        elif not ex and yae:
-            y = py_cui.fit_text(x_blank-2-len(x), y)
-        elif ex and yae:
-            x_blanke = int((x_blank-2)/2)
-            x, y = py_cui.fit_text(x_blanke+1, x), py_cui.fit_text(x_blanke, y)
-    return x + (x_blank - len(x) - len(y))*" " + y

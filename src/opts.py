@@ -5,7 +5,7 @@
 musi_path = "/home/issac/Music/" # path where music should be stored and stuff
 musi_download_ext = "m4a"
 musimanager_directory = "/home/issac/0Git/musimanager/db/" # directory where musimanager can store files
-temp_dir = musimanager_directory + "temp/"
+temp_dir = musimanager_directory + ".temp/"
 newpipe_bkup_directory = "/sdcard/BKUP/newpipe/"
 newpipe_playlists = ['issac', 'sawitch'] # playlists to download songs from
 

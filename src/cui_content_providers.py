@@ -237,6 +237,7 @@ class AutoSearchSongs(SongProvider):
     def get_at(self, index, top_view):
         super().get_at(index, top_view)
         s = song.Song.from_file(self.song_paths[index])
+        s.title = self.song_paths[index].split(os.path.sep)[-1]
         self.content_type = WidgetContentType.SONGS # this needs to behave like a queue
         return s
 
@@ -280,6 +281,8 @@ class AlbumSearchYTM(SongProvider):
             a = album.Album.load(album_data)
             self.data_list.append(a)
     
+    def search_box_title(self): return "enter album/artist name"
+
     def get_at(self, index, top_view):
         a = super().get_at(index, top_view)
         return SongProvider(a.get_songs(), a.name)
