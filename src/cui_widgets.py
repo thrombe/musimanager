@@ -36,7 +36,7 @@ class Player:
         if self.playback_handle is not None: self.playback_handle.stop()
         # len(song) is ~~ (duration of song in seconds (milliseconds in decimal))*1000
         self.current_song = song
-        song_path = song.last_known_path # TODO: handle path properly
+        song_path = song.last_known_path if song.last_known_path is not None else song.temporary_download()
         self.pydub_audio_segment = pydub.AudioSegment.from_file(song_path, song_path.split(os.path.sep)[-1].split(".")[-1])
         self.song_duration = len(self.pydub_audio_segment)*0.001 # seconds
         self.song_psuedo_start_time = time.time()
@@ -148,7 +148,7 @@ class PlayerWidget:
         if self.player.current_song is None: return
         x_blank = self.scroll_menu._stop_x - self.scroll_menu._start_x - self.border_padding_x*2
         center = lambda text: int((x_blank-len(text))/2)*" "+text
-        img = Image.open(opts.musimanager_directory+"img.jpeg")
+        img = Image.open(opts.temp_dir+"img.jpeg")
         columns = min(
             x_blank,
             round(2.2 * (self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info + 1)),
@@ -166,14 +166,14 @@ class PlayerWidget:
         self.player.current_queue = queue
 
     def replace_album_art(self, song):
-        img = song.get_cover_image_from_metadata()
+        img = song.get_cover_image_from_metadata() if song.last_known_path is not None else song.download_cover_image()
         if img is None:
             img = Image.open(opts.default_album_art)
         else:
             img = helpers.chop_image_into_square(img)
             img = Image.open(io.BytesIO(img))
             
-        img_path = opts.musimanager_directory + "img.jpeg"
+        img_path = opts.temp_dir + "img.jpeg"
         img.save(img_path)
 
         if not opts.ASCII_ART:
@@ -287,6 +287,13 @@ class BrowserWidget:
                 potential_queue_provider.yeet_selected_queue()
             self.change_queue(copy.deepcopy(self.content_state_stack[-1]))
             return
+        elif content.content_type is cui_content_providers.WidgetContentType.SEARCHER:
+            def helper_func(search_term):
+                content.search(search_term)
+                self.content_state_stack.append(content)
+                self.refresh_names(content)
+            cui_handle.pycui.show_text_box_popup("enter album/artist name", helper_func)
+            return
         self.content_state_stack.append(content)
         self.refresh_names(content)
 
@@ -305,9 +312,14 @@ class BrowserWidget:
         self.scroll_menu.clear()
         name_list = content.get_current_name_list()
         x_blank = self.scroll_menu._stop_x - self.scroll_menu._start_x - self.player_widget.border_padding_x*2
-        self.scroll_menu.add_item_list([ # yes, pad is needed before and after fit_text (annoying 2 width chars)
-            helpers.pad_zwsp(py_cui.fit_text(x_blank, name)) for name in name_list
+        if len(name_list) != 0 and type(name_list[0]) == type(("", "")):
+            self.scroll_menu.add_item_list([
+                text_on_both_sides(name[0], name[1], x_blank) for name in name_list
             ])
+        else:
+            self.scroll_menu.add_item_list([ # yes, pad is needed before and after fit_text (annoying 2 width chars)
+                helpers.pad_zwsp(py_cui.fit_text(x_blank, name)) for name in name_list
+                ])
 
         self.scroll_menu.set_selected_item_index(content.current_index)
         self.scroll_menu._top_view = content.current_scroll_top_index
@@ -375,6 +387,6 @@ def text_on_both_sides(x, y, x_blank):
         elif not ex and yae:
             y = py_cui.fit_text(x_blank-2-len(x), y)
         elif ex and yae:
-            x_blanke = (x_blank-2)/2
-            x, y = py_cui.fit_text(x_blanke, x), py_cui.fit_text(x_blanke, y)
+            x_blanke = int((x_blank-2)/2)
+            x, y = py_cui.fit_text(x_blanke+1, x), py_cui.fit_text(x_blanke, y)
     return x + (x_blank - len(x) - len(y))*" " + y

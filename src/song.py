@@ -120,6 +120,14 @@ class Song(serde.Model):
         self.last_known_path = f"{ytdl.path}{self.key}.{ytdl.ext}"
         return self.get_info_ytdl_data(ytdl_data)
 
+    def temporary_download(self):
+        ytdl_data = ytdl.ytd.extract_info(self.url(), download=True)
+        self.get_info_ytdl_data(ytdl_data)
+        temp_path1 = f"{ytdl.path}{self.key}.{ytdl.ext}"
+        temp_path2 = f"{opts.temp_dir}{self.key}.{ytdl.ext}"
+        os.rename(temp_path1, temp_path2)
+        return temp_path2
+
     def tag(self, path=None, img_bytes=None):
         if path is None:
             path = self.last_known_path
@@ -184,4 +192,7 @@ class Song(serde.Model):
         if musicache is not None:
             musicache[f"{self.key}"] = ytdl_data
         self.info = SongInfo.load(ytdl_data)
+        if self.artist_name is None: self.artist_name = self.info.artist_names[0]
+        if self.title is None: self.title = self.info.titles[0]
+        if self.key is None: self.key = self.info.key
         return self.info

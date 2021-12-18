@@ -7,18 +7,24 @@ import opts
 import tracker
 import song
 import helpers
+import album
 
 class WidgetContentType(enum.Enum):
     MAIN = enum.auto()
 
-    ARTISTS = enum.auto()
+    # behaviours
+    SONGS = enum.auto()
+    SEARCHER = enum.auto()
+
+    # content types which the widgets are aware of
     PLAYLISTS = enum.auto()
     QUEUES = enum.auto() # like playlist but remembers position and deletes itself when finished
-    # AUTOSEARCH_SONGS = enum.auto()
 
-    SONGS = enum.auto()
-
+    # content types which might do special stuff on startup and might change behaviour or return a primitive content type depending on what is chosen
+    ARTISTS = enum.auto()
+    AUTOSEARCH_SONGS = enum.auto()
     FILE_EXPLORER = enum.auto()
+    ALBUM_SEARCH = enum.auto()
 
 # using this as a trait
 class SongProvider:
@@ -87,7 +93,7 @@ class SongProvider:
 class MainProvider(SongProvider):
     def __init__(self):
         # TODO: fix ArtistProvider
-        data = [ArtistProvider, AutoSearchSongs(), PlaylistProvider(), QueueProvider(), FileExplorer.new()]
+        data = [ArtistProvider, AutoSearchSongs(), PlaylistProvider(), QueueProvider(), FileExplorer.new(), AlbumSearchYTM()]
         super().__init__(data, None)
         self.content_type = WidgetContentType.MAIN
 
@@ -95,7 +101,7 @@ class MainProvider(SongProvider):
         return super().get_at(index, top_view)
 
     def get_current_name_list(self):
-        return ["Artists", "All Songs", "Playlists", "Queues", "File Explorer"]
+        return ["Artists", "All Songs", "Playlists", "Queues", "File Explorer", "Album Search"]
 
     # thou shall not move items here
     def move_item_up(self, index, y_blank, top_view):
@@ -259,3 +265,24 @@ class AutoSearchSongs(SongProvider):
 # TODO: songs should be able to decide if online/offline
     # playlists/queues should support online songs without probs
     # online songs can be directly converted in flac after download?
+
+class AlbumSearchYTM(SongProvider):
+    def __init__(self):
+        self.current_search_term = None
+        super().__init__([], "Album search")
+        self.content_type = WidgetContentType.SEARCHER
+    
+    def search(self, search_term):
+        self.current_search_term = search_term
+        self.content_type = WidgetContentType.ALBUM_SEARCH
+        data = opts.ytmusic.search(self.current_search_term, filter="albums", limit=opts.musitracker_search_limit, ignore_spelling=False)
+        for album_data in data:
+            a = album.Album.load(album_data)
+            self.data_list.append(a)
+    
+    def get_at(self, index, top_view):
+        a = super().get_at(index, top_view)
+        return SongProvider(a.get_songs(), a.name)
+    
+    def get_current_name_list(self):
+        return [(helpers.pad_zwsp(a.name), helpers.pad_zwsp(a.artist_name)) for a in self.data_list]

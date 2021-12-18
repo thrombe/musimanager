@@ -13,7 +13,7 @@ class Album:
         # self.artist_daata = artists # [{"name": "..", "id": ".."}, {..}, ..]
         self.artist_name = [artist["name"] for artist in artists if artist.get("name", None) is not None]
         if len(self.artist_name) == 0: self.artist_name = ""
-        else: self.artist_name = self.artist_name.join(", ")
+        else: self.artist_name = ", ".join(self.artist_name)
 
     def load(ytm_album_search_data):
         # artist_data = ytm_album_search_data["artists"]
