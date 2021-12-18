@@ -27,6 +27,10 @@ class YTdl:
             "verbose": False,
             "no_warnings": True,
             "noprogress": True,
+            "geo_bypass": True,
+            # "geo_bypass_country": "JP",
+            # "skip_playlist_after_errors": 5,
+            "extract_flat": "in_playlist", # dont recursively seek for every video when in playlist
         }
         self.ytd = ytdl.YoutubeDL(options)
         self.ytm_url = "https://music.youtube.com/watch?v="

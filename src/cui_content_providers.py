@@ -226,11 +226,12 @@ class AutoSearchSongs(SongProvider):
         self.song_paths = tracker.Tracker.get_song_paths(opts.get_access_under.rstrip(os.path.sep))
         data = [s.split(os.path.sep)[-1] for s in self.song_paths]
         super().__init__(data, "all songs")
-        self.content_type = WidgetContentType.SONGS # this needs to behave like a queue
+        self.content_type = WidgetContentType.AUTOSEARCH_SONGS
 
     def get_at(self, index, top_view):
         super().get_at(index, top_view)
         s = song.Song.from_file(self.song_paths[index])
+        self.content_type = WidgetContentType.SONGS # this needs to behave like a queue
         return s
 
     def get_current_name_list(self):
@@ -250,7 +251,7 @@ class AutoSearchSongs(SongProvider):
     # AlbumSearchYTM
         # search for albums from some artist
     # ArtistAlbumSearchYTM (tracker)
-        # get all albums for selected artist (all keys)
+        # get all albums for selected artist (all keys + album search)
     # ArtistSearchYTM
         # search for artist then get all albums from them (probably single key)
         # provide shortcut to add to tracker/add key to some artist (sort with key=kinda_similar so similar come first in list)
