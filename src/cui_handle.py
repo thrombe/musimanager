@@ -40,6 +40,7 @@ class CUI_handle:
         # TODO: change the widget title as content displayed on it changes
 
         # TODO: cleanup all downloaded songs from temp_dir on exit
+        # TODO: make an init func that checks and setus up the temp dirs and stuff on startup
 
         self.player_widget = cui_widgets.PlayerWidget(self.pycui.add_scroll_menu('Player', 0, 1, row_span=1, column_span=1, padx = 1, pady = 0))
         self.browser_widget = cui_widgets.BrowserWidget(
