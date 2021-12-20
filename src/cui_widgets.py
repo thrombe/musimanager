@@ -291,11 +291,11 @@ class BrowserWidget:
 
     def try_load_right(self):
         if self.current_queue_view:
-            self.player_widget.play(self.player_widget.player.current_queue.get_at(self.scroll_menu.get_selected_item_index(), self.scroll_menu._top_view))
+            self.player_widget.play(self.player_widget.player.current_queue.get_at(self.scroll_menu.get_selected_item_index()))
             return
 
         content_provider = self.content_state_stack[-1]
-        content = content_provider.get_at(self.scroll_menu.get_selected_item_index(), self.scroll_menu._top_view)
+        content = content_provider.get_at(self.scroll_menu.get_selected_item_index())
         if content is None: return
         if content_provider.content_type is cui_content_providers.WidgetContentType.SONGS:
             self.player_widget.play(content)
@@ -360,9 +360,6 @@ class BrowserWidget:
             self.refresh_names(self.content_state_stack[-1])
         else:
             if self.player_widget.player.current_queue is None: return
-            # content_provider = self.content_state_stack[-1]
-            # content_provider.current_index = self.scroll_menu.get_selected_item_index()
-            # content_provider.current_scroll_top_index = self.scroll_menu._top_view
             self.current_queue_view = True
             self.content_state_stack.append(self.player_widget.player.current_queue)
             self.scroll_menu.set_title(py_cui.fit_text(self.player_widget.x_blank(), f"current queue: {self.content_state_stack[-1].name}"))
@@ -372,7 +369,7 @@ class BrowserWidget:
         main_provider = self.content_state_stack[0]
         playlist_provider = main_provider.data_list[2]
         content_provider = self.content_state_stack[-1]
-        song = content_provider.get_at(self.scroll_menu.get_selected_item_index(), self.scroll_menu._top_view)
+        song = content_provider.get_at(self.scroll_menu.get_selected_item_index())
         if content_provider.content_type is not cui_content_providers.WidgetContentType.SONGS: return
         # TODO: allow to remove the song from the playlists that already have it
             # how? the popups dont allow shortcuts
