@@ -44,12 +44,26 @@ class Album:
                 albumcache[self.browse_id] = album_data
         return album_data
 
+    def get_album_data_ytdl(self):
+        album_data = None
+        if albumcache is not None:
+            album_data = albumcache.get(self.get_playlist_id(), None)
+        if album_data is None:
+            album_data = song.ytdl.ytd.extract_info(self.get_playlist_id(), download=False)
+            if albumcache is not None:
+                albumcache[self.playlist_id] = album_data
+        return album_data
+
     def get_songs(self):
-        album = self.get_album_data()
         songs = []
-        for song_data in album["tracks"]:
-            if song_data["videoId"] is None: continue # songs without video id are no longer available
-            songs.append(song.Song(song_data["title"], song_data["videoId"], None))
+        # album = self.get_album_data()
+        # for song_data in album["tracks"]:
+        #     if song_data["videoId"] is None: continue # songs without video id are no longer available
+        #     songs.append(song.Song(song_data["title"], song_data["videoId"], None))
+        album = self.get_album_data_ytdl()
+        for song_data in album["entries"]:
+            if song_data["id"] is None: continue # songs without video id are no longer available
+            songs.append(song.Song(song_data["title"], song_data["id"], None))
         self.songs = songs
         return songs
     

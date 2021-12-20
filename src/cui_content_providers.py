@@ -92,7 +92,7 @@ class MainProvider(SongProvider):
     def __init__(self):
         # TODO: fix ArtistProvider
         data = [ArtistProvider, AutoSearchSongs(), PlaylistProvider(), QueueProvider(), FileExplorer.new(), AlbumSearchYTM()]
-        super().__init__(data, None)
+        super().__init__(data, "Browser")
         self.content_type = WidgetContentType.MAIN
 
     def get_at(self, index):
@@ -111,7 +111,7 @@ class ArtistProvider(SongProvider):
         _tracker.load()
         data = list(_tracker.artists)
         data.sort(key=lambda x: x.name)
-        super().__init__(data, None)
+        super().__init__(data, "Artists")
         self.content_type = WidgetContentType.ARTISTS
     
     def get_current_name_list(self):
@@ -127,7 +127,7 @@ class ArtistProvider(SongProvider):
 class PlaylistProvider(SongProvider):
     def __init__(self):
         playlists = []
-        super().__init__(playlists, None)
+        super().__init__(playlists, "Playlists")
         self.content_type = WidgetContentType.PLAYLISTS
     
     def load():
@@ -155,7 +155,7 @@ class PlaylistProvider(SongProvider):
 class QueueProvider(SongProvider):
     def __init__(self):
         queues = []
-        super().__init__(queues, None)
+        super().__init__(queues, "Queues")
         self.content_type = WidgetContentType.QUEUES
 
     def get_current_name_list(self):
@@ -197,7 +197,7 @@ class FileExplorer(SongProvider):
         self.files.sort()
         data.extend(self.folders)
         data.extend(self.files)
-        super().__init__(data, None)
+        super().__init__(data, "File Explorer")
         self.content_type = WidgetContentType.FILE_EXPLORER
     
     def new():
@@ -226,7 +226,7 @@ class AutoSearchSongs(SongProvider):
     def __init__(self):
         self.song_paths = tracker.Tracker.get_song_paths(opts.get_access_under.rstrip(os.path.sep))
         data = [s.split(os.path.sep)[-1] for s in self.song_paths]
-        super().__init__(data, "all songs")
+        super().__init__(data, "All Songs")
         self.content_type = WidgetContentType.AUTOSEARCH_SONGS
 
     def get_at(self, index):
@@ -257,6 +257,13 @@ class AutoSearchSongs(SongProvider):
     # ArtistSearchYTM
         # search for artist then get all albums from them (probably single key)
         # provide shortcut to add to tracker/add key to some artist (sort with key=kinda_similar so similar come first in list)
+    # online playlists
+        # maybe no need of seperate class, integrate in playlists
+            # but cant add songs to any playlists
+            # show some smol mark against online playlists and refuse to try to add songs to it
+        # save playlists by entering links
+            # parse the name if it starts with https:// and online playlist
+        # musitracker playlist stays here by default
 
 # TODO: songs should be able to decide if online/offline
     # playlists/queues should support online songs without probs
@@ -265,13 +272,14 @@ class AutoSearchSongs(SongProvider):
 class AlbumSearchYTM(SongProvider):
     def __init__(self):
         self.current_search_term = None
-        super().__init__([], "Album search")
+        super().__init__([], "Album Search")
         self.content_type = WidgetContentType.SEARCHER
     
     def search(self, search_term):
         self.current_search_term = search_term
+        self.name = f"Search: {search_term}"
         self.content_type = WidgetContentType.ALBUM_SEARCH
-        data = opts.ytmusic.search(self.current_search_term, filter="albums", limit=opts.musitracker_search_limit, ignore_spelling=False)
+        data = opts.ytmusic.search(self.current_search_term, filter="albums", limit=opts.musitracker_search_limit, ignore_spelling=True)
         for album_data in data:
             a = album.Album.load(album_data)
             self.data_list.append(a)

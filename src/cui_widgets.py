@@ -217,9 +217,6 @@ class BrowserWidget:
         self.current_queue_view = False
 
     # TODO: provide shortcut to search (sort using kinda_similar)
-    # TODO: maintain a title for 
-        # just use preexisting content_provider.name and also adjust it in refresh names (every frame)
-    # TODO: fix the auto scroll in queue when songs change
     # TODO: fix x_blank calculation duplication
 
     def setup(self):
@@ -327,6 +324,8 @@ class BrowserWidget:
 
     def refresh_names(self, content):
         self.scroll_menu.clear()
+        if self.current_queue_view: self.scroll_menu.set_title(helpers.pad_zwsp(f"current queue: {content.name}"))
+        else: self.scroll_menu.set_title(helpers.pad_zwsp(content.name))
         name_list = content.get_current_name_list()
         x_blank = self.player_widget.x_blank()
         if len(name_list) != 0 and type(name_list[0]) == type(("", "")):
@@ -344,6 +343,8 @@ class BrowserWidget:
         y_blank = self.player_widget.y_blank()
         if len(name_list) <= y_blank:
             self.scroll_menu._top_view = 0
+        elif len(name_list)-content.current_scroll_top_index < y_blank:
+            self.scroll_menu._top_view = len(name_list)-y_blank
 
     def change_queue(self, queue):
         current_queue = self.player_widget.player.current_queue
@@ -356,13 +357,11 @@ class BrowserWidget:
         if self.current_queue_view:
             self.current_queue_view = False
             self.content_state_stack.pop()
-            self.scroll_menu.set_title("Browser")
             self.refresh_names(self.content_state_stack[-1])
         else:
             if self.player_widget.player.current_queue is None: return
             self.current_queue_view = True
             self.content_state_stack.append(self.player_widget.player.current_queue)
-            self.scroll_menu.set_title(py_cui.fit_text(self.player_widget.x_blank(), f"current queue: {self.content_state_stack[-1].name}"))
             self.refresh_names(self.content_state_stack[-1])
 
     def try_add_song_to_playlist(self):
@@ -391,7 +390,7 @@ class BrowserWidget:
         with_a_tick = lambda x, y: (x, "✔"*y)
         options = ["0│ add new"]
         for i, pl in enumerate(playlist_provider.data_list):
-            a = with_a_tick(f"{i+1}│ "+pl.name, pl.contains_song(song))
+            a = with_a_tick(f"{i+1}│ {pl.name}", pl.contains_song(song))
             a = helpers.text_on_both_sides(a[0], a[1], x_blank)
             options.append(a)
         cui_handle.pycui._popup.add_item_list(options)
