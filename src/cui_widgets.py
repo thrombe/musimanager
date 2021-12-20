@@ -37,17 +37,23 @@ class Player:
         # len(song) is ~~ (duration of song in seconds (milliseconds in decimal))*1000
         self.current_song = song
         song_path = song.last_known_path if song.last_known_path is not None else song.temporary_download()
+        
+        # TODO: any other way to get song_duration? mutagen? pydub is slow (and not needed) for flac files
         self.pydub_audio_segment = pydub.AudioSegment.from_file(song_path, song_path.split(os.path.sep)[-1].split(".")[-1])
         self.song_duration = len(self.pydub_audio_segment)*0.001 # seconds
         self.song_psuedo_start_time = time.time()
         self.is_paused_since = None
         flac_filelike = io.BytesIO()
+        # with open(song_path, "rb") as f: flac_filelike = io.BytesIO(f.read())
         self.playback_handle = mixer.music
 
         # maybe TODO: try switching back to simpleaudio cuz converting to flac is slower than wav (about a second faster maybe)
         convert_to = "flac"
         # convert_to = "wav"
-        flac_filelike = self.pydub_audio_segment.export(flac_filelike, format=convert_to)
+        if song_path.split(".")[-1] != convert_to: flac_filelike = self.pydub_audio_segment.export(flac_filelike, format=convert_to)
+        else:
+            with open(song_path, "rb") as f:
+                flac_filelike.write(f.read())
         self.flac_filelike_copy = copy.deepcopy(flac_filelike)
         flac_filelike.seek(0)
         self.playback_handle.load(flac_filelike, namehint=convert_to)
@@ -182,8 +188,9 @@ class PlayerWidget:
 
     def print_song_metadata(self, song):
         x_blank = self.scroll_menu._stop_x - self.scroll_menu._start_x - self.border_padding_x*2
-        center = lambda text: int((x_blank-len(text))/2)*" "+text
-        right = lambda text: int(x_blank-int(len(text)))*" "+text
+        # center = lambda text: int((x_blank-len(text))/2)*" "+text
+        # right = lambda text: int(x_blank-int(len(text)))*" "+text
+        center = lambda text: py_cui.fit_text(x_blank, helpers.pad_zwsp(text), center=True)
         if opts.LUUNIX and not opts.ASCII_ART:
             # blank = self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info + 1
             blank = min(
@@ -208,6 +215,10 @@ class BrowserWidget:
         self.current_queue_view = False
 
     # TODO: provide shortcut to search (sort using kinda_similar)
+    # TODO: maintain a title for 
+        # just use preexisting content_provider.name and also adjust it in refresh names (every frame)
+    # TODO: fix the auto scroll in queue when songs change
+    # TODO: fix x_blank calculation duplication
 
     def setup(self):
         self.scroll_menu.add_key_command(py_cui.keys.KEY_Q_LOWER, cui_handle.pycui.stop)
@@ -230,6 +241,11 @@ class BrowserWidget:
 
     def refresh(self):
         self.player_widget.refresh()
+        # TODO: maybe changing indices is not needed in other funcs
+        content_provider = self.content_state_stack[-1]
+        content_provider.current_index = self.scroll_menu.get_selected_item_index()
+        content_provider.current_scroll_top_index = self.scroll_menu._top_view
+        self.refresh_names(content_provider)
         
         # if current song ended, play next
         if self.player_widget.player.song_psuedo_start_time is None: return
@@ -344,7 +360,8 @@ class BrowserWidget:
             content_provider.current_scroll_top_index = self.scroll_menu._top_view
             self.current_queue_view = True
             self.content_state_stack.append(self.player_widget.player.current_queue)
-            self.scroll_menu.set_title(f"current queue: {self.content_state_stack[-1].name}")
+            x_blank = self.scroll_menu._stop_x - self.scroll_menu._start_x - self.player_widget.border_padding_x*2
+            self.scroll_menu.set_title(py_cui.fit_text(x_blank, f"current queue: {self.content_state_stack[-1].name}"))
             self.refresh_names(self.content_state_stack[-1])
 
     def try_add_song_to_playlist(self):

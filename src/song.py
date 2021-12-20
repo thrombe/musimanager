@@ -5,6 +5,8 @@ import serde
 import phrydy as tagg
 import requests
 import os
+import subprocess
+import ffmpeg
 from PIL import Image
 import io
 
@@ -28,16 +30,18 @@ class YTdl:
             "no_warnings": True,
             "noprogress": True,
             "geo_bypass": True,
-            # "geo_bypass_country": "JP",
             # "skip_playlist_after_errors": 5,
             "extract_flat": "in_playlist", # dont recursively seek for every video when in playlist
+            # "concurrent_fragment_downloads": 100,
         }
         self.ytd = yt_dl.YoutubeDL(options)
-        self.ytm_url = "https://music.youtube.com/watch?v="
+        self.yt_url = "https://youtu.be/"
+        # self.yt_url = "https://music.youtube.com/watch?v="
         # self.yt_url = "https://www.youtube.com/watch?v="
 
 # global ytdl for all songs to use    
 ytdl = YTdl(opts.musi_path, opts.musi_download_ext)
+temp_ytdl = YTdl(opts.temp_dir, opts.musi_download_ext)
 musicache = None
 
 class SongInfo(serde.Model): # all metadata that i might care about
@@ -121,12 +125,25 @@ class Song(serde.Model):
         return self.get_info_ytdl_data(ytdl_data)
 
     def temporary_download(self):
-        ytdl_data = ytdl.ytd.extract_info(self.url(), download=True)
+        temp_path = f"{temp_ytdl.path}{self.key}.{ytdl.ext}"
+        download = not os.path.exists(temp_path)
+        ytdl_data = temp_ytdl.ytd.extract_info(self.url(), download=download)
+
+        # ytdl_data = ytdl.ytd.extract_info(self.url(), download=False)
         self.get_info_ytdl_data(ytdl_data)
-        temp_path1 = f"{ytdl.path}{self.key}.{ytdl.ext}"
-        temp_path2 = f"{opts.temp_dir}{self.key}.{ytdl.ext}"
-        os.rename(temp_path1, temp_path2)
-        return temp_path2
+
+        # temp_path = f"{opts.temp_dir}{self.key}.flac"
+        # if os.path.exists(temp_path2): return temp_path
+
+        # # youtube-dl -f bestaudio VIDEO_URL -o - 2>/dev/null | ffplay -nodisp -autoexit -i - &>/dev/null
+        # proc = subprocess.Popen(f"yt-dlp --quiet -f bestaudio {self.url()} -o - ", shell=True, stdout=subprocess.PIPE)
+        # i = ffmpeg.input("pipe:", f="webm", loglevel="panic").output(temp_path, f="flac").run_async(pipe_stdin=True)
+        # while True:
+        #     a = proc.stdout.read(512)
+        #     if not a: break
+        #     i.stdin.write(a)
+
+        return temp_path
 
     def tag(self, path=None, img_bytes=None):
         if path is None:
@@ -174,7 +191,7 @@ class Song(serde.Model):
         return s
 
     def url(self):
-        return f"{ytdl.ytm_url}{self.key}"
+        return f"{ytdl.yt_url}{self.key}"
 
     def get_info(self):
         if musicache is not None:

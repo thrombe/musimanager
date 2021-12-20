@@ -12,7 +12,7 @@ def pad_zwsp(string):
     for char in string:
         p = wcwidth(char)-len(char)
         pads += p
-    return string + zwsp*pads
+    return zwsp*pads + string
 
 def kinda_similar(str1, str2, threshold=0.4):
     # this func is terrible, use a different one
