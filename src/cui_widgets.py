@@ -97,25 +97,6 @@ class Player:
     def seek_10_secs_behind(self):
         self.try_seek(-10)
 
-    def play_next(self):
-        if self.current_queue is None: return False
-        next = self.current_queue.next()
-        if next is not None:
-            self.play(next)
-            return True
-        else:
-            self.current_queue = None
-            return False
-
-    def play_prev(self):
-        if self.current_queue is None: return False
-        prev = self.current_queue.previous()
-        if prev is not None:
-            self.play(prev)
-            return True
-        else:
-            return False
-
 class PlayerWidget:
     def __init__(self, widget):
         self.player = None
@@ -144,20 +125,20 @@ class PlayerWidget:
         #   self.play_window.get_padding() ?????
         # TODO: center the image and text in the y axis ????
         self.image_placement.y = self.scroll_menu._start_y + self.border_padding_y_top
-        self.image_placement.width = self.scroll_menu._stop_x - self.scroll_menu._start_x - self.border_padding_x*2
-        self.image_placement.height = self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info - 0
+        self.image_placement.width = self.x_blank()
+        self.image_placement.height = self.y_blank() - self.lines_of_song_info - 0
         a = self.image_placement.width - 2.1*self.image_placement.height
         if round(a/2) > 2: self.image_placement.x = round(a/2) + self.scroll_menu._start_x + self.border_padding_x - 1
         else: self.image_placement.x = self.scroll_menu._start_x + self.border_padding_x
 
     def ascii_image_refresh(self):
         if self.player.current_song is None: return
-        x_blank = self.scroll_menu._stop_x - self.scroll_menu._start_x - self.border_padding_x*2
+        x_blank = self.x_blank()
         center = lambda text: int((x_blank-len(text))/2)*" "+text
         img = Image.open(opts.temp_dir+"img.jpeg")
         columns = min(
             x_blank,
-            round(2.2 * (self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info + 1)),
+            round(2.2 * (self.y_blank() - self.lines_of_song_info + 1)),
         )
         textimg = ascii_magic.from_image(img, mode=ascii_magic.Modes.ASCII, columns=columns)
         for line in textimg.splitlines():
@@ -167,6 +148,25 @@ class PlayerWidget:
         self.player.play(song)
         self.replace_album_art(song)
         self.print_song_metadata(song)
+
+    def play_next(self):
+        if self.player.current_queue is None: return False
+        next = self.player.current_queue.next()
+        if next is not None:
+            self.play(next)
+            return True
+        else:
+            self.player.current_queue = None
+            return False
+
+    def play_prev(self):
+        if self.player.current_queue is None: return False
+        prev = self.player.current_queue.previous()
+        if prev is not None:
+            self.play(prev)
+            return True
+        else:
+            return False
 
     def set_queue(self, queue):
         self.player.current_queue = queue
@@ -187,14 +187,13 @@ class PlayerWidget:
             self.image_placement.visibility = ueberzug.Visibility.VISIBLE
 
     def print_song_metadata(self, song):
-        x_blank = self.scroll_menu._stop_x - self.scroll_menu._start_x - self.border_padding_x*2
+        x_blank = self.x_blank()
         # center = lambda text: int((x_blank-len(text))/2)*" "+text
         # right = lambda text: int(x_blank-int(len(text)))*" "+text
         center = lambda text: py_cui.fit_text(x_blank, helpers.pad_zwsp(text), center=True)
         if opts.LUUNIX and not opts.ASCII_ART:
-            # blank = self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info + 1
             blank = min(
-                self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom - self.lines_of_song_info,
+                self.y_blank() - self.lines_of_song_info,
                 int(1/2.1 * (x_blank)),
             ) + 1
             self.scroll_menu.add_item_list(list(" "*blank))
@@ -206,6 +205,9 @@ class PlayerWidget:
             self.player.song_progress_bar = (time.time()-self.player.song_psuedo_start_time)/self.player.song_duration
         self.scroll_menu.add_item(f"{'█' * round(x_blank * self.player.song_progress_bar)}")
         # "█", "▄", "▀", "■", "▓", "│", "▌", "▐", "─", 
+
+    def x_blank(self): return self.scroll_menu._stop_x - self.scroll_menu._start_x - self.border_padding_x*2
+    def y_blank(self): return self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom
 
 class BrowserWidget:
     def __init__(self, widget, player_widget):
@@ -241,7 +243,6 @@ class BrowserWidget:
 
     def refresh(self):
         self.player_widget.refresh()
-        # TODO: maybe changing indices is not needed in other funcs
         content_provider = self.content_state_stack[-1]
         content_provider.current_index = self.scroll_menu.get_selected_item_index()
         content_provider.current_scroll_top_index = self.scroll_menu._top_view
@@ -270,22 +271,22 @@ class BrowserWidget:
 
     def move_item_down(self):
         content_provider = self.content_state_stack[-1]
-        y_blank = self.scroll_menu._stop_y - self.scroll_menu._start_y - self.player_widget.border_padding_y_top - self.player_widget.border_padding_y_bottom
+        y_blank = self.player_widget.y_blank()
         content_provider.move_item_down(self.scroll_menu.get_selected_item_index(), y_blank, self.scroll_menu._top_view)
         self.refresh_names(content_provider)
 
     def move_item_up(self):
         content_provider = self.content_state_stack[-1]
-        y_blank = self.scroll_menu._stop_y - self.scroll_menu._start_y - self.player_widget.border_padding_y_top - self.player_widget.border_padding_y_bottom
+        y_blank = self.player_widget.y_blank()
         content_provider.move_item_up(self.scroll_menu.get_selected_item_index(), y_blank, self.scroll_menu._top_view)
         self.refresh_names(content_provider)
 
     def play_next(self):
-        if self.player_widget.player.play_next():
+        if self.player_widget.play_next():
             self.refresh_names(self.content_state_stack[-1])
 
     def play_prev(self):
-        if self.player_widget.player.play_prev():
+        if self.player_widget.play_prev():
             self.refresh_names(self.content_state_stack[-1])
 
     def try_load_right(self):
@@ -327,7 +328,7 @@ class BrowserWidget:
     def refresh_names(self, content):
         self.scroll_menu.clear()
         name_list = content.get_current_name_list()
-        x_blank = self.scroll_menu._stop_x - self.scroll_menu._start_x - self.player_widget.border_padding_x*2
+        x_blank = self.player_widget.x_blank()
         if len(name_list) != 0 and type(name_list[0]) == type(("", "")):
             self.scroll_menu.add_item_list([
                 helpers.text_on_both_sides(name[0], name[1], x_blank) for name in name_list
@@ -339,6 +340,10 @@ class BrowserWidget:
 
         self.scroll_menu.set_selected_item_index(content.current_index)
         self.scroll_menu._top_view = content.current_scroll_top_index
+
+        y_blank = self.player_widget.y_blank()
+        if len(name_list) <= y_blank:
+            self.scroll_menu._top_view = 0
 
     def change_queue(self, queue):
         current_queue = self.player_widget.player.current_queue
@@ -355,13 +360,12 @@ class BrowserWidget:
             self.refresh_names(self.content_state_stack[-1])
         else:
             if self.player_widget.player.current_queue is None: return
-            content_provider = self.content_state_stack[-1]
-            content_provider.current_index = self.scroll_menu.get_selected_item_index()
-            content_provider.current_scroll_top_index = self.scroll_menu._top_view
+            # content_provider = self.content_state_stack[-1]
+            # content_provider.current_index = self.scroll_menu.get_selected_item_index()
+            # content_provider.current_scroll_top_index = self.scroll_menu._top_view
             self.current_queue_view = True
             self.content_state_stack.append(self.player_widget.player.current_queue)
-            x_blank = self.scroll_menu._stop_x - self.scroll_menu._start_x - self.player_widget.border_padding_x*2
-            self.scroll_menu.set_title(py_cui.fit_text(x_blank, f"current queue: {self.content_state_stack[-1].name}"))
+            self.scroll_menu.set_title(py_cui.fit_text(self.player_widget.x_blank(), f"current queue: {self.content_state_stack[-1].name}"))
             self.refresh_names(self.content_state_stack[-1])
 
     def try_add_song_to_playlist(self):

@@ -39,8 +39,8 @@ class SongProvider:
         self.data_list.append(song)
 
     def get_at(self, index, top_view):
-        self.current_index = index
-        self.current_scroll_top_index = top_view
+        # self.current_index = index
+        # self.current_scroll_top_index = top_view
         song = self.data_list[index]
         return song
 
@@ -104,12 +104,12 @@ class MainProvider(SongProvider):
         return ["Artists", "All Songs", "Playlists", "Queues", "File Explorer", "Album Search"]
 
     # thou shall not move items here
-    def move_item_up(self, index, y_blank, top_view):
-        self.current_index = index
-        self.current_scroll_top_index = top_view
-    def move_item_down(self, index, y_blank, top_view):
-        self.current_index = index
-        self.current_scroll_top_index = top_view
+    def move_item_up(self, index, y_blank, top_view): pass
+        # self.current_index = index
+        # self.current_scroll_top_index = top_view
+    def move_item_down(self, index, y_blank, top_view): pass
+        # self.current_index = index
+        # self.current_scroll_top_index = top_view
 
 class ArtistProvider(SongProvider):
     def __init__(self):
