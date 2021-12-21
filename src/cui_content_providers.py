@@ -145,10 +145,6 @@ class PlaylistProvider(SongProvider):
     def get_at(self, index):
         return super().get_at(index)
 
-# TODO: (maybe) add any songprovider as queue (till its in player.current_queue)
-  # it will be accessible with queue view shortcut
-# TODO: if some queue is switched without one being finished, save it in queueprovider with a smol bufer (a few queues)
-
 # 1 queue is store in player, rest here, if new queue created, the older one gets sent here
 # if queue selected from here, send it to player and yeet it from here
 # when queue complete, yeet it from player too
@@ -247,8 +243,6 @@ class AutoSearchSongs(SongProvider):
         if self.current_index+1 >= len(self.data_list): return None
         return self.get_at(self.current_index+1, self.current_scroll_top_index)
 
-# TODO: devour code from non-cui musimanager and edit tracker and stuff specially for cui, yeet unimportant stuff from cui branches
-
 # TODO: online albums/songs search
     # AlbumSearchYTM
         # search for albums from some artist
@@ -264,10 +258,6 @@ class AutoSearchSongs(SongProvider):
         # save playlists by entering links
             # parse the name if it starts with https:// and online playlist
         # musitracker playlist stays here by default
-
-# TODO: songs should be able to decide if online/offline
-    # playlists/queues should support online songs without probs
-    # online songs can be directly converted in flac after download?
 
 class AlbumSearchYTM(SongProvider):
     def __init__(self):

@@ -1,47 +1,34 @@
 
 bugs:
-  . remove unnecessary inputs from --add-songs-to-plist-using-song-key
-    . asks for clearing the plist twice
-    . asks for choosing artist name for some reason
   . cant init a new database, it expects that user already has the files there
     . create --init-new-db
-  . if download fails -> retry else skip + notify user
-    . check if song exists before downloading (to prevent redownloading due to crashes)
-      . just need to check if there is a file at the required path
-      . need to figure out the path tho. maybe find_path() or something
-  . np-download should ask for artist name confirming
-    . dont forget check-sort after name confirming
 
 plan:
-  . musimanager fix the .ext prob (support more music formats)
-  . use pathlib.path
-  . add another playlist from which things can be downloaded (replacement for newpipe-download)
-  . append-albums-manual whatever - if input == "" then only show artists which dont have any known albums
-  . maybe artist.show() for debug, that shows what all the keys point to?
-    . maybe confirm if its the correct artist by showing its albums
-  . ytmusic.get_album(key){["releaseDate"], ["trackCount"], ["tracks"]}
-  . maybe check song name in known_songs?
-  . track songs too?
-    . have to wait too long for this to finish
-    . Queen Bee - ten - missing (eg holy war)
-    . regional content stuff?
-  . get songs from newpipe playlist and add it to yt_playlist
-    . remove duplicates
-    . sort acc to artist or something
-  
+  . maintain a song history
+    . queue history?
+  . multithreaing for time consuming stuff (async??)
+    . including the live player info change on browser selection change 
+  . show selected song/album/whatever info on the player widget and add shortcut to switch and show playing song
+  . make it work offline (no crashes) 
+  . maybe have general buttons for refresh, and stuff
+  . have a "trigger_on_<button>" method on song provider (:pass), and have required implimentations on subclasses
+  . allow to remove the song from the playlists that already have it
+    . how? the popups dont allow shortcuts
+      . maybe another button to press to try remove?
+      . only show the ones with tick
+  . provide shortcut to search (sort using kinda_similar)
+  . allow to disable album art for the songs that do not have one
+  . add a popup for showing shortcuts
+  . do something useful with the bottom statusbar
+  . shortcut to send songs to queue (different from playlist)
+  . cleanup all downloaded songs from temp_dir on exit
+  . make an init func that checks and setus up the temp dirs and stuff on startup
+  . show some loading thing when doing online stuff/doing stuff with songs (when the screen freezes otherwise)
+
+
 dev_plan: 
   . add fucking typer
   . allow import of cookies and tokens using cli
   . add hooks/functions for external programs to use this as a microservice/package.
   . allow import from .txt and .json files (idk if this actually exists in the code)
   . make code more atomic (late goal, probably after this is stable.)
-
-
-
-
-dependency graph thing:
-  . THIS IS OUT DATED
-  \. options for everything stored in opts
-  \. tracker - artist - album - song (songs for putting in playlist or something, not tracking (for now atleast))
-  \. manager - artist - song
-            - np_db_handler

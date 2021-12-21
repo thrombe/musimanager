@@ -31,16 +31,6 @@ class CUI_handle:
         # TODO: try these
             # picui.set_border_color()
             # picui.set_focus_border_color()
-        # TODO: add a popup for showing shortcuts
-        # TODO: do something useful about the bottom statusbar
-        # TODO: on selection change show song info without playing (allow to enable/disable with shortcut)
-
-        # TODO: add a queue widget + shortcut to disable it
-        # TODO: shortcut to send songs to queue (different from playlist)
-        # TODO: change the widget title as content displayed on it changes
-
-        # TODO: cleanup all downloaded songs from temp_dir on exit
-        # TODO: make an init func that checks and setus up the temp dirs and stuff on startup
 
         self.player_widget = cui_widgets.PlayerWidget(self.pycui.add_scroll_menu('Player', 0, 1, row_span=1, column_span=1, padx = 1, pady = 0))
         self.browser_widget = cui_widgets.BrowserWidget(

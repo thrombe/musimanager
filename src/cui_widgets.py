@@ -107,7 +107,6 @@ class PlayerWidget:
         self.border_padding_y_top = 1
         self.border_padding_y_bottom = 2
         self.lines_of_song_info = 4
-        # TODO: allow to disable album art for the songs that do not have one
 
     def setup(self):
         self.player = Player()
@@ -216,15 +215,12 @@ class BrowserWidget:
         self.player_widget = player_widget # needs to be able to change songs at any time
         self.current_queue_view = False
 
-    # TODO: provide shortcut to search (sort using kinda_similar)
-    # TODO: fix x_blank calculation duplication
-
     def setup(self):
         self.scroll_menu.add_key_command(py_cui.keys.KEY_Q_LOWER, cui_handle.pycui.stop)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_RIGHT_ARROW, self.try_load_right)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_LEFT_ARROW, self.try_load_left)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_P_LOWER, self.player_widget.player.toggle_pause)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_O_LOWER, self.try_add_song_to_playlist)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_O_LOWER, self.add_song_to_playlist)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_J_LOWER, self.player_widget.player.seek_10_secs_behind)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_K_LOWER, self.player_widget.player.seek_10_secs_forward)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_H_LOWER, self.play_prev)
@@ -364,16 +360,12 @@ class BrowserWidget:
             self.content_state_stack.append(self.player_widget.player.current_queue)
             self.refresh_names(self.content_state_stack[-1])
 
-    def try_add_song_to_playlist(self):
+    def add_song_to_playlist(self):
         main_provider = self.content_state_stack[0]
         playlist_provider = main_provider.data_list[2]
         content_provider = self.content_state_stack[-1]
         song = content_provider.get_at(self.scroll_menu.get_selected_item_index())
         if content_provider.content_type is not cui_content_providers.WidgetContentType.SONGS: return
-        # TODO: allow to remove the song from the playlists that already have it
-            # how? the popups dont allow shortcuts
-                # maybe another button to press to try remove?
-                # only show the ones with tick
         
         helper_func2 = lambda p: playlist_provider.add_playlist([song], p.rstrip(" "))
         def helper_func1(x):
