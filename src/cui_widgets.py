@@ -150,6 +150,7 @@ class PlayerWidget:
 
     def play_next(self):
         if self.player.current_queue is None: return False
+        self.set_current_queue_index_to_playing_song()
         next = self.player.current_queue.next()
         if next is not None:
             self.play(next)
@@ -160,12 +161,23 @@ class PlayerWidget:
 
     def play_prev(self):
         if self.player.current_queue is None: return False
+        self.set_current_queue_index_to_playing_song()
         prev = self.player.current_queue.previous()
         if prev is not None:
             self.play(prev)
             return True
         else:
             return False
+
+    # to reset the index to whatever is playing
+    def set_current_queue_index_to_playing_song(self):
+        i = None
+        for j, s in enumerate(self.player.current_queue.data_list):
+            if s.key == self.player.current_song.key:
+                i = j
+                break
+        if i is None: raise ValueError("song not found in queue")
+        self.player.current_queue.current_index = i
 
     def set_queue(self, queue):
         self.player.current_queue = queue
@@ -243,6 +255,7 @@ class BrowserWidget:
         
         # if current song ended, play next
         if self.player_widget.player.song_psuedo_start_time is None: return
+        if self.player_widget.player.is_paused_since is not None: return
         tme = time.time() - self.player_widget.player.song_psuedo_start_time
         if tme > self.player_widget.player.song_duration: # playback_handle.get_pos() >= song_duration
             self.play_next()
@@ -320,10 +333,11 @@ class BrowserWidget:
 
     def refresh_names(self, content):
         self.scroll_menu.clear()
-        if self.current_queue_view: self.scroll_menu.set_title(helpers.pad_zwsp(f"current queue: {content.name}"))
-        else: self.scroll_menu.set_title(helpers.pad_zwsp(content.name))
-        name_list = content.get_current_name_list()
         x_blank = self.player_widget.x_blank()
+        frmat = lambda text: py_cui.fit_text(x_blank, helpers.pad_zwsp(text)).rstrip(" ")
+        if self.current_queue_view: self.scroll_menu.set_title(frmat(f"current queue: {content.name}"))
+        else: self.scroll_menu.set_title(frmat(content.name))
+        name_list = content.get_current_name_list()
         if len(name_list) != 0 and type(name_list[0]) == type(("", "")):
             self.scroll_menu.add_item_list([
                 helpers.text_on_both_sides(name[0], name[1], x_blank) for name in name_list
@@ -333,14 +347,22 @@ class BrowserWidget:
                 helpers.pad_zwsp(py_cui.fit_text(x_blank, name)) for name in name_list
                 ])
 
+        y_blank = self.player_widget.y_blank()
+
+        # making sure some values arent hidden when theres empty space
+        if len(name_list) <= y_blank:
+            content.current_scroll_top_index = 0
+        elif len(name_list)-content.current_scroll_top_index-1 < y_blank:
+            content.current_scroll_top_index = len(name_list)-y_blank-1
+        
+        # making sure selected item is visible
+        if content.current_index < content.current_scroll_top_index:
+            content.current_scroll_top_index = content.current_index
+        elif content.current_index > content.current_scroll_top_index + y_blank - 1:
+            content.current_scroll_top_index = content.current_index - y_blank
+        
         self.scroll_menu.set_selected_item_index(content.current_index)
         self.scroll_menu._top_view = content.current_scroll_top_index
-
-        y_blank = self.player_widget.y_blank()
-        if len(name_list) <= y_blank:
-            self.scroll_menu._top_view = 0
-        elif len(name_list)-content.current_scroll_top_index < y_blank:
-            self.scroll_menu._top_view = len(name_list)-y_blank
 
     def change_queue(self, queue):
         current_queue = self.player_widget.player.current_queue

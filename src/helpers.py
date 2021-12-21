@@ -2,6 +2,7 @@ from difflib import SequenceMatcher
 from wcwidth import wcwidth, wcswidth
 from PIL import Image
 import io
+import numpy as np
 import py_cui
 
 # 2 width chars are counted as 1 width by len(), so causes probs
@@ -24,18 +25,48 @@ def chop_image_into_square(imag):
     if type(imag) == type(bytes()): img = Image.open(io.BytesIO(imag))
     elif type(imag) == type(""): img = Image.open(imag)
     
+    img = chop_black_borders(img)
+
     x, y = img.size
     imag = io.BytesIO()
     if abs(x - y) < 2:
         img.save(imag, "jpeg")
         return imag.getvalue()
-    
+
     a = (x-y)/2
     if a > 0: box = (a, 0, x - a, y)
     else: box = (0, -a, x, y+a)
     img = img.crop(box)
     img.save(imag, "jpeg")
     return imag.getvalue()
+
+def chop_black_borders(imag):
+    y_nonzero, x_nonzero, _ = np.nonzero(blur_rows(np.array(imag))>20)
+    # return imag.crop((np.min(x_nonzero), np.min(y_nonzero), np.max(x_nonzero), np.max(y_nonzero)))
+    return imag.crop((0, np.min(y_nonzero), imag.width-1, np.max(y_nonzero)))
+
+def blur(a):
+    kernel = np.array([[0.0, 0.0, 0.0], 
+                       [2.0, 1.0, 2.0], 
+                       [0.0, 0.0, 0.0]])
+    kernel = kernel / np.sum(kernel)
+    arraylist = []
+    for y in range(3):
+        temparray = np.copy(a)
+        temparray = np.roll(temparray, y - 1, axis=0)
+        for x in range(3):
+            temparray_X = np.copy(temparray)
+            temparray_X = np.roll(temparray_X, x - 1, axis=1)*kernel[y,x]
+            arraylist.append(temparray_X)
+
+    arraylist = np.array(arraylist)
+    arraylist_sum = np.sum(arraylist, axis=0)
+    return arraylist_sum
+
+def blur_rows(img_np_array):
+    for i, row in enumerate(img_np_array):
+        img_np_array[i] = np.sum(row)/(len(row)*len(row[0]))
+    return img_np_array
 
 def text_on_both_sides(x, y, width):
     if len(x)+len(y) > width-2:

@@ -41,7 +41,7 @@ class YTdl:
 
 # global ytdl for all songs to use    
 ytdl = YTdl(opts.musi_path, opts.musi_download_ext)
-temp_ytdl = YTdl(opts.temp_dir, opts.musi_download_ext)
+temp_ytdl = YTdl(opts.temp_dir, "flac")
 musicache = None
 
 class SongInfo(serde.Model): # all metadata that i might care about
@@ -125,7 +125,7 @@ class Song(serde.Model):
         return self.get_info_ytdl_data(ytdl_data)
 
     def temporary_download(self):
-        temp_path = f"{temp_ytdl.path}{self.key}.{ytdl.ext}"
+        temp_path = f"{temp_ytdl.path}{self.key}.{temp_ytdl.ext}"
         download = not os.path.exists(temp_path)
         ytdl_data = temp_ytdl.ytd.extract_info(self.url(), download=download)
 
