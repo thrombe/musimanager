@@ -227,27 +227,18 @@ class FileExplorer(SongProvider):
 class AutoSearchSongs(SongProvider):
     def __init__(self):
         self.song_paths = tracker.Tracker.get_song_paths(opts.get_access_under.rstrip(os.path.sep))
-        data = [s.split(os.path.sep)[-1] for s in self.song_paths]
+        data = []
+        for sp in self.song_paths:
+            s = song.Song.from_file(sp)
+            if s.title is None:
+                s.title = sp.split(os.path.sep)[-1]
+            data.append(s)
         super().__init__(data, "All Songs")
-        self.content_type = WidgetContentType.AUTOSEARCH_SONGS
+        # self.content_type = WidgetContentType.AUTOSEARCH_SONGS
+        self.content_type = WidgetContentType.SONGS # this needs to behave like a queue
 
     def get_at(self, index):
-        super().get_at(index)
-        s = song.Song.from_file(self.song_paths[index])
-        s.title = self.song_paths[index].split(os.path.sep)[-1]
-        self.content_type = WidgetContentType.SONGS # this needs to behave like a queue
-        return s
-
-    def get_current_name_list(self):
-        return self.data_list
-
-    def previous(self):
-        if self.current_index-1 < 0: return None
-        return self.get_at(self.current_index-1, self.current_scroll_top_index)
-
-    def next(self):
-        if self.current_index+1 >= len(self.data_list): return None
-        return self.get_at(self.current_index+1, self.current_scroll_top_index)
+        return super().get_at(index)
 
 # TODO: online albums/songs search
     # AlbumSearchYTM
