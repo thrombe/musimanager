@@ -165,7 +165,7 @@ class Song(serde.Model):
     def download_cover_image(self):
         img = requests.get(self.info.thumbnail_url).content
         imaag = io.BytesIO()
-        Image.open(io.BytesIO(img)).convert("RGB").save(imaag, "jpeg")
+        Image.open(io.BytesIO(img)).save(imaag, "png")
         return imaag.getvalue()
 
     def get_cover_image_from_metadata(self):

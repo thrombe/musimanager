@@ -26,7 +26,7 @@ search_exts = ["mp3", "m4a", "flac", "ogg"]
 do_not_sort = True
 force_ascii_art = False # linux only (cuz theres ueberzug too)
 disable_ascii_art = False
-default_album_art = musimanager_directory + "img.jpeg"
+default_album_art = musimanager_directory + "img.png"
 
 # debugs
 # manager_sort_debug = True

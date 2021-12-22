@@ -130,7 +130,7 @@ class PlayerWidget:
         if self.player.current_song is None: return
         x_blank = self.x_blank()
         center = lambda text: int((x_blank-len(text))/2)*" "+text
-        img = Image.open(opts.temp_dir+"img.jpeg")
+        img = Image.open(opts.temp_dir+"img.png")
         columns = min(
             x_blank,
             round(2.2 * (self.y_blank() - self.lines_of_song_info + 1)),
@@ -186,7 +186,7 @@ class PlayerWidget:
             img = helpers.chop_image_into_square(img)
             img = Image.open(io.BytesIO(img))
             
-        img_path = opts.temp_dir + "img.jpeg"
+        img_path = opts.temp_dir + "img.png"
         img.save(img_path)
 
         if not opts.ASCII_ART:

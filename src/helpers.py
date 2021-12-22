@@ -30,14 +30,14 @@ def chop_image_into_square(imag):
     x, y = img.size
     imag = io.BytesIO()
     if abs(x - y) < 2:
-        img.save(imag, "jpeg")
+        img.save(imag, "png")
         return imag.getvalue()
 
     a = (x-y)/2
     if a > 0: box = (a, 0, x - a, y)
     else: box = (0, -a, x, y+a)
     img = img.crop(box)
-    img.save(imag, "jpeg")
+    img.save(imag, "png")
     return imag.getvalue()
 
 def chop_black_borders(imag):
