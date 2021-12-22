@@ -303,12 +303,18 @@ class BrowserWidget:
         if content is None: return
         if content_provider.content_type is cui_content_providers.WidgetContentType.SONGS:
             self.player_widget.play(content)
-            self.change_queue(copy.deepcopy(self.content_state_stack[-1]))
+            self.change_queue(copy.deepcopy(content_provider))
             return
         elif content.content_type is cui_content_providers.WidgetContentType.SEARCHER:
             self.content_state_stack.append(content)
             self.search()
             return
+        elif content_provider.content_type is cui_content_providers.WidgetContentType.FILE_EXPLORER:
+            if content.content_type is cui_content_providers.WidgetContentType.SONGS:
+                song = content.get_at(content.current_index)
+                self.player_widget.play(song)
+                self.change_queue(content)
+                return
         self.content_state_stack.append(content)
         self.refresh_names(content)
 

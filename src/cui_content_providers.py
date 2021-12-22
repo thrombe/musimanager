@@ -19,11 +19,11 @@ class WidgetContentType(enum.Enum):
     # content types which the widgets are aware of
     PLAYLISTS = enum.auto()
     QUEUES = enum.auto() # like playlist but remembers position and deletes itself when finished
+    FILE_EXPLORER = enum.auto()
 
     # content types which might do special stuff on startup and might change behaviour or return a primitive content type depending on what is chosen
     ARTISTS = enum.auto()
     AUTOSEARCH_SONGS = enum.auto()
-    FILE_EXPLORER = enum.auto()
     ALBUM_SEARCH = enum.auto()
 
 # using this as a trait
@@ -210,19 +210,21 @@ class FileExplorer(SongProvider):
         if len(self.data_list) == 0: return None
         num_folders = len(self.folders)
         if index >= num_folders:
-            path = os.path.join(self.base_path, self.data_list[index])
-            s = song.Song.from_file(path)
-            self.content_type = WidgetContentType.SONGS # so that songs play instantly
-            return s
+            songs = []
+            for name in self.files:
+                path = os.path.join(self.base_path, name)
+                s = song.Song.from_file(path)
+                if s.title is None:
+                    s.title = name
+                songs.append(s)
+            song_provider = SongProvider(songs, self.base_path.split(os.path.sep)[-1])
+            song_provider.current_index = index - num_folders
+            return song_provider
         else:
-            self.content_type = WidgetContentType.FILE_EXPLORER
             return FileExplorer(os.path.join(self.base_path, self.folders[index]))
 
     def get_current_name_list(self):
         return self.data_list
-
-    def previous(self): pass
-    def next(self): pass
 
 class AutoSearchSongs(SongProvider):
     def __init__(self):

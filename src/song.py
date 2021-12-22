@@ -143,6 +143,8 @@ class Song(serde.Model):
         #     if not a: break
         #     i.stdin.write(a)
 
+        self.tag(path=temp_path, img_bytes=self.download_cover_image())
+
         return temp_path
 
     def tag(self, path=None, img_bytes=None):
@@ -155,8 +157,10 @@ class Song(serde.Model):
         mf.artist = self.artist_name
         mf.title = self.title
 
-        if img_bytes is None: return
-        mf.images = [tagg.mediafile.Image(data=img_bytes)]
+        if img_bytes is not None: 
+            mf.images = [tagg.mediafile.Image(data=img_bytes)]
+        
+        mf.save()
 
     def download_cover_image(self):
         img = requests.get(self.info.thumbnail_url).content
@@ -176,8 +180,6 @@ class Song(serde.Model):
     def from_key(key):
         s = Song.new(None, key, None)
         s.get_info()
-        s.title = s.info.titles[0]
-        s.artist_name = s.info.artist_names[0]
         return s
 
     # TODO: how to confirm if filename is key?
@@ -193,12 +195,12 @@ class Song(serde.Model):
     def url(self):
         return f"{ytdl.yt_url}{self.key}"
 
-    def get_info(self):
+    def get_info(self, force_offline_only=False):
         if musicache is not None:
             info = musicache.get(f"{self.key}", None)
             if info is not None:
-                self.info = SongInfo.load(info)
-                return self.info
+                return self.get_info_ytdl_data(info)
+        if force_offline_only: return None
         return self.get_info_yt()
 
     def get_info_yt(self):
