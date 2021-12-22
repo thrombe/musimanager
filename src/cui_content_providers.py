@@ -38,6 +38,19 @@ class SongProvider:
     def add_song(self, song):
         self.data_list.append(song)
 
+    def remove_song(self, song):
+        for i, s in enumerate(self.data_list):
+            if song.key == s.key:
+                self.data_list.pop(i)
+                return True
+        return False
+
+    def contains_song(self, song):
+        for s in self.data_list:
+            if s.key == song.key:
+                return True
+        return False
+
     def get_at(self, index):
         song = self.data_list[index]
         return song
@@ -64,13 +77,6 @@ class SongProvider:
 
     def get_current(self):
         return self.data_list[self.current_index]
-
-    def contains_song(self, song):
-        if self.content_type is not WidgetContentType.SONGS: return False
-        for s in self.data_list:
-            if s.key == song.key:
-                return True
-        return False
 
     def move_item_up(self, index, y_blank, top_view):
         if index == 0: return

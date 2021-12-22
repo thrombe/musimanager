@@ -2,10 +2,22 @@
 bugs:
   . cant init a new database, it expects that user already has the files there
     . create --init-new-db
+  . impliment next and stuff fot the things that behave like SongProviders
+  . cant add songs from AutoSearch and FileExplorer in playlists
+  . how to handle adding fileexplorer and stuff into queue?
 
 plan:
   . maintain a song history
     . queue history?
+    . save song progress and show when searching online (for discoverability)
+      . a dict with just key and a number
+      . songproviders and then use these when passing names
+        . when online stuff, some attr in song_provider would be set true
+      . mark the progress for songs that are offline too
+  . maybe show a smol q besides song names so that a quickshortcut for add_to_current_queue can be added
+  . song menus like newpipe instead of unique buttons for each
+    . choose from here what to do with the song instead of remembering buttons
+    . shortcuts can also be kept if user wants
   . multithreaing for time consuming stuff (async??)
     . including the live player info change on browser selection change 
   . show selected song/album/whatever info on the player widget and add shortcut to switch and show playing song

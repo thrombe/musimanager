@@ -59,10 +59,6 @@ class Player:
         self.playback_handle.load(flac_filelike, namehint=convert_to)
         self.playback_handle.play()
         
-    # def stop(self):
-    #     self.playback_handle.stop()
-    #     self.is_paused_since = time.time()
-
     def toggle_pause(self):
         if self.is_paused_since is not None:
             self.playback_handle.unpause()
@@ -386,14 +382,14 @@ class BrowserWidget:
             self.refresh_names(self.content_state_stack[-1])
 
     def add_song_to_playlist(self):
-        self.add_selected_to_something_using_popup(2, "playlist")
+        self.add_song_to_something_using_popup(2, "playlist")
 
     def add_song_to_queue(self):
-        self.add_selected_to_something_using_popup(3, "queue")
+        self.add_song_to_something_using_popup(3, "queue")
 
-    def add_selected_to_something_using_popup(self, provider_index_in_main, add_new_what):
+    def add_song_to_something_using_popup(self, provider_index_in_main, add_new_what):
         destination_content_provider = self.content_state_stack[0].data_list[provider_index_in_main]
-        queues = [queue for queue in destination_content_provider.data_list]
+        content_providers = [content_provider for content_provider in destination_content_provider.data_list]
         source_content_provider = self.content_state_stack[-1]
         if source_content_provider.content_type is not cui_content_providers.WidgetContentType.SONGS: return
         song = source_content_provider.get_at(self.scroll_menu.get_selected_item_index())
@@ -404,7 +400,8 @@ class BrowserWidget:
             if i == -1:
                 cui_handle.pycui.show_text_box_popup("add new", helper_func2)
                 return
-            queues[i].add_song(song)
+            if not content_providers[i].remove_song(song):
+                content_providers[i].add_song(song)
         
         cui_handle.pycui.show_menu_popup(f"choose/create {add_new_what}", [], helper_func1)
         cui_handle.pycui._popup.set_selected_color(py_cui.MAGENTA_ON_CYAN)
@@ -412,8 +409,8 @@ class BrowserWidget:
         x_blank = cui_handle.pycui._popup._stop_x - cui_handle.pycui._popup._start_x - self.player_widget.border_padding_x*2
         with_a_tick = lambda x, y: (x, "✔"*y)
         options = ["0│ add new"]
-        for i, pl in enumerate(queues):
-            a = with_a_tick(f"{i+1}│ {pl.name}", pl.contains_song(song))
+        for i, p in enumerate(content_providers):
+            a = with_a_tick(f"{i+1}│ {p.name}", p.contains_song(song))
             a = helpers.text_on_both_sides(a[0], a[1], x_blank)
             options.append(a)
         cui_handle.pycui._popup.add_item_list(options)
