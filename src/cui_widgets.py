@@ -37,23 +37,22 @@ class Player:
         # len(song) is ~~ (duration of song in seconds (milliseconds in decimal))*1000
         self.current_song = song
         song_path = song.last_known_path if song.last_known_path is not None else song.temporary_download()
-        
-        # TODO: any other way to get song_duration? mutagen? pydub is slow (and not needed) for flac files
-        self.pydub_audio_segment = pydub.AudioSegment.from_file(song_path, song_path.split(os.path.sep)[-1].split(".")[-1])
-        self.song_duration = len(self.pydub_audio_segment)*0.001 # seconds
+                
+        self.song_duration = song.get_duration(path=song_path)
         self.song_psuedo_start_time = time.time()
         self.is_paused_since = None
-        flac_filelike = io.BytesIO()
-        # with open(song_path, "rb") as f: flac_filelike = io.BytesIO(f.read())
         self.playback_handle = mixer.music
+        flac_filelike = io.BytesIO()
 
         # maybe TODO: try switching back to simpleaudio cuz converting to flac is slower than wav (about a second faster maybe)
         convert_to = "flac"
-        # convert_to = "wav"
-        if song_path.split(".")[-1] != convert_to: flac_filelike = self.pydub_audio_segment.export(flac_filelike, format=convert_to)
+        if song_path.split(".")[-1] != convert_to:
+            self.pydub_audio_segment = pydub.AudioSegment.from_file(song_path, song_path.split(os.path.sep)[-1].split(".")[-1])
+            flac_filelike = self.pydub_audio_segment.export(flac_filelike, format=convert_to)
         else:
             with open(song_path, "rb") as f:
                 flac_filelike.write(f.read())
+
         self.flac_filelike_copy = copy.deepcopy(flac_filelike)
         flac_filelike.seek(0)
         self.playback_handle.load(flac_filelike, namehint=convert_to)

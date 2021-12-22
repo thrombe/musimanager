@@ -2,9 +2,8 @@
 bugs:
   . cant init a new database, it expects that user already has the files there
     . create --init-new-db
-  . impliment next and stuff fot the things that behave like SongProviders
-  . cant add songs from FileExplorer in playlists
-  . how to handle adding fileexplorer into queue?
+  . yeet unnecessary uses of funcs for 2 width chars
+  . something wierd happens when song keys are same (they like to repeat)
 
 plan:
   . maintain a song history

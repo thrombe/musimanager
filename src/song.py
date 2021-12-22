@@ -47,6 +47,7 @@ musicache = None
 class SongInfo(serde.Model): # all metadata that i might care about
     titles: serde.fields.List(serde.fields.Str())
     video_id: serde.fields.Str()
+    duration: serde.fields.Optional(serde.fields.Float())
     tags: serde.fields.List(serde.fields.Str())
     thumbnail_url: serde.fields.Str()
     album: serde.fields.Optional(serde.fields.Str())
@@ -58,6 +59,7 @@ class SongInfo(serde.Model): # all metadata that i might care about
         return SongInfo(
             titles = [""],
             video_id = "",
+            duration = None,
             tags = [],
             thumbnail_url = "",
             album = "",
@@ -76,6 +78,7 @@ class SongInfo(serde.Model): # all metadata that i might care about
         titles = [name for name in titles if name != None]
 
         video_id = ytdl_data["id"]
+        duration = float(ytdl_data["duration"])
         tags = ytdl_data.get("tags", [])
         thumbnail_url = ytdl_data["thumbnail"]
         album = ytdl_data.get("album", "")
@@ -91,8 +94,8 @@ class SongInfo(serde.Model): # all metadata that i might care about
         # donno whats diff here
         channel_id = ytdl_data["channel_id"]
         uploader_id = ytdl_data["uploader_id"]
-        return SongInfo(titles=titles, video_id=video_id, tags=tags, thumbnail_url=thumbnail_url, album=album,
-                        artist_names=artist_names, channel_id=channel_id, uploader_id=uploader_id)
+        return SongInfo(titles=titles, video_id=video_id, duration=duration, tags=tags, thumbnail_url=thumbnail_url,
+                        album=album, artist_names=artist_names, channel_id=channel_id, uploader_id=uploader_id)
 
 class Song(serde.Model):
     title: serde.fields.Optional(serde.fields.Str())
@@ -107,7 +110,7 @@ class Song(serde.Model):
             title = title,
             key = key, # youtube videoid
             artist_name = artist_name,
-            info = None,
+            info = SongInfo.empty(),
             last_known_path = path,
             title_lock = False,
         )
@@ -188,9 +191,18 @@ class Song(serde.Model):
         mf = tagg.MediaFile(path)
         s.title = mf.title
         s.artist_name = mf.artist
-        s.info = SongInfo.empty()
         s.info.album = mf.album
+        s.info.duration = mf.length
         return s
+
+    def get_duration(self, path=None):
+        if self.info.duration is not None:
+            return self.info.duration
+        if path is None and self.last_known_path is not None:
+            path = self.last_known_path
+        mf = tagg.MediaFile(path)
+        self.info.duration = mf.length
+        return self.info.duration
 
     def url(self):
         return f"{ytdl.yt_url}{self.key}"
