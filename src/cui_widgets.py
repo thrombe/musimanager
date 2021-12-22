@@ -233,6 +233,7 @@ class BrowserWidget:
         self.scroll_menu.add_key_command(py_cui.keys.KEY_LEFT_ARROW, self.try_load_left)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_P_LOWER, self.player_widget.player.toggle_pause)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_O_LOWER, self.add_song_to_playlist)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_I_LOWER, self.add_song_to_queue)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_J_LOWER, self.player_widget.player.seek_10_secs_behind)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_K_LOWER, self.player_widget.player.seek_10_secs_forward)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_H_LOWER, self.play_prev)
@@ -242,6 +243,7 @@ class BrowserWidget:
         self.scroll_menu.add_key_command(py_cui.keys.KEY_V_LOWER, self.move_item_down)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_B_LOWER, self.move_item_up)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_U_LOWER, self.toggle_queue_view)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_S_LOWER, self.search)
         self.scroll_menu.set_selected_color(py_cui.MAGENTA_ON_CYAN)
 
         self.scroll_menu.add_item_list(self.content_state_stack[0].get_current_name_list())
@@ -305,17 +307,11 @@ class BrowserWidget:
         if content is None: return
         if content_provider.content_type is cui_content_providers.WidgetContentType.SONGS:
             self.player_widget.play(content)
-            potential_queue_provider = self.content_state_stack[-2]
-            if potential_queue_provider.content_type is cui_content_providers.WidgetContentType.QUEUES:
-                potential_queue_provider.yeet_selected_queue()
             self.change_queue(copy.deepcopy(self.content_state_stack[-1]))
             return
         elif content.content_type is cui_content_providers.WidgetContentType.SEARCHER:
-            def helper_func(search_term):
-                content.search(search_term)
-                self.content_state_stack.append(content)
-                self.refresh_names(content)
-            cui_handle.pycui.show_text_box_popup(content.search_box_title(), helper_func)
+            self.content_state_stack.append(content)
+            self.search()
             return
         self.content_state_stack.append(content)
         self.refresh_names(content)
@@ -331,11 +327,20 @@ class BrowserWidget:
         self.content_state_stack.pop()
         self.refresh_names(self.content_state_stack[-1])
 
+    def search(self):
+        content_provider = self.content_state_stack[-1]
+        search_box_title = content_provider.search(None, get_search_box_title=True)
+        if search_box_title is None: return
+        def helper_func(search_term):
+            content_provider.search(search_term)
+            self.refresh_names(content_provider)
+        cui_handle.pycui.show_text_box_popup(search_box_title, helper_func)
+
     def refresh_names(self, content):
         self.scroll_menu.clear()
         x_blank = self.player_widget.x_blank()
-        frmat = lambda text: py_cui.fit_text(x_blank, helpers.pad_zwsp(text)).rstrip(" ")
-        if self.current_queue_view: self.scroll_menu.set_title(frmat(f"current queue: {content.name}"))
+        frmat = lambda text: py_cui.fit_text(x_blank-1, helpers.pad_zwsp(text)).rstrip(" ")
+        if self.current_queue_view: self.scroll_menu.set_title(frmat(f"queue: {content.name}"))
         else: self.scroll_menu.set_title(frmat(content.name))
         name_list = content.get_current_name_list()
         if len(name_list) != 0 and type(name_list[0]) == type(("", "")):
@@ -365,10 +370,8 @@ class BrowserWidget:
         self.scroll_menu._top_view = content.current_scroll_top_index
 
     def change_queue(self, queue):
-        current_queue = self.player_widget.player.current_queue
-        if current_queue is not None:
-            queue_provider = self.content_state_stack[0].data_list[3]
-            queue_provider.add_queue(current_queue)
+        queue_provider = self.content_state_stack[0].data_list[3]
+        queue_provider.add_queue(queue)
         self.player_widget.set_queue(queue)
 
     def toggle_queue_view(self):
@@ -383,29 +386,34 @@ class BrowserWidget:
             self.refresh_names(self.content_state_stack[-1])
 
     def add_song_to_playlist(self):
-        main_provider = self.content_state_stack[0]
-        playlist_provider = main_provider.data_list[2]
-        content_provider = self.content_state_stack[-1]
-        song = content_provider.get_at(self.scroll_menu.get_selected_item_index())
-        if content_provider.content_type is not cui_content_providers.WidgetContentType.SONGS: return
+        self.add_selected_to_something_using_popup(2, "playlist")
+
+    def add_song_to_queue(self):
+        self.add_selected_to_something_using_popup(3, "queue")
+
+    def add_selected_to_something_using_popup(self, provider_index_in_main, add_new_what):
+        destination_content_provider = self.content_state_stack[0].data_list[provider_index_in_main]
+        queues = [queue for queue in destination_content_provider.data_list]
+        source_content_provider = self.content_state_stack[-1]
+        if source_content_provider.content_type is not cui_content_providers.WidgetContentType.SONGS: return
+        song = source_content_provider.get_at(self.scroll_menu.get_selected_item_index())
         
-        helper_func2 = lambda p: playlist_provider.add_playlist([song], p.rstrip(" "))
+        helper_func2 = lambda p: destination_content_provider.add_new_song_provider([song], p.rstrip(" "))
         def helper_func1(x):
             i = int(x.split("│")[0]) - 1
             if i == -1:
                 cui_handle.pycui.show_text_box_popup("add new", helper_func2)
                 return
-            playlist_provider.data_list[i].add_song(song)
+            queues[i].add_song(song)
         
-        cui_handle.pycui.show_menu_popup("choose/create playlist", [], helper_func1)
+        cui_handle.pycui.show_menu_popup(f"choose/create {add_new_what}", [], helper_func1)
         cui_handle.pycui._popup.set_selected_color(py_cui.MAGENTA_ON_CYAN)
         
         x_blank = cui_handle.pycui._popup._stop_x - cui_handle.pycui._popup._start_x - self.player_widget.border_padding_x*2
         with_a_tick = lambda x, y: (x, "✔"*y)
         options = ["0│ add new"]
-        for i, pl in enumerate(playlist_provider.data_list):
+        for i, pl in enumerate(queues):
             a = with_a_tick(f"{i+1}│ {pl.name}", pl.contains_song(song))
             a = helpers.text_on_both_sides(a[0], a[1], x_blank)
             options.append(a)
         cui_handle.pycui._popup.add_item_list(options)
-        

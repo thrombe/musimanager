@@ -88,6 +88,8 @@ class SongProvider:
         self.data_list.insert(index, song)
         self.current_index = index
 
+    def search(self, search_term, get_search_box_title=False): return None
+
 class MainProvider(SongProvider):
     def __init__(self):
         # TODO: fix ArtistProvider
@@ -136,7 +138,7 @@ class PlaylistProvider(SongProvider):
           # what abot artistprovider? use tracker here?
         pass
 
-    def add_playlist(self, songs, name):
+    def add_new_song_provider(self, songs, name):
         self.data_list.append(SongProvider(songs, name))
 
     def get_current_name_list(self):
@@ -157,22 +159,20 @@ class QueueProvider(SongProvider):
     def get_current_name_list(self):
         return [helpers.pad_zwsp(queue.name) for queue in self.data_list]
 
-    def add_queue(self, songs, name):
+    def add_new_song_provider(self, songs, name):
         self.data_list.append(SongProvider(songs, name))
 
     def add_queue(self, queue):
-        self.data_list = [queue] + self.data_list
+        for i, q in enumerate(self.data_list):
+            # TODO: maybe improve this with some kind of unique queue id
+            if queue.name == q.name and len(queue.data_list) == len(q.data_list):
+                self.data_list.pop(i)
+        self.data_list.insert(0, queue)
+        self.current_index = 0
         if len(self.data_list) > 5: self.data_list.pop()
 
     def get_at(self, index):
         return super().get_at(index)
-
-    def yeet_selected_queue(self):
-        self.yeet_queue_at(self.current_index)
-        self.current_index = 0
-
-    def yeet_queue_at(self, index):
-        self.data_list.pop(index)
 
 class FileExplorer(SongProvider):
     def __init__(self, base_path):
@@ -265,17 +265,19 @@ class AlbumSearchYTM(SongProvider):
         super().__init__([], "Album Search")
         self.content_type = WidgetContentType.SEARCHER
     
-    def search(self, search_term):
+    def search(self, search_term, get_search_box_title=False):
+        if get_search_box_title: return "enter album/artist name"
+
         self.current_search_term = search_term
         self.name = f"Search: {search_term}"
         self.content_type = WidgetContentType.ALBUM_SEARCH
+        self.data_list = []
+        self.reset_indices()
         data = opts.ytmusic.search(self.current_search_term, filter="albums", limit=opts.musitracker_search_limit, ignore_spelling=True)
         for album_data in data:
             a = album.Album.load(album_data)
             self.data_list.append(a)
     
-    def search_box_title(self): return "enter album/artist name"
-
     def get_at(self, index):
         a = super().get_at(index)
         return SongProvider(a.get_songs(), a.name)
