@@ -197,7 +197,7 @@ class PlayerWidget:
         x_blank = self.x_blank()
         # center = lambda text: int((x_blank-len(text))/2)*" "+text
         # right = lambda text: int(x_blank-int(len(text)))*" "+text
-        center = lambda text: py_cui.fit_text(x_blank, helpers.pad_zwsp(text), center=True)
+        center = lambda text: helpers.fit_text(x_blank, helpers.pad_zwsp(text), center=True)
         if opts.LUUNIX and not opts.ASCII_ART:
             blank = min(
                 self.y_blank() - self.lines_of_song_info,
@@ -341,7 +341,7 @@ class BrowserWidget:
     def refresh_names(self, content):
         self.scroll_menu.clear()
         x_blank = self.player_widget.x_blank()
-        frmat = lambda text: py_cui.fit_text(x_blank-1, helpers.pad_zwsp(text)).rstrip(" ")
+        frmat = lambda text: helpers.fit_text(x_blank-1, helpers.pad_zwsp(text)).rstrip(" ")
         if self.current_queue_view: self.scroll_menu.set_title(frmat(f"queue: {content.name}"))
         else: self.scroll_menu.set_title(frmat(content.name))
         name_list = content.get_current_name_list()
@@ -351,7 +351,7 @@ class BrowserWidget:
             ])
         else:
             self.scroll_menu.add_item_list([ # yes, pad is needed before and after fit_text (annoying 2 width chars)
-                helpers.pad_zwsp(py_cui.fit_text(x_blank, name)) for name in name_list
+                helpers.pad_zwsp(helpers.fit_text(x_blank, name)) for name in name_list
                 ])
 
         y_blank = self.player_widget.y_blank()

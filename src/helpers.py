@@ -3,17 +3,17 @@ from wcwidth import wcwidth, wcswidth
 from PIL import Image
 import io
 import numpy as np
-import py_cui
 
 # 2 width chars are counted as 1 width by len(), so causes probs
 # https://github.com/jupiterbjy/CUIAudioPlayer/
 def pad_zwsp(string):
-    zwsp = "\u200b" # zero width space character or something
-    pads = 0
+    zwsp = "\u200b" # zero width space character
+    string = string.replace(zwsp, "") # to avoid extra zwsp chars
+    res = ""
     for char in string:
-        p = wcwidth(char)-len(char)
-        pads += p
-    return zwsp*pads + string
+        p = wcswidth(char)-len(char)
+        res += zwsp*p + char
+    return res
 
 def kinda_similar(str1, str2, threshold=0.4):
     # this func is terrible, use a different one
@@ -73,10 +73,26 @@ def text_on_both_sides(x, y, width):
         ex = len(x) > width/2
         yae = len(y) > width/2
         if ex and not yae:
-            x = py_cui.fit_text(width-2-len(y), x)
+            x = fit_text(width-2-len(y), x)
         elif not ex and yae:
-            y = py_cui.fit_text(width-2-len(x), y)
+            y = fit_text(width-2-len(x), y)
         elif ex and yae:
             widthe = int((width-2)/2)
-            x, y = py_cui.fit_text(widthe + 1, x), py_cui.fit_text(widthe, y)
+            x, y = fit_text(widthe + 1, x), fit_text(widthe, y)
     return x + (width - len(x) - len(y))*" " + y
+
+def fit_text(width, text, center=False):
+    if width < 5:
+        return '.' * width
+    if len(text) >= width:
+        return text[:width - 3] + '..'
+    else:
+        total_num_spaces = (width - len(text) - 1)
+        if center:
+            left_spaces = int(total_num_spaces / 2)
+            right_spaces = int(total_num_spaces / 2)
+            if(total_num_spaces % 2 == 1):
+                right_spaces = right_spaces + 1
+            return ' ' * left_spaces + text + ' ' * right_spaces
+        else:
+            return text + ' ' * total_num_spaces
