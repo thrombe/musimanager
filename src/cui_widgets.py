@@ -168,7 +168,7 @@ class PlayerWidget:
     def set_current_queue_index_to_playing_song(self):
         i = None
         for j, s in enumerate(self.player.current_queue.data_list):
-            if s.key == self.player.current_song.key:
+            if s == self.player.current_song:
                 i = j
                 break
         if i is None: raise ValueError("song not found in queue")
@@ -301,8 +301,9 @@ class BrowserWidget:
         content = content_provider.get_at(self.scroll_menu.get_selected_item_index())
         if content is None: return
         if content_provider.content_type is cui_content_providers.WidgetContentType.SONGS:
-            self.player_widget.play(content)
-            self.change_queue(copy.deepcopy(content_provider))
+            content_provider_copy = copy.deepcopy(content_provider)
+            self.player_widget.play(content_provider_copy.get_at(self.scroll_menu.get_selected_item_index())) # getting it again so playing song is the same as the one in song_provider
+            self.change_queue(content_provider_copy)
             return
         elif content.content_type is cui_content_providers.WidgetContentType.SEARCHER:
             self.content_state_stack.append(content)

@@ -3,7 +3,6 @@ bugs:
   . cant init a new database, it expects that user already has the files there
     . create --init-new-db
   . yeet unnecessary uses of funcs for 2 width chars
-  . something wierd happens when song keys are same (they like to repeat)
 
 plan:
   . maintain a song history
@@ -20,22 +19,16 @@ plan:
     . add one to try load in from yt (for offline songs without metadata)
     . how to do menus for general content_providers?
   . ability to append songproviders into queues
-  . get duration from phrydy??
   . multithreaing for time consuming stuff (async??)
     . including the live player info change on browser selection change 
   . show selected song/album/whatever info on the player widget and add shortcut to switch and show playing song
   . make it work offline (no crashes) 
   . maybe have general buttons for refresh, and stuff
   . have a "trigger_on_<button>" method on song provider (:pass), and have required implimentations on subclasses
-  . allow to remove the song from the playlists that already have it
-    . how? the popups dont allow shortcuts
-      . maybe another button to press to try remove?
-      . only show the ones with tick
-  . provide shortcut to search (sort using kinda_similar)
+  . provide shortcut to filter (sort using kinda_similar)
   . allow to disable album art for the songs that do not have one
   . add a popup for showing shortcuts
   . do something useful with the bottom statusbar
-  . shortcut to send songs to queue (different from playlist)
   . cleanup all downloaded songs from temp_dir on exit
   . make an init func that checks and setus up the temp dirs and stuff on startup
   . show some loading thing when doing online stuff/doing stuff with songs (when the screen freezes otherwise)

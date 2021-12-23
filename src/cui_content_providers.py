@@ -40,14 +40,14 @@ class SongProvider:
 
     def remove_song(self, song):
         for i, s in enumerate(self.data_list):
-            if song.key == s.key:
+            if song == s:
                 self.data_list.pop(i)
                 return True
         return False
 
     def contains_song(self, song):
         for s in self.data_list:
-            if s.key == song.key:
+            if s == song:
                 return True
         return False
 
