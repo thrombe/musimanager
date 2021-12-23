@@ -26,6 +26,8 @@ plan:
   . maybe have general buttons for refresh, and stuff
   . have a "trigger_on_<button>" method on song provider (:pass), and have required implimentations on subclasses
   . provide shortcut to filter (sort using kinda_similar)
+    . save filtered objects in a seperate variable, and use this one to get the names for objects and object from names
+    . filter changes, just change the filtered list using the main list
   . allow to disable album art for the songs that do not have one
   . add a popup for showing shortcuts
   . do something useful with the bottom statusbar

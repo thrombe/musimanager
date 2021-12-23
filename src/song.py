@@ -101,9 +101,8 @@ class Song(serde.Model):
     title: serde.fields.Optional(serde.fields.Str())
     key: serde.fields.Optional(serde.fields.Str())
     artist_name: serde.fields.Optional(serde.fields.Str())
-    info: serde.fields.Optional(serde.fields.Nested(SongInfo))
+    info: serde.fields.Nested(SongInfo)
     last_known_path: serde.fields.Optional(serde.fields.Str())
-    title_lock: serde.fields.Optional(serde.fields.Bool())
 
     def new(title, key, artist_name, path=None):
         return Song(
@@ -112,7 +111,6 @@ class Song(serde.Model):
             artist_name = artist_name,
             info = SongInfo.empty(),
             last_known_path = path,
-            title_lock = False,
         )
         
     def get_path(self):

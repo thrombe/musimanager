@@ -1,16 +1,44 @@
 
+import serde
 
-class Artist:
-    def __init__(self, name, key):
-        self.name = name
-        if type(key) == type(["key"]): self.keys = set(key)
-        elif type(key) == type("string"): self.keys = set([key])
-        else: self.keys = None
-        self.check_stat = True
-        self.ignore_no_songs = False # wont be removed from db even if no songs in it (only tracking for new albums)
-        self.name_confirmation_status = False
-        
-        self.known_albums = set()
-        self.songs = set() # downloaded songs
-        self.keywords = set() # keywords for sort
+import song
+
+class Artist(serde.Model):
+    name: serde.fields.Str()
+    keys: serde.fields.List(serde.fields.Str())
+    check_stat: serde.fields.Bool()
+    ignore_no_songs: serde.fields.Bool() # wont be removed from db even if no songs in it (only tracking for new albums)
+    name_confirmation_status: serde.fields.Bool()
+    songs: serde.fields.List(serde.fields.Nested(song.Song))
+    known_album_ids: serde.fields.List(serde.fields.Str()) # to track what albums the user has listened to
+    keywords: serde.fields.List(serde.fields.Str()) # keywords for sort
+    non_keywords: serde.fields.List(serde.fields.Str()) # keywords/keys to specifically ignore
+
+    def new(name, keys):
+        if type(keys) == type(["key"]): keys = keys
+        elif type(keys) == type("string"): keys = [keys]
+        else: keys = None
+        return Artist(
+            name=name,
+            keys=keys,
+            check_stat=True,
+            ignore_no_songs=False,
+            name_confirmation_status=False,
+            songs=[],
+            known_album_ids=[],
+            keywords=[],
+            non_keywords=[],
+        )
     
+    def add_song(self, s):
+        self.songs.append(s)
+        if s.artist_name not in self.non_keywords:
+            if s.artist_name not in self.keywords:
+                self.keywords.append(s.artist_name)
+        if s.channel_id not in self.non_keywords:
+            if s.channel_id not in self.keys:
+                self.keys.append(s.info.channel_id)
+        if s.uploader_id not in self.non_keywords:
+            if s.uploader_id not in self.keys:
+                self.keys.append(s.info.uploader_id)
+        s.artist_name = self.name

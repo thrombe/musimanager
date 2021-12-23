@@ -31,7 +31,7 @@ default_album_art = musimanager_directory + "img.png"
 # debugs
 # manager_sort_debug = True
 ytdl_quiet = True
-debug_no_edits_to_stored = True
+debug_no_edits_to_stored = False
 debug_no_edits_to_db = False
 
 

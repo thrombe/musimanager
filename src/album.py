@@ -1,27 +1,31 @@
 
+import serde
+
 import song
 import opts
 
 albumcache = None
 
-class Album:
-    def __init__(self, name, browse_id, artists):
-        self.name = name
-        self.browse_id = browse_id
-        self.playlist_id = None
-        self.songs = []
-        # self.artist_daata = artists # [{"name": "..", "id": ".."}, {..}, ..]
-        self.artist_name = [artist["name"] for artist in artists if artist.get("name", None) is not None]
-        if len(self.artist_name) == 0: self.artist_name = ""
-        else: self.artist_name = ", ".join(self.artist_name)
+class Album(serde.Model):
+    name: serde.fields.Str()
+    browse_id: serde.fields.Str()
+    playlist_id: serde.fields.Optional(serde.fields.Str())
+    songs: serde.fields.List(serde.fields.Nested(song.Song))
+    artist_name: serde.fields.Str()
 
     def load(ytm_album_search_data):
-        # artist_data = ytm_album_search_data["artists"]
-        # if artist_data is None or len(artist_data) == 0:
-        #     artist_data = {"name": None, "id": None}
-        # else:
-        #     artist_data = artist_data[0]
-        return Album(ytm_album_search_data["title"], ytm_album_search_data["browseId"], ytm_album_search_data["artists"])
+        # self.artist_daata = artists # [{"name": "..", "id": ".."}, {..}, ..]
+        artist_name = [artist["name"] for artist in ytm_album_search_data["artists"] if artist.get("name", None) is not None]
+        if len(artist_name) == 0: artist_name = ""
+        else: artist_name = ", ".join(artist_name)
+
+        return Album(
+            name=ytm_album_search_data["title"],
+            browse_id=ytm_album_search_data["browseId"],
+            playlist_id=None,
+            songs=[],
+            artist_name=artist_name,
+        )
 
     def set_albumcache_refrence(tracker):
         global albumcache
@@ -29,12 +33,12 @@ class Album:
 
     def get_playlist_id(self): # this is needed to access songs from ytdl (to get a url for this album) or to add its songs to a youtube playlist
         if self.playlist_id: return self.playlist_id
-        album_data = self.get_album_data()
+        album_data = self.get_album_data_ytmusic()
         self.playlist_id = album_data.get("playlistId", None)
         if self.playlist_id is None: self.playlist_id = album_data["audioPlaylistId"]
         return self.playlist_id
 
-    def get_album_data(self):
+    def get_album_data_ytmusic(self):
         album_data = None
         if albumcache is not None:
             album_data = albumcache.get(self.browse_id, None)
@@ -55,15 +59,23 @@ class Album:
         return album_data
 
     def get_songs(self):
+        self.songs = self.get_songs_ytdl()
+        # self.songs = self.get_songs_ytmusic()
+        return self.songs
+
+    def get_songs_ytdl(self):
         songs = []
-        # album = self.get_album_data()
-        # for song_data in album["tracks"]:
-        #     if song_data["videoId"] is None: continue # songs without video id are no longer available
-        #     songs.append(song.Song(song_data["title"], song_data["videoId"], None))
         album = self.get_album_data_ytdl()
         for song_data in album["entries"]:
             if song_data["id"] is None: continue # songs without video id are no longer available
-            songs.append(song.Song(song_data["title"], song_data["id"], None))
-        self.songs = songs
+            songs.append(song.Song.new(song_data["title"], song_data["id"], None))
+        return songs
+
+    def get_songs_ytmusic(self):
+        songs = []
+        album = self.get_album_data_ytmusic()
+        for song_data in album["tracks"]:
+            if song_data["videoId"] is None: continue # songs without video id are no longer available
+            songs.append(song.Song.new(song_data["title"], song_data["videoId"], None))
         return songs
     

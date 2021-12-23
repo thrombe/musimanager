@@ -98,8 +98,7 @@ class SongProvider:
 
 class MainProvider(SongProvider):
     def __init__(self):
-        # TODO: fix ArtistProvider
-        data = [ArtistProvider, AutoSearchSongs(), PlaylistProvider(), QueueProvider(), FileExplorer.new(), AlbumSearchYTM()]
+        data = [ArtistProvider(), AutoSearchSongs(), PlaylistProvider(), QueueProvider(), FileExplorer.new(), AlbumSearchYTM()]
         super().__init__(data, "Browser")
         self.content_type = WidgetContentType.MAIN
 
@@ -115,9 +114,8 @@ class MainProvider(SongProvider):
 
 class ArtistProvider(SongProvider):
     def __init__(self):
-        _tracker = tracker.Tracker()
-        _tracker.load()
-        data = list(_tracker.artists)
+        _tracker = tracker.Tracker.load()
+        data = _tracker.artists
         data.sort(key=lambda x: x.name)
         super().__init__(data, "Artists")
         self.content_type = WidgetContentType.ARTISTS
