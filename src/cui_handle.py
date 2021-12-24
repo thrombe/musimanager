@@ -21,7 +21,7 @@ class CUI_handle:
         global pycui 
         pycui = self.pycui # to make it accessible globally
         self.pycui.toggle_unicode_borders()
-        self.pycui.set_title('cuisimanager')
+        self.pycui.set_title('cuisiman')
         # self.master.enable_logging(logging_level=logging.ERROR)
         # self.master.toggle_live_debug_mode()
         self.pycui.set_refresh_timeout(0.1)

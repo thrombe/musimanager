@@ -36,7 +36,7 @@ class Player:
         if self.playback_handle is not None: self.playback_handle.stop()
         # len(song) is ~~ (duration of song in seconds (milliseconds in decimal))*1000
         self.current_song = song
-        song_path = song.last_known_path if song.last_known_path is not None else song.temporary_download()
+        song_path = song.last_known_path if song.last_known_path is not None and os.path.exists(song.last_known_path) else song.temporary_download()
                 
         self.song_duration = song.get_duration(path=song_path)
         self.song_psuedo_start_time = time.time()
@@ -389,4 +389,4 @@ class BrowserWidget:
             self.refresh_names(self.content_state_stack[-1])
 
     def menu_for_selected(self, execute_func_index=None):
-        self.content_state_stack[-1].menu_for_selected(self.content_state_stack[0], execute_func_index=execute_func_index)
+        self.content_state_stack[-1].menu_for_selected(self.content_state_stack, execute_func_index=execute_func_index)

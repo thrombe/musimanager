@@ -19,7 +19,6 @@ class Artist(serde.Model):
     def new(name, keys):
         if type(keys) == type(["key"]): keys = keys
         elif type(keys) == type("string"): keys = [keys]
-        else: keys = None
         return Artist(
             name=name,
             keys=keys,

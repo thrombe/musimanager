@@ -16,10 +16,13 @@ def pad_zwsp(string):
     return res
 
 def kinda_similar(str1, str2, threshold=0.4):
-    # this func is terrible, use a different one
-    perc = SequenceMatcher(None, str1.lower(), str2.lower()).ratio()
+    perc = kinda_similar_perc(str1, str2)
     if perc >= threshold: return True
     else: return False
+
+def kinda_similar_perc(str1, str2):
+    # this func is terrible, use a different one
+    return SequenceMatcher(None, str1.lower(), str2.lower()).ratio()
 
 def chop_image_into_square(imag):
     if type(imag) == type(bytes()): img = Image.open(io.BytesIO(imag))
