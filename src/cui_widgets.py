@@ -227,8 +227,8 @@ class BrowserWidget:
         self.scroll_menu.add_key_command(py_cui.keys.KEY_RIGHT_ARROW, self.try_load_right)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_LEFT_ARROW, self.try_load_left)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_P_LOWER, self.player_widget.player.toggle_pause)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_O_LOWER, self.add_song_to_playlist)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_I_LOWER, self.add_song_to_queue)
+        # self.scroll_menu.add_key_command(py_cui.keys.KEY_O_LOWER, lambda: self.menu_for_selected(execute_func_index=2)) # add song to playlists # TODO these crash on non songs
+        # self.scroll_menu.add_key_command(py_cui.keys.KEY_I_LOWER, lambda: self.menu_for_selected(execute_func_index=3)) # add song to queues
         self.scroll_menu.add_key_command(py_cui.keys.KEY_J_LOWER, self.player_widget.player.seek_10_secs_behind)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_K_LOWER, self.player_widget.player.seek_10_secs_forward)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_H_LOWER, self.play_prev)
@@ -239,6 +239,7 @@ class BrowserWidget:
         self.scroll_menu.add_key_command(py_cui.keys.KEY_B_LOWER, self.move_item_up)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_U_LOWER, self.toggle_queue_view)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_S_LOWER, self.search)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_G_LOWER, self.menu_for_selected)
         self.scroll_menu.set_selected_color(py_cui.MAGENTA_ON_CYAN)
 
         self.scroll_menu.add_item_list(self.content_state_stack[0].get_current_name_list())
@@ -387,36 +388,5 @@ class BrowserWidget:
             self.content_state_stack.append(self.player_widget.player.current_queue)
             self.refresh_names(self.content_state_stack[-1])
 
-    def add_song_to_playlist(self):
-        self.add_song_to_something_using_popup(2, "playlist")
-
-    def add_song_to_queue(self):
-        self.add_song_to_something_using_popup(3, "queue")
-
-    def add_song_to_something_using_popup(self, provider_index_in_main, add_new_what):
-        destination_content_provider = self.content_state_stack[0].data_list[provider_index_in_main]
-        content_providers = [content_provider for content_provider in destination_content_provider.data_list]
-        source_content_provider = self.content_state_stack[-1]
-        if source_content_provider.content_type is not cui_content_providers.WidgetContentType.SONGS: return
-        song = source_content_provider.get_at(self.scroll_menu.get_selected_item_index())
-        
-        helper_func2 = lambda p: destination_content_provider.add_new_song_provider([song], p.rstrip(" "))
-        def helper_func1(x):
-            i = int(x.split("│")[0]) - 1
-            if i == -1:
-                cui_handle.pycui.show_text_box_popup("add new", helper_func2)
-                return
-            if not content_providers[i].remove_song(song):
-                content_providers[i].add_song(song)
-        
-        cui_handle.pycui.show_menu_popup(f"choose/create {add_new_what}", [], helper_func1)
-        cui_handle.pycui._popup.set_selected_color(py_cui.MAGENTA_ON_CYAN)
-        
-        x_blank = cui_handle.pycui._popup._stop_x - cui_handle.pycui._popup._start_x - self.player_widget.border_padding_x*2
-        with_a_tick = lambda x, y: (x, "✔"*y)
-        options = ["0│ add new"]
-        for i, p in enumerate(content_providers):
-            a = with_a_tick(f"{i+1}│ {p.name}", p.contains_song(song))
-            a = helpers.text_on_both_sides(a[0], a[1], x_blank)
-            options.append(a)
-        cui_handle.pycui._popup.add_item_list(options)
+    def menu_for_selected(self, execute_func_index=None):
+        self.content_state_stack[-1].menu_for_selected(self.content_state_stack[0], execute_func_index=execute_func_index)

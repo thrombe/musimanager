@@ -1,6 +1,7 @@
 
 import enum
 
+import py_cui
 import os
 
 import opts
@@ -8,6 +9,7 @@ import tracker
 import song
 import helpers
 import album
+import cui_handle
 
 class WidgetContentType(enum.Enum):
     MAIN = enum.auto()
@@ -40,14 +42,14 @@ class SongProvider:
 
     def remove_song(self, song):
         for i, s in enumerate(self.data_list):
-            if song == s:
+            if song.key == s.key:
                 self.data_list.pop(i)
                 return True
         return False
 
     def contains_song(self, song):
         for s in self.data_list:
-            if s == song:
+            if s.key == song.key:
                 return True
         return False
 
@@ -75,8 +77,8 @@ class SongProvider:
         if self.current_index < 0: return None
         return self.data_list[self.current_index]
 
-    def get_current(self):
-        return self.data_list[self.current_index]
+    # def get_current(self):
+    #     return self.data_list[self.current_index]
 
     def move_item_up(self, index, y_blank, top_view):
         if index == 0: return
@@ -93,6 +95,72 @@ class SongProvider:
         index += 1
         self.data_list.insert(index, song)
         self.current_index = index
+    
+    # TODO: can execute_func_index be replaces with some enum while still being tidy ???
+        # how to make sure that given func exists for this content type?
+    def menu_for_selected(self, main_provider, execute_func_index=None):
+        pycui = cui_handle.pycui
+        song = self.get_at(self.current_index)
+        
+        def download_song(): # TODO
+            _ = song.info
+            pass
+        def remove_song():
+            self.remove_song(song)
+        def add_song_to_something_using_popup(destination_content_provider, add_new_what, content_providers, enable_options=True):
+            song = self.get_at(self.current_index)
+            
+            helper_func2 = lambda p: destination_content_provider.add_new([song], p.rstrip(" "))
+            def helper_func1(x):
+                i = int(x.split("│")[0]) - 2*enable_options
+                if i == -2:
+                    pycui.show_text_box_popup("add new", helper_func2)
+                    return
+                elif i == -1:
+                    f = lambda x: add_song_to_something_using_popup(destination_content_provider, add_new_what, [c for c in content_providers if helpers.kinda_similar(c.name, x, 0.6)], enable_options=False)
+                    pycui.show_text_box_popup("filter", f)
+                    return
+                if not content_providers[i].remove_song(song):
+                    content_providers[i].add_song(song)
+            
+            pycui.show_menu_popup(f"choose/create {add_new_what}", [], helper_func1)
+            pycui._popup.set_selected_color(py_cui.MAGENTA_ON_CYAN)
+            
+            x_blank = pycui._popup._stop_x - pycui._popup._start_x - 6
+            with_a_tick = lambda x, y: (x, "✔"*y)
+            if enable_options: options = ["0│ add new", "1│ filter"]
+            else: options = []
+            for i, p in enumerate(content_providers):
+                a = with_a_tick(f"{i+2*enable_options}│ {p.name}", p.contains_song(song))
+                a = helpers.text_on_both_sides(a[0], a[1], x_blank)
+                options.append(a)
+            pycui._popup.add_item_list(options)
+        def add_to_playlist():
+            add_song_to_something_using_popup(main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list)
+        def add_to_queue():
+            add_song_to_something_using_popup(main_provider.data_list[3], "queue", main_provider.data_list[3].data_list)
+        def add_to_artist():
+            add_song_to_something_using_popup(main_provider.data_list[0], "artists", main_provider.data_list[0].data_list)
+        
+        menu_funcs = [
+            download_song,
+            remove_song,
+            add_to_playlist,
+            add_to_queue,
+            add_to_artist,
+        ]
+
+        if execute_func_index is not None:
+            return menu_funcs[execute_func_index]()
+        menu_func_names = [f"{i}│ "+func.__name__.replace("_", " ") for i, func in enumerate(menu_funcs)]
+        def helper_func(x):
+            i = int(x.split("│")[0])
+            menu_funcs[i]()
+        pycui.show_menu_popup("", [], helper_func)
+        x_blank = pycui._popup._stop_x - pycui._popup._start_x - 6
+        pycui._popup.set_title(f"{helpers.fit_text(x_blank, helpers.pad_zwsp(song.title)).rstrip(' ')}")
+        pycui._popup.set_selected_color(py_cui.MAGENTA_ON_CYAN)
+        pycui._popup.add_item_list(menu_func_names)
 
     def search(self, search_term, get_search_box_title=False): return None
 
@@ -107,6 +175,8 @@ class MainProvider(SongProvider):
 
     def get_current_name_list(self):
         return ["Artists", "All Songs", "Playlists", "Queues", "File Explorer", "Album Search"]
+
+    def menu_for_selected(self, main_provider, execute_func_index=None): pass
 
     # thou shall not move items here
     def move_item_up(self, index, y_blank, top_view): pass
@@ -129,6 +199,14 @@ class ArtistProvider(SongProvider):
         songs.sort(key=lambda x: x.title)
         return SongProvider(songs, f"songs by {artist.name}")
 
+    # TODO
+    def add_new(self, songs, name):
+        pass
+
+    # TODO
+    def menu_for_selected(self, main_provider, execute_func_index=None):
+        pass
+
 # TODO: use picui.run_on_exit func to save playlists and stuff
 class PlaylistProvider(SongProvider):
     def __init__(self):
@@ -142,7 +220,7 @@ class PlaylistProvider(SongProvider):
           # what abot artistprovider? use tracker here?
         pass
 
-    def add_new_song_provider(self, songs, name):
+    def add_new(self, songs, name):
         self.data_list.append(SongProvider(songs, name))
 
     def get_current_name_list(self):
@@ -150,6 +228,10 @@ class PlaylistProvider(SongProvider):
     
     def get_at(self, index):
         return super().get_at(index)
+
+    # TODO
+    def menu_for_selected(self, main_provider, execute_func_index=None):
+        pass
 
 # 1 queue is store in player, rest here, if new queue created, the older one gets sent here
 # if queue selected from here, send it to player and yeet it from here
@@ -163,7 +245,7 @@ class QueueProvider(SongProvider):
     def get_current_name_list(self):
         return [helpers.pad_zwsp(queue.name) for queue in self.data_list]
 
-    def add_new_song_provider(self, songs, name):
+    def add_new(self, songs, name):
         self.data_list.append(SongProvider(songs, name))
 
     def add_queue(self, queue):
@@ -177,6 +259,10 @@ class QueueProvider(SongProvider):
 
     def get_at(self, index):
         return super().get_at(index)
+
+    # TODO
+    def menu_for_selected(self, main_provider, execute_func_index=None):
+        pass
 
 class FileExplorer(SongProvider):
     def __init__(self, base_path):
@@ -223,6 +309,17 @@ class FileExplorer(SongProvider):
 
     def get_current_name_list(self):
         return self.data_list
+
+    # thou shall not move items here
+    def move_item_up(self, index, y_blank, top_view): pass
+    def move_item_down(self, index, y_blank, top_view): pass
+
+    def menu_for_selected(self, main_provider, execute_func_index=None):
+        if len(self.data_list) == 0: return None
+        num_folders = len(self.folders)
+        if self.current_index >= num_folders:
+            sp = self.get_at(self.current_index)
+            sp.menu_for_selected(main_provider, execute_func_index=execute_func_index)
 
 class AutoSearchSongs(SongProvider):
     def __init__(self):
@@ -282,3 +379,7 @@ class AlbumSearchYTM(SongProvider):
     
     def get_current_name_list(self):
         return [(helpers.pad_zwsp(a.name), helpers.pad_zwsp(a.artist_name)) for a in self.data_list]
+    
+    # TODO
+    def menu_for_selected(self, main_provider, execute_func_index=None):
+        pass

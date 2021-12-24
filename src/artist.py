@@ -3,6 +3,7 @@ import serde
 
 import song
 import album
+import cui_content_providers
 
 class Artist(serde.Model):
     name: serde.fields.Str()
@@ -36,10 +37,16 @@ class Artist(serde.Model):
         if s.artist_name not in self.non_keywords:
             if s.artist_name not in self.keywords:
                 self.keywords.append(s.artist_name)
-        if s.channel_id not in self.non_keywords:
-            if s.channel_id not in self.keys:
+        if s.info.channel_id not in self.non_keywords:
+            if s.info.channel_id not in self.keys:
                 self.keys.append(s.info.channel_id)
-        if s.uploader_id not in self.non_keywords:
-            if s.uploader_id not in self.keys:
+        if s.info.uploader_id not in self.non_keywords:
+            if s.info.uploader_id not in self.keys:
                 self.keys.append(s.info.uploader_id)
         s.artist_name = self.name
+    
+    def remove_song(self, s):
+        return cui_content_providers.SongProvider(self.songs, self.name).remove_song(s)
+
+    def contains_song(self, s):
+        return cui_content_providers.SongProvider(self.songs, self.name).contains_song(s)

@@ -3,6 +3,8 @@ bugs:
   . cant init a new database, it expects that user already has the files there
     . create --init-new-db
   . yeet unnecessary uses of funcs for 2 width chars
+  . since content_provider.current_index is updated every frame, yeet them from the get_at arguments and stuff
+    . check if its necessary somewhere first
 
 plan:
   . FIX CRASHES CUZ OF ONLINE TIMEOUTS and stuff

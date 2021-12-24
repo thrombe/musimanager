@@ -24,6 +24,7 @@ class Tracker(serde.Model):
         album.Album.set_albumcache_refrence(self)
 
     # TODO: save and load cache from different file so its easy to yeet
+    # TODO: save playlists, queues, stuff
     def save(self):
         if opts.debug_no_edits_to_db: return
         with open(opts.musitracker_path, "w") as f:
