@@ -5,6 +5,7 @@ bugs:
   . yeet unnecessary uses of funcs for 2 width chars
 
 plan:
+  . FIX CRASHES CUZ OF ONLINE TIMEOUTS and stuff
   . maintain a song history
     . queue history?
     . save song progress and show when searching online (for discoverability)

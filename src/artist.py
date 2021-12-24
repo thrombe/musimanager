@@ -2,6 +2,7 @@
 import serde
 
 import song
+import album
 
 class Artist(serde.Model):
     name: serde.fields.Str()
@@ -10,7 +11,7 @@ class Artist(serde.Model):
     ignore_no_songs: serde.fields.Bool() # wont be removed from db even if no songs in it (only tracking for new albums)
     name_confirmation_status: serde.fields.Bool()
     songs: serde.fields.List(serde.fields.Nested(song.Song))
-    known_album_ids: serde.fields.List(serde.fields.Str()) # to track what albums the user has listened to
+    known_albums: serde.fields.List(serde.fields.Nested(album.Album)) # to track what albums the user has listened to
     keywords: serde.fields.List(serde.fields.Str()) # keywords for sort
     non_keywords: serde.fields.List(serde.fields.Str()) # keywords/keys to specifically ignore
 
@@ -25,7 +26,7 @@ class Artist(serde.Model):
             ignore_no_songs=False,
             name_confirmation_status=False,
             songs=[],
-            known_album_ids=[],
+            known_albums=[],
             keywords=[],
             non_keywords=[],
         )

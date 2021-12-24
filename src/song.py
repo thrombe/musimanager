@@ -24,7 +24,7 @@ class YTdl:
                 "preferredcodec": self.ext
             }],
             "noplaylist": True,
-            "quiet": opts.ytdl_quiet,
+            "quiet": True,
             "outtmpl": self.path + "%(id)s.%(ext)s",
             "verbose": False,
             "no_warnings": True,

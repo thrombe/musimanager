@@ -201,7 +201,7 @@ class FileExplorer(SongProvider):
         self.content_type = WidgetContentType.FILE_EXPLORER
     
     def new():
-        return FileExplorer(opts.get_access_under)
+        return FileExplorer(opts.search_under)
         
     # send either FileExplorer or single song
     def get_at(self, index):
@@ -226,7 +226,7 @@ class FileExplorer(SongProvider):
 
 class AutoSearchSongs(SongProvider):
     def __init__(self):
-        self.song_paths = tracker.Tracker.get_song_paths(opts.get_access_under.rstrip(os.path.sep))
+        self.song_paths = tracker.Tracker.get_song_paths(opts.search_under.rstrip(os.path.sep))
         data = []
         for sp in self.song_paths:
             s = song.Song.from_file(sp)
@@ -270,6 +270,7 @@ class AlbumSearchYTM(SongProvider):
         self.content_type = WidgetContentType.ALBUM_SEARCH
         self.data_list = []
         self.reset_indices()
+        # TODO: support arbitary search results (maybe "<name> | <num resullts>" or somethin)
         data = opts.ytmusic.search(self.current_search_term, filter="albums", limit=opts.musitracker_search_limit, ignore_spelling=True)
         for album_data in data:
             a = album.Album.load(album_data)
