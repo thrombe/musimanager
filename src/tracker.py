@@ -9,6 +9,7 @@ import album
 
 class Tracker(serde.Model):
     artists: serde.fields.List(serde.fields.Nested(artist.Artist))
+    # progress_history: serde.fields.Dict() # {key: watch_progress in range (0, 1)}
     musicache: serde.fields.Dict()
     albumcache: serde.fields.Dict()
 

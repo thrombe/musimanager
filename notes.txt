@@ -21,7 +21,7 @@ plan:
     . shortcuts can also be kept if user wants
     . add one to try load in from yt (for offline songs without metadata)
     . how to do menus for general content_providers?
-  . ability to append songproviders into queues
+  . shortcut to shuffle queue
   . multithreaing for time consuming stuff (async??)
     . including the live player info change on browser selection change 
   . show selected song/album/whatever info on the player widget and add shortcut to switch and show playing song
