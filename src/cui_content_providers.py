@@ -4,6 +4,7 @@ import enum
 import py_cui
 import os
 import copy
+import random
 
 import opts
 import tracker
@@ -117,6 +118,13 @@ class SongProvider:
             self.data_list.clear()
             for a in self.unfiltered_data: self.data_list.append(a)
             self.unfiltered_data = None
+
+    def shuffle(self):
+        if self.unfiltered_data is None:
+            self.unfiltered_data = [a for a in self.data_list]
+            random.shuffle(self.data_list)
+        else:
+            self.filter(None)
 
     def menu_for_selected(self, content_stack, no_moves=False, execute_func_index=None):
         main_provider = content_stack[0]

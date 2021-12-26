@@ -241,6 +241,7 @@ class BrowserWidget:
         self.scroll_menu.add_key_command(py_cui.keys.KEY_S_LOWER, self.search)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_G_LOWER, self.menu_for_selected)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_F_LOWER, self.filter)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_F_UPPER, self.shuffle_if_current_queue)
         self.scroll_menu.set_selected_color(py_cui.MAGENTA_ON_CYAN)
 
         self.scroll_menu.add_item_list(self.content_state_stack[0].get_current_name_list())
@@ -403,3 +404,9 @@ class BrowserWidget:
             filter_func(None)
             return
         cui_handle.pycui.show_text_box_popup("filter", filter_func)
+    
+    def shuffle_if_current_queue(self):
+        if self.current_queue_view:
+            self.player_widget.player.current_queue.shuffle()
+            self.content_state_stack[-1].reset_indices()
+            self.refresh_names(self.content_state_stack[-1])

@@ -6,6 +6,7 @@ bugs:
   . since content_provider.current_index is updated every frame, yeet them from the get_at arguments and stuff
     . check if its necessary somewhere first
   . filtering changes order (important in queues)
+  . is current_queue_view variable even required anymore?
 
 plan:
   . FIX CRASHES CUZ OF ONLINE TIMEOUTS and stuff
