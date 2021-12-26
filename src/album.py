@@ -12,6 +12,7 @@ class Album(serde.Model):
     playlist_id: serde.fields.Optional(serde.fields.Str())
     songs: serde.fields.List(serde.fields.Nested(song.Song))
     artist_name: serde.fields.Str()
+    artist_keys: serde.fields.List(serde.fields.Str())
 
     def load(ytm_album_search_data):
         # self.artist_daata = artists # [{"name": "..", "id": ".."}, {..}, ..]
@@ -25,7 +26,28 @@ class Album(serde.Model):
             playlist_id=None,
             songs=[],
             artist_name=artist_name,
+            artist_keys=[artist["id"] for artist in ytm_album_search_data["artists"] if artist.get("id", None) is not None]
         )
+    
+    def load_albums_from_artist_key(key):
+        artist_data = opts.ytmusic.get_artist(key)
+        maybe_albums_data = artist_data.get("albums", None)
+        if maybe_albums_data is None: return []
+        albums_data = maybe_albums_data.get("results", None)
+        if maybe_albums_data.get("params", None) is not None:
+            albums_data = opts.ytmusic.get_artist_albums(key, maybe_albums_data["params"])
+        if albums_data is None: return []
+        albums = []
+        for album_data in albums_data:
+            albums.append(Album(
+                name=album_data["title"],
+                browse_id=album_data["browseId"],
+                playlist_id=None,
+                songs=[],
+                artist_name=artist_data["name"],
+                artist_keys=[key]
+            ))
+        return albums
 
     def set_albumcache_refrence(tracker):
         global albumcache

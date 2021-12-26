@@ -207,21 +207,29 @@ class ArtistProvider(SongProvider):
                     content_provider.add_song(s)
         def remove_artist():
             self.remove_artist(a)
-        def get_albums_untracked():
+        def get_albums_untracked_as_playlist():
             asy = AlbumSearchYTM.albums_for_artist(a)
-            content_stack.append(asy)
+            # content_stack.append(asy)
             # main_provider.data_list[5] = asy
+            songs = []
+            for al in asy.data_list:
+                try: songs.extend(al.get_songs())
+                except: continue
+            main_provider.data_list[2].add_new(songs, f"all songs by {a.name}")
         def get_new_albums_tracked_as_playlist():
             asy = AlbumSearchYTM.albums_for_artist(a)
             # main_provider.data_list[5] = copy.deepcopy(asy)
-            for i, al in enumerate(copy.copy(asy.data_list)):
+            for al in copy.copy(asy.data_list):
                 for al2 in a.known_albums:
                     if al.browse_id == al2.browse_id:
-                        asy.data_list.pop(i)
+                        asy.remove_album(al)
                         break
+            songs = []
             for al in asy.data_list:
+                try: songs.extend(al.get_songs())
+                except: continue
                 a.known_albums.append(al)
-            main_provider.data_list[2].add_new(asy.data_list, f"new songs by {a.name}")
+            main_provider.data_list[2].add_new(songs, f"new songs by {a.name}")
         def add_to_playlist():
             select_item_using_popup(main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func)
         def add_to_queue():
@@ -249,7 +257,7 @@ class ArtistProvider(SongProvider):
             yeet(a.non_keywords, "non keyword")
 
         menu_funcs = [
-            get_albums_untracked,
+            get_albums_untracked_as_playlist,
             get_new_albums_tracked_as_playlist,
             add_to_playlist,
             add_to_queue,
@@ -471,12 +479,23 @@ class AlbumSearchYTM(SongProvider):
         self.content_type = WidgetContentType.SEARCHER
     
     def albums_for_artist(a):
+        # TODO: increase search limit for first search when tracked
         asy = AlbumSearchYTM()
         asy.search(a.name)
+        albums = []
         for al in asy.data_list:
-            # if al.key something
-            pass
-        # TODO
+            for k in al.artist_keys:
+                if k in a.keys:
+                    if not any([al.browse_id == a2.browse_id for a2 in albums]):
+                        albums.append(al)
+                    break
+        for key in a.keys:
+            aa = album.Album.load_albums_from_artist_key(key)
+            for a1 in aa:
+                if not any([a1.browse_id == a2.browse_id for a2 in albums]):
+                    albums.append(a1)
+        # albums.sort(key=lambda x: x.name)
+        asy.data_list = albums
         return asy
 
     def search(self, search_term, get_search_box_title=False):
@@ -500,11 +519,11 @@ class AlbumSearchYTM(SongProvider):
     def get_current_name_list(self):
         return [(helpers.pad_zwsp(a.name), helpers.pad_zwsp(a.artist_name)) for a in self.data_list]
     
-    # def remove_album(self, album):
-    #     for i, a in enumerate(self.data_list):
-    #         if a.name == album.name:
-    #             self.data_list.pop(i)
-    #             return
+    def remove_album(self, album):
+        for i, a in enumerate(self.data_list):
+            if a.name == album.name:
+                self.data_list.pop(i)
+                return
 
     def menu_for_selected(self, main_provider, execute_func_index=None):
         PlaylistProvider.menu_for_selected(self, main_provider, execute_func_index=execute_func_index, no_remove=True)

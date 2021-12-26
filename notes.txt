@@ -3,7 +3,6 @@ bugs:
   . cant init a new database, it expects that user already has the files there
     . create --init-new-db
   . yeet unnecessary uses of funcs for 2 width chars
-  . yeet redundant refresh_names as already happens every frame
   . since content_provider.current_index is updated every frame, yeet them from the get_at arguments and stuff
     . check if its necessary somewhere first
 
@@ -17,13 +16,12 @@ plan:
         . when online stuff, some attr in song_provider would be set true
       . mark the progress for songs that are offline too
   . maybe show a smol q besides song names so that a quickshortcut for add_to_current_queue can be added
-  . song menus like newpipe instead of unique buttons for each
-    . choose from here what to do with the song instead of remembering buttons
-    . shortcuts can also be kept if user wants
-    . add one to try load in from yt (for offline songs without metadata)
-    . how to do menus for general content_providers?
+  . maybe global shortcuts?
+    . https://pynput.readthedocs.io/en/latest/
+    . https://github.com/moses-palmer/pynput
   . shortcut to shuffle queue
   . yeet artist name confirmation var and add a menu func for it
+  . artist.search_term for artists that dont give good enough results for just their names for albums
   . multithreaing for time consuming stuff (async??)
     . including the live player info change on browser selection change 
   . show selected song/album/whatever info on the player widget and add shortcut to switch and show playing song
