@@ -3,6 +3,7 @@ bugs:
   . cant init a new database, it expects that user already has the files there
     . create --init-new-db
   . yeet unnecessary uses of funcs for 2 width chars
+  . yeet redundant refresh_names as already happens every frame
   . since content_provider.current_index is updated every frame, yeet them from the get_at arguments and stuff
     . check if its necessary somewhere first
 
@@ -22,6 +23,7 @@ plan:
     . add one to try load in from yt (for offline songs without metadata)
     . how to do menus for general content_providers?
   . shortcut to shuffle queue
+  . yeet artist name confirmation var and add a menu func for it
   . multithreaing for time consuming stuff (async??)
     . including the live player info change on browser selection change 
   . show selected song/album/whatever info on the player widget and add shortcut to switch and show playing song

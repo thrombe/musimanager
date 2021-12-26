@@ -101,34 +101,34 @@ class SongProvider:
     def menu_for_selected(self, content_stack, execute_func_index=None):
         main_provider = content_stack[0]
         s = self.get_at(self.current_index)
+        s = copy.deepcopy(s) # cuz artists need a copy (cuz they change some info) # else can use different final_func for the artists with a deepcopy
         
         def download_song(): # TODO
             _ = s.info
             pass
         def add_uploaders_key_to_artist():
-            tick_func = lambda x, y: False
-            def final_func(content_provider, selected_content):
-                content_provider.add_song(selected_content)
-                content_provider.remove_song(selected_content)
-            add_item_to_something_using_popup(copy.deepcopy(s), main_provider.data_list[0], "artists", main_provider.data_list[0].data_list, final_func, tick_func)
+            def final_func(content_provider):
+                content_provider.add_song(s)
+                content_provider.remove_song(s)
+            select_item_using_popup(main_provider.data_list[0], "artists", main_provider.data_list[0].data_list, final_func)
         def remove_song():
             self.remove_song(s)
-        def final_func(content_provider, selected_content):
-            if not content_provider.remove_song(selected_content):
-                content_provider.add_song(selected_content)
+        def final_func(content_provider):
+            if not content_provider.remove_song(s):
+                content_provider.add_song(s)
         def tick_func(song_provider, selected_item):
             return song_provider.contains_song(selected_item)
         def add_to_playlist():
-            add_item_to_something_using_popup(s, main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func, tick_func)
+            select_item_using_popup(main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func, tick_func=tick_func)
         def move_to_playlist():
-            def final_func2(content_provider, selected_content):
+            def final_func2(content_provider):
                 remove_song()
-                final_func(content_provider, selected_content)
-            add_item_to_something_using_popup(s, main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func2, tick_func)
+                final_func(content_provider)
+            select_item_using_popup(main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func2, tick_func=tick_func)
         def add_to_queue():
-            add_item_to_something_using_popup(s, main_provider.data_list[3], "queue", main_provider.data_list[3].data_list, final_func, tick_func)
+            select_item_using_popup(main_provider.data_list[3], "queue", main_provider.data_list[3].data_list, final_func, tick_func=tick_func)
         def add_to_artist():
-            add_item_to_something_using_popup(copy.deepcopy(s), main_provider.data_list[0], "artists", main_provider.data_list[0].data_list, final_func, tick_func)
+            select_item_using_popup(main_provider.data_list[0], "artists", main_provider.data_list[0].data_list, final_func, tick_func=tick_func)
         def add_to_tracker_offline(): # TODO
             # download/convert downloaded to required format and shift to musi_dir
             pass
@@ -143,7 +143,7 @@ class SongProvider:
             download_song,
             remove_song,
         ]
-        present_menu_popup(s, menu_funcs, execute_func_index, s.title)
+        present_menu_popup(menu_funcs, execute_func_index, s.title)
 
     def search(self, search_term, get_search_box_title=False): return None
 
@@ -201,9 +201,8 @@ class ArtistProvider(SongProvider):
         main_provider = content_stack[0]
         a = self.data_list[self.current_index]
 
-        tick_func = lambda x, y: False
-        def final_func(content_provider, selected_content):
-            for s in selected_content.songs:
+        def final_func(content_provider):
+            for s in a.songs:
                 if not content_provider.contains_song(s):
                     content_provider.add_song(s)
         def remove_artist():
@@ -224,24 +223,24 @@ class ArtistProvider(SongProvider):
                 a.known_albums.append(al)
             main_provider.data_list[2].add_new(asy.data_list, f"new songs by {a.name}")
         def add_to_playlist():
-            add_item_to_something_using_popup(a, main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func, tick_func)
+            select_item_using_popup(main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func)
         def add_to_queue():
-            add_item_to_something_using_popup(a, main_provider.data_list[3], "queue", main_provider.data_list[3].data_list, final_func, tick_func)
+            select_item_using_popup(main_provider.data_list[3], "queue", main_provider.data_list[3].data_list, final_func)
         def fuse_into_another_artist():
-            def final_func2(a, b):
-                final_func(a, b)
+            def final_func2(a):
+                final_func(a)
                 remove_artist()
-            add_item_to_something_using_popup(a, main_provider.data_list[0], "artists", main_provider.data_list[0].data_list, final_func2, tick_func)
+            select_item_using_popup(main_provider.data_list[0], "artists", main_provider.data_list[0].data_list, final_func2)
         def yeet(list, title): # put in non-keywords # how will user know what key is what?
             class A:
                 def __init__(self, name): self.name = name
             daata = [A(key) for key in list]
-            def final_func(key, a):
+            def final_func(key):
                 if key.name not in a.non_keywords: a.non_keywords.append(key.name)
                 for i, k in enumerate(list):
                     if key.name == k:
                         list.pop(i)
-            add_item_to_something_using_popup(a, None, title, daata, final_func, tick_func, enable_options=False)
+            select_item_using_popup(None, title, daata, final_func, enable_options=False)
         def yeet_key():
             yeet(a.keys, "key")
         def yeet_keyword(): # yeet from keywords, goes into non-keywords
@@ -260,7 +259,7 @@ class ArtistProvider(SongProvider):
             yeet_non_keyword,
             remove_artist,
         ]
-        present_menu_popup(a, menu_funcs, execute_func_index, a.name)
+        present_menu_popup(menu_funcs, execute_func_index, a.name)
 
 
 # TODO: use picui.run_on_exit func to save playlists and stuff
@@ -297,15 +296,14 @@ class PlaylistProvider(SongProvider):
         main_provider = content_stack[0]
         playlist = self.get_at(self.current_index)
 
-        tick_func = lambda x, y: False
-        def final_func(content_provider, selected_content):
-            for s in selected_content.data_list:
+        def final_func(content_provider):
+            for s in playlist.data_list:
                 if not content_provider.contains_song(s):
                     content_provider.add_song(s)
         def append_to_playlist():
-            add_item_to_something_using_popup(playlist, main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func, tick_func)
+            select_item_using_popup(main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func)
         def append_to_queue():
-            add_item_to_something_using_popup(playlist, main_provider.data_list[3], "queue", main_provider.data_list[3].data_list, final_func, tick_func)
+            select_item_using_popup(main_provider.data_list[3], "queue", main_provider.data_list[3].data_list, final_func)
         def remove_playlist():
             self.remove_playlist(playlist)
         def add_to_tracker_offline():
@@ -321,7 +319,7 @@ class PlaylistProvider(SongProvider):
             remove_playlist,
         ]
         if no_remove: menu_funcs.pop(menu_funcs.index(remove_playlist))
-        present_menu_popup(playlist, menu_funcs, execute_func_index, playlist.name)
+        present_menu_popup(menu_funcs, execute_func_index, playlist.name)
 
 # 1 queue is store in player, rest here, if new queue created, the older one gets sent here
 # if queue selected from here, send it to player and yeet it from here
@@ -361,25 +359,24 @@ class QueueProvider(SongProvider):
         main_provider = content_stack[0]
         queue = self.get_at(self.current_index)
 
-        tick_func = lambda x, y: False
-        def final_func(content_provider, selected_content):
-            for s in selected_content.data_list:
+        def final_func(content_provider):
+            for s in queue.data_list:
                 if not content_provider.contains_song(s):
                     content_provider.add_song(s)
         def remove_queue():
             self.remove_queue(queue)
         def append_to_playlist():
-            add_item_to_something_using_popup(queue, main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func, tick_func)
+            select_item_using_popup(main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func)
         def merge_into_queue():
             remove_queue()
-            add_item_to_something_using_popup(queue, main_provider.data_list[3], "queue", main_provider.data_list[3].data_list, final_func, tick_func)
+            select_item_using_popup(main_provider.data_list[3], "queue", main_provider.data_list[3].data_list, final_func)
 
         menu_funcs = [
             remove_queue,
             append_to_playlist,
             merge_into_queue,
         ]
-        present_menu_popup(queue, menu_funcs, execute_func_index, queue.name)
+        present_menu_popup(menu_funcs, execute_func_index, queue.name)
 
 
 class FileExplorer(SongProvider):
@@ -456,10 +453,6 @@ class AutoSearchSongs(SongProvider):
         return super().get_at(index)
 
 # TODO: online albums/songs search
-    # AlbumSearchYTM
-        # search for albums from some artist
-    # ArtistAlbumSearchYTM (tracker)
-        # get all albums for selected artist (all keys + album search)
     # ArtistSearchYTM
         # search for artist then get all albums from them (probably single key)
         # provide shortcut to add to tracker/add key to some artist (sort with key=kinda_similar so similar come first in list)
@@ -518,14 +511,10 @@ class AlbumSearchYTM(SongProvider):
 
 # constraints
     # destination_content_provider -> add_new(self, content_list, name)
-# TODO: there is no reaso to take in selected_content cuz it can be captured in final_func and stuff
-    # except maybe when deepcopy() is made
-# TODO: tick_func can be defaulted to lambda x, y: False
-# TODO: rename appropriately
-def add_item_to_something_using_popup(selected_content, destination_content_provider, add_new_what, content_providers, final_func, tick_func, enable_options=True):
+def select_item_using_popup(destination_content_provider, add_new_what, content_providers, final_func, tick_func=lambda x: False, enable_options=True):
     def helper_func2(p):
         sp = destination_content_provider.add_new([], p.rstrip(" "))
-        final_func(sp, selected_content)
+        final_func(sp)
     def helper_func1(x):
         i = int(x.split("│")[0]) - 2*enable_options
         if i == -2:
@@ -535,10 +524,10 @@ def add_item_to_something_using_popup(selected_content, destination_content_prov
             def f(x):
                 new_content_providers = [c for c in content_providers if helpers.kinda_similar(c.name, x)]
                 new_content_providers.sort(key=lambda c: -helpers.kinda_similar_perc(c.name, x))
-                add_item_to_something_using_popup(selected_content, destination_content_provider, add_new_what, new_content_providers, enable_options=False)
+                select_item_using_popup(destination_content_provider, add_new_what, new_content_providers, enable_options=False)
             cui_handle.pycui.show_text_box_popup("filter", f)
             return
-        final_func(content_providers[i], selected_content)
+        final_func(content_providers[i])
     
     cui_handle.pycui.show_menu_popup(f"choose {add_new_what}", [], helper_func1)
     cui_handle.pycui._popup.set_selected_color(py_cui.MAGENTA_ON_CYAN)
@@ -548,15 +537,14 @@ def add_item_to_something_using_popup(selected_content, destination_content_prov
     if enable_options: options = ["0│ add new", "1│ filter"]
     else: options = []
     for i, p in enumerate(content_providers):
-        a = with_a_tick(f"{i+2*enable_options}│ {p.name}", tick_func(p, selected_content))
+        a = with_a_tick(f"{i+2*enable_options}│ {p.name}", tick_func(p))
         a = helpers.text_on_both_sides(a[0], a[1], x_blank)
         options.append(a)
     cui_handle.pycui._popup.add_item_list(options)
 
 # TODO: can execute_func_index be replaced with some enum while still being tidy ???
     # how to make sure that given func exists for this content type?
-# TODO: yeet the selected_content as argument as not required
-def present_menu_popup(selected_content, menu_funcs, execute_func_index, popup_title):
+def present_menu_popup(menu_funcs, execute_func_index, popup_title):
     if execute_func_index is not None:
         return menu_funcs[execute_func_index]()
     menu_func_names = [f"{i}│ "+func.__name__.replace("_", " ") for i, func in enumerate(menu_funcs)]
