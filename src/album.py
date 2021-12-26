@@ -13,6 +13,7 @@ class Album(serde.Model):
     songs: serde.fields.List(serde.fields.Nested(song.Song))
     artist_name: serde.fields.Str()
     artist_keys: serde.fields.List(serde.fields.Str())
+    # ytmusic.get_album()["thumbnails"][-1]["url"]
 
     def load(ytm_album_search_data):
         # self.artist_daata = artists # [{"name": "..", "id": ".."}, {..}, ..]

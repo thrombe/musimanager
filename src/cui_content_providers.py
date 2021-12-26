@@ -38,6 +38,7 @@ class SongProvider:
         self.current_index = 0
         self.current_scroll_top_index = 0
         self.name = name
+        self.unfiltered_data = None
 
     def add_song(self, song):
         self.data_list.append(song)
@@ -98,7 +99,26 @@ class SongProvider:
         self.data_list.insert(index, song)
         self.current_index = index
     
-    def menu_for_selected(self, content_stack, execute_func_index=None):
+    def filter(self, filter_term, name=lambda x: x.title):
+        if self.unfiltered_data is None:
+            self.unfiltered_data = [a for a in self.data_list]
+            self.data_list.sort(key=lambda c: -helpers.kinda_similar_perc(name(c), filter_term))
+        else:
+            # making sure changes are synced between filtered and unfiltered lists
+            for a in self.data_list:
+                # if not any([same(a, b) for b in self.unfiltered_data]):
+                if self.unfiltered_data.count(a) == 0:
+                    self.unfiltered_data.append(a)
+            for a in copy.copy(self.unfiltered_data):
+                # if not any([same(a, b) for b in self.data_list]):
+                if self.data_list.count(a) == 0:
+                    self.unfiltered_data.remove(a) # can use this ad the elements are the exact same
+
+            self.data_list.clear()
+            for a in self.unfiltered_data: self.data_list.append(a)
+            self.unfiltered_data = None
+
+    def menu_for_selected(self, content_stack, no_moves=False, execute_func_index=None):
         main_provider = content_stack[0]
         s = self.get_at(self.current_index)
         s = copy.deepcopy(s) # cuz artists need a copy (cuz they change some info) # else can use different final_func for the artists with a deepcopy
@@ -116,8 +136,8 @@ class SongProvider:
         def final_func(content_provider):
             if not content_provider.remove_song(s):
                 content_provider.add_song(s)
-        def tick_func(song_provider, selected_item):
-            return song_provider.contains_song(selected_item)
+        def tick_func(song_provider):
+            return song_provider.contains_song(s)
         def add_to_playlist():
             select_item_using_popup(main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func, tick_func=tick_func)
         def move_to_playlist():
@@ -134,15 +154,19 @@ class SongProvider:
             pass
 
         menu_funcs = [
+            add_to_queue,
             add_to_playlist,
             move_to_playlist,
-            add_to_queue,
             add_to_tracker_offline,
             add_to_artist,
             add_uploaders_key_to_artist,
             download_song,
             remove_song,
         ]
+        if no_moves:
+            menu_funcs.remove(remove_song)
+            menu_funcs.remove(move_to_playlist)
+            menu_funcs.remove(download_song)
         present_menu_popup(menu_funcs, execute_func_index, s.title)
 
     def search(self, search_term, get_search_box_title=False): return None
@@ -153,6 +177,7 @@ class MainProvider(SongProvider):
         data = [ArtistProvider(), AutoSearchSongs(), PlaylistProvider(), QueueProvider(), FileExplorer.new(), AlbumSearchYTM()]
         super().__init__(data, "Browser")
         self.content_type = WidgetContentType.MAIN
+        self.unfiltered_data = 1
 
     def get_at(self, index):
         return super().get_at(index)
@@ -160,7 +185,8 @@ class MainProvider(SongProvider):
     def get_current_name_list(self):
         return ["Artists", "All Songs", "Playlists", "Queues", "File Explorer", "Album Search"]
 
-    def menu_for_selected(self, main_provider, execute_func_index=None): pass
+    def menu_for_selected(self, content_stack, execute_func_index=None): pass
+    def filter(self, _): pass
 
     # thou shall not move items here
     def move_item_up(self, index, y_blank, top_view): pass
@@ -196,6 +222,9 @@ class ArtistProvider(SongProvider):
             if a1.name == a.name and a1.keys == a1.keys:
                 self.data_list.pop(i)
                 return
+
+    def filter(self, filter_term):
+        return super().filter(filter_term, name=lambda x: x.name)
 
     def menu_for_selected(self, content_stack, execute_func_index=None):
         main_provider = content_stack[0]
@@ -248,6 +277,7 @@ class ArtistProvider(SongProvider):
                 for i, k in enumerate(list):
                     if key.name == k:
                         list.pop(i)
+                        break
             select_item_using_popup(None, title, daata, final_func, enable_options=False)
         def yeet_key():
             yeet(a.keys, "key")
@@ -257,10 +287,10 @@ class ArtistProvider(SongProvider):
             yeet(a.non_keywords, "non keyword")
 
         menu_funcs = [
-            get_albums_untracked_as_playlist,
-            get_new_albums_tracked_as_playlist,
-            add_to_playlist,
             add_to_queue,
+            get_new_albums_tracked_as_playlist,
+            get_albums_untracked_as_playlist,
+            add_to_playlist,
             fuse_into_another_artist,
             yeet_key,
             yeet_keyword,
@@ -299,6 +329,9 @@ class PlaylistProvider(SongProvider):
             if p.name == playlist.name and len(p.data_list) == len(playlist.data_list):
                 self.data_list.pop(i)
                 return
+
+    def filter(self, filter_term):
+        return super().filter(filter_term, name=lambda x: x.name)
 
     def menu_for_selected(self, content_stack, execute_func_index=None, no_remove=False):
         main_provider = content_stack[0]
@@ -351,6 +384,7 @@ class QueueProvider(SongProvider):
             # TODO: maybe improve this with some kind of unique queue id
             if queue.name == q.name and len(queue.data_list) == len(q.data_list):
                 self.data_list.pop(i)
+                break
         self.data_list.insert(0, queue)
         self.current_index = 0
         if len(self.data_list) > 5: self.data_list.pop()
@@ -359,9 +393,13 @@ class QueueProvider(SongProvider):
     #     for i, q in enumerate(self.data_list):
     #         if q.anme == queue.name and len(q.data_list) == len(queue.data_list):
     #             self.data_list.pop(i)
+    #             break
 
     def get_at(self, index):
         return super().get_at(index)
+
+    def filter(self, filter_term):
+        return super().filter(filter_term, name=lambda x: x.name)
 
     def menu_for_selected(self, content_stack, execute_func_index=None):
         main_provider = content_stack[0]
@@ -433,6 +471,18 @@ class FileExplorer(SongProvider):
     def get_current_name_list(self):
         return self.data_list
 
+    def filter(self, filter_term):
+        if self.unfiltered_data is None:
+            self.unfiltered_data = self.data_list
+            self.folders.sort(key=lambda c: -helpers.kinda_similar_perc(c, filter_term))
+            self.files.sort(key=lambda c: -helpers.kinda_similar_perc(c, filter_term))
+            self.data_list = self.folders + self.files
+        else:
+            self.folders.sort()
+            self.files.sort()
+            self.data_list = self.folders + self.files
+            self.unfiltered_data = None
+
     # thou shall not move items here
     def move_item_up(self, index, y_blank, top_view): pass
     def move_item_down(self, index, y_blank, top_view): pass
@@ -442,7 +492,7 @@ class FileExplorer(SongProvider):
         num_folders = len(self.folders)
         if self.current_index >= num_folders:
             sp = self.get_at(self.current_index)
-            sp.menu_for_selected(main_provider, execute_func_index=execute_func_index)
+            sp.menu_for_selected(main_provider, no_moves=True, execute_func_index=execute_func_index)
 
 class AutoSearchSongs(SongProvider):
     def __init__(self):
@@ -525,6 +575,9 @@ class AlbumSearchYTM(SongProvider):
                 self.data_list.pop(i)
                 return
 
+    def filter(self, filter_term):
+        return super().filter(filter_term, name=lambda x: x.name)
+
     def menu_for_selected(self, main_provider, execute_func_index=None):
         PlaylistProvider.menu_for_selected(self, main_provider, execute_func_index=execute_func_index, no_remove=True)
 
@@ -543,7 +596,7 @@ def select_item_using_popup(destination_content_provider, add_new_what, content_
             def f(x):
                 new_content_providers = [c for c in content_providers if helpers.kinda_similar(c.name, x)]
                 new_content_providers.sort(key=lambda c: -helpers.kinda_similar_perc(c.name, x))
-                select_item_using_popup(destination_content_provider, add_new_what, new_content_providers, enable_options=False)
+                select_item_using_popup(destination_content_provider, add_new_what, new_content_providers, final_func, tick_func=tick_func, enable_options=False)
             cui_handle.pycui.show_text_box_popup("filter", f)
             return
         final_func(content_providers[i])

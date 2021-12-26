@@ -164,9 +164,17 @@ class Song(serde.Model):
         mf.save()
 
     def download_cover_image(self):
-        img = requests.get(self.info.thumbnail_url).content
+        img1 = requests.get(self.info.thumbnail_url).content
+        img2 = requests.get(opts.ytmusic.get_song(self.key)["videoDetails"]["thumbnail"]["thumbnails"][-1]["url"]).content
+        imag1 = Image.open(io.BytesIO(img1))
+        imag2 = Image.open(io.BytesIO(img2))
+        if imag1.size[1] > imag2.size[1]:
+            imag = imag1
+        else:
+            imag = imag2
+
         imaag = io.BytesIO()
-        Image.open(io.BytesIO(img)).save(imaag, "png")
+        imag.save(imaag, "png")
         return imaag.getvalue()
 
     def get_cover_image_from_metadata(self):

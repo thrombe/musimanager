@@ -5,9 +5,18 @@ bugs:
   . yeet unnecessary uses of funcs for 2 width chars
   . since content_provider.current_index is updated every frame, yeet them from the get_at arguments and stuff
     . check if its necessary somewhere first
+  . filtering changes order (important in queues)
 
 plan:
   . FIX CRASHES CUZ OF ONLINE TIMEOUTS and stuff
+  . are cached musidata and albumdata really needed?
+    . it can be a bit quick maybe?
+  . maybe replace popup menus with menu in the browser widget
+    . album art dosent have to disappear
+    . other shortcuts still work
+    . just another implimentation of song_provider needed
+    . sorting and adding new dosent require to be in the list (kb shortcuts)
+    . no need to display the numbers
   . maintain a song history
     . queue history?
     . save song progress and show when searching online (for discoverability)
@@ -15,13 +24,17 @@ plan:
       . songproviders and then use these when passing names
         . when online stuff, some attr in song_provider would be set true
       . mark the progress for songs that are offline too
+      . if the song changes or next() is executed (for last song in a queue), enter the new progress in dict
+        . so maybe maintain a "last_song_key" or something
   . maybe show a smol q besides song names so that a quickshortcut for add_to_current_queue can be added
+  . add logging
   . maybe global shortcuts?
     . https://pynput.readthedocs.io/en/latest/
     . https://github.com/moses-palmer/pynput
   . shortcut to shuffle queue
   . yeet artist name confirmation var and add a menu func for it
   . artist.search_term for artists that dont give good enough results for just their names for albums
+    . multiple artist search terms + smol limit
   . multithreaing for time consuming stuff (async??)
     . including the live player info change on browser selection change 
   . show selected song/album/whatever info on the player widget and add shortcut to switch and show playing song
@@ -31,6 +44,7 @@ plan:
   . provide shortcut to filter (sort using kinda_similar)
     . save filtered objects in a seperate variable, and use this one to get the names for objects and object from names
     . filter changes, just change the filtered list using the main list
+    . TOO DIFFICULT -> just sort the data_list instead using kinda_similar
   . allow to disable album art for the songs that do not have one
   . add a popup for showing shortcuts
   . do something useful with the bottom statusbar

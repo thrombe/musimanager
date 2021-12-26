@@ -28,13 +28,14 @@ def chop_image_into_square(imag):
     if type(imag) == type(bytes()): img = Image.open(io.BytesIO(imag))
     elif type(imag) == type(""): img = Image.open(imag)
     
-    img = chop_black_borders(img)
-
     x, y = img.size
     imag = io.BytesIO()
     if abs(x - y) < 2:
         img.save(imag, "png")
         return imag.getvalue()
+
+    img = chop_black_borders(img)
+    x, y = img.size
 
     a = (x-y)/2
     if a > 0: box = (a, 0, x - a, y)

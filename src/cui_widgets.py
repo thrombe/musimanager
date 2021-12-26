@@ -240,6 +240,7 @@ class BrowserWidget:
         self.scroll_menu.add_key_command(py_cui.keys.KEY_U_LOWER, self.toggle_queue_view)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_S_LOWER, self.search)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_G_LOWER, self.menu_for_selected)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_F_LOWER, self.filter)
         self.scroll_menu.set_selected_color(py_cui.MAGENTA_ON_CYAN)
 
         self.scroll_menu.add_item_list(self.content_state_stack[0].get_current_name_list())
@@ -294,10 +295,6 @@ class BrowserWidget:
             self.refresh_names(self.content_state_stack[-1])
 
     def try_load_right(self):
-        if self.current_queue_view:
-            self.player_widget.play(self.player_widget.player.current_queue.get_at(self.scroll_menu.get_selected_item_index()))
-            return
-
         content_provider = self.content_state_stack[-1]
         content = content_provider.get_at(self.scroll_menu.get_selected_item_index())
         if content is None: return
@@ -320,7 +317,9 @@ class BrowserWidget:
         self.refresh_names(content)
 
     def try_load_left(self):
-        if self.current_queue_view: return
+        if self.current_queue_view:
+            self.toggle_queue_view()
+            return
 
         content = self.content_state_stack[-1]
         if content.content_type is cui_content_providers.WidgetContentType.MAIN:
@@ -357,6 +356,10 @@ class BrowserWidget:
 
         y_blank = self.player_widget.y_blank()
 
+        # making sure that nothing is not selected
+        if content.current_index >= len(content.data_list):
+            content.current_index = len(content.data_list)-1
+
         # making sure some values arent hidden when theres empty space
         if len(name_list) <= y_blank:
             content.current_scroll_top_index = 0
@@ -390,3 +393,13 @@ class BrowserWidget:
 
     def menu_for_selected(self, execute_func_index=None):
         self.content_state_stack[-1].menu_for_selected(self.content_state_stack, execute_func_index=execute_func_index)
+    
+    def filter(self):
+        def filter_func(filter_term):
+            self.content_state_stack[-1].filter(filter_term)
+            self.content_state_stack[-1].reset_indices()
+            self.refresh_names(self.content_state_stack[-1])
+        if self.content_state_stack[-1].unfiltered_data is not None:
+            filter_func(None)
+            return
+        cui_handle.pycui.show_text_box_popup("filter", filter_func)
