@@ -13,6 +13,7 @@ import helpers
 import album
 import cui_handle
 import artist
+import newpipe_db_handler
 
 class WidgetContentType(enum.Enum):
     MAIN = enum.auto()
@@ -190,7 +191,7 @@ class MainProvider(SongProvider):
         import tracker
         self.tracker = tracker.Tracker.load()
         # TODO: find a way to rely less on hard coded indices in this list
-        data = [ArtistProvider(self.tracker), AutoSearchSongs(), PlaylistProvider(self.tracker), QueueProvider(self.tracker), FileExplorer.new(), AlbumSearchYTM()]
+        data = [ArtistProvider(self.tracker), AutoSearchSongs(), PlaylistProvider(self.tracker), QueueProvider(self.tracker), FileExplorer.new(), AlbumSearchYTM(), NewpipePlaylistProvider()]
         super().__init__(data, "Browser")
         self.content_type = WidgetContentType.MAIN
         self.unfiltered_data = 1
@@ -199,7 +200,7 @@ class MainProvider(SongProvider):
         return super().get_at(index)
 
     def get_current_name_list(self):
-        return ["Artists", "All Songs", "Playlists", "Queues", "File Explorer", "Album Search"]
+        return ["Artists", "All Songs", "Playlists", "Queues", "File Explorer", "Album Search", "Newpipe Backup Playlists"]
 
     def menu_for_selected(self, content_stack, execute_func_index=None): pass
     def filter(self, _): pass
@@ -325,12 +326,6 @@ class PlaylistProvider(SongProvider):
         super().__init__(playlists, "Playlists")
         self.content_type = WidgetContentType.PLAYLISTS
     
-    def load():
-        # TODO:
-          # yeet the init func, use serde for all all fields in playlist provider and queue provider (hence in song provider)
-          # what abot artistprovider? use tracker here?
-        pass
-
     def add_new(self, songs, name):
         song_provider = SongProvider(songs, name)
         self.data_list.append(song_provider)
@@ -444,6 +439,32 @@ class QueueProvider(SongProvider):
         ]
         present_menu_popup(menu_funcs, execute_func_index, queue.name)
 
+class NewpipePlaylistProvider(SongProvider):
+    def __init__(self):
+        data = newpipe_db_handler.NewpipeDBHandler.quick_extract_playlists()
+        playlists = []
+        for key, val in data.items():
+            songs = []
+            for song_data in val:
+                s = song.Song.new(song_data[0], song_data[2], song_data[1])
+                songs.append(s)
+            playlist = SongProvider(songs, key)
+            playlists.append(playlist)
+            playlists.sort(key=lambda x: x.name)
+        super().__init__(playlists, "Newpipe Playlists")
+        self.content_type = WidgetContentType.PLAYLISTS
+
+    def get_at(self, index):
+        return super().get_at(index)
+
+    def get_current_name_list(self):
+        return PlaylistProvider.get_current_name_list(self)
+
+    def remove_playlist(self, playlist):
+        return PlaylistProvider.remove_playlist(self, playlist)
+
+    def menu_for_selected(self, content_stack, execute_func_index=None, no_remove=False):
+        return PlaylistProvider.menu_for_selected(self, content_stack, execute_func_index=execute_func_index, no_remove=no_remove)
 
 class FileExplorer(SongProvider):
     def __init__(self, base_path):
