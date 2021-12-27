@@ -41,6 +41,14 @@ class CUI_handle:
         self.player_widget.setup()
         self.browser_widget.setup()
 
+    def safe_start(self):
+        try:
+            self.start()
+        except Exception as e:
+            self.browser_widget.content_state_stack[0].tracker.save()
+            print(e)
+            quit()
+
     def start(self):
         if getattr(self, "pycui", None) is None: self.setup()
 

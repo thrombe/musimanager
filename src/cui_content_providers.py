@@ -5,9 +5,9 @@ import py_cui
 import os
 import copy
 import random
+import serde
 
 import opts
-import tracker
 import song
 import helpers
 import album
@@ -32,13 +32,19 @@ class WidgetContentType(enum.Enum):
     ALBUM_SEARCH = enum.auto()
 
 # using this as a trait
-class SongProvider:
+class SongProvider(serde.Model):
+    data_list: serde.fields.List(serde.fields.Nested(song.Song))
+    name: serde.fields.Str()
+
     def __init__(self, data, name):
-        self.content_type = WidgetContentType.SONGS
         self.data_list = data
+        self.name = name
+        self.default_untracked_attrs()
+
+    def default_untracked_attrs(self):
+        self.content_type = WidgetContentType.SONGS
         self.current_index = 0
         self.current_scroll_top_index = 0
-        self.name = name
         self.unfiltered_data = None
 
     def add_song(self, song):
@@ -181,8 +187,10 @@ class SongProvider:
 
 class MainProvider(SongProvider):
     def __init__(self):
+        import tracker
+        self.tracker = tracker.Tracker.load()
         # TODO: find a way to rely less on hard coded indices in this list
-        data = [ArtistProvider(), AutoSearchSongs(), PlaylistProvider(), QueueProvider(), FileExplorer.new(), AlbumSearchYTM()]
+        data = [ArtistProvider(self.tracker), AutoSearchSongs(), PlaylistProvider(self.tracker), QueueProvider(self.tracker), FileExplorer.new(), AlbumSearchYTM()]
         super().__init__(data, "Browser")
         self.content_type = WidgetContentType.MAIN
         self.unfiltered_data = 1
@@ -201,8 +209,8 @@ class MainProvider(SongProvider):
     def move_item_down(self, index, y_blank, top_view): pass
 
 class ArtistProvider(SongProvider):
-    def __init__(self):
-        self.tracker = tracker.Tracker.load()
+    def __init__(self, t):
+        self.tracker = t
         data = self.tracker.artists
         data.sort(key=lambda x: x.name)
         super().__init__(data, "Artists")
@@ -310,8 +318,10 @@ class ArtistProvider(SongProvider):
 
 # TODO: use picui.run_on_exit func to save playlists and stuff
 class PlaylistProvider(SongProvider):
-    def __init__(self):
-        playlists = []
+    def __init__(self, t):
+        playlists = t.playlists
+        for playlist in playlists:
+            playlist.default_untracked_attrs()
         super().__init__(playlists, "Playlists")
         self.content_type = WidgetContentType.PLAYLISTS
     
@@ -374,8 +384,10 @@ class PlaylistProvider(SongProvider):
 # if queue selected from here, send it to player and yeet it from here
 # when queue complete, yeet it from player too
 class QueueProvider(SongProvider):
-    def __init__(self):
-        queues = []
+    def __init__(self, t):
+        queues = t.queues
+        for q in queues:
+            q.default_untracked_attrs()
         super().__init__(queues, "Queues")
         self.content_type = WidgetContentType.QUEUES
 
@@ -397,11 +409,11 @@ class QueueProvider(SongProvider):
         self.current_index = 0
         if len(self.data_list) > 5: self.data_list.pop()
 
-    # def remove_album(self, queue):
-    #     for i, q in enumerate(self.data_list):
-    #         if q.anme == queue.name and len(q.data_list) == len(queue.data_list):
-    #             self.data_list.pop(i)
-    #             break
+    def remove_queue(self, queue):
+        for i, q in enumerate(self.data_list):
+            if q.name == queue.name and len(q.data_list) == len(queue.data_list):
+                self.data_list.pop(i)
+                break
 
     def get_at(self, index):
         return super().get_at(index)
@@ -426,9 +438,9 @@ class QueueProvider(SongProvider):
             select_item_using_popup(main_provider.data_list[3], "queue", main_provider.data_list[3].data_list, final_func)
 
         menu_funcs = [
+            merge_into_queue,
             remove_queue,
             append_to_playlist,
-            merge_into_queue,
         ]
         present_menu_popup(menu_funcs, execute_func_index, queue.name)
 
@@ -504,6 +516,7 @@ class FileExplorer(SongProvider):
 
 class AutoSearchSongs(SongProvider):
     def __init__(self):
+        import tracker
         self.song_paths = tracker.Tracker.get_song_paths(opts.search_under.rstrip(os.path.sep))
         data = []
         for sp in self.song_paths:

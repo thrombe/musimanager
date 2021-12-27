@@ -5,6 +5,7 @@ bugs:
     . check if its necessary somewhere first
   . filtering changes order (important in queues)
   . is current_queue_view variable even required anymore?
+  . auto play_next causes wrong values of _top_view
 
 plan:
   . show selected song/album/whatever info on the player widget and add shortcut to switch and show playing song
@@ -20,6 +21,7 @@ plan:
       . if the song changes or next() is executed (for last song in a queue), enter the new progress in dict
         . so maybe maintain a "last_song_key" or something
   . FIX CRASHES CUZ OF ONLINE TIMEOUTS and stuff
+  . provide options to rename playlists/queues/artists
   . make it work offline (no crashes)
   . have a options menu for stuff like
     . toggling album art if not available

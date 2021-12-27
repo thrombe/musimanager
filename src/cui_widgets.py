@@ -223,7 +223,8 @@ class BrowserWidget:
         self.current_queue_view = False
 
     def setup(self):
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_Q_LOWER, cui_handle.pycui.stop)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_Q_LOWER, self.quit)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_Q_UPPER, cui_handle.pycui.stop) # quit without save
         self.scroll_menu.add_key_command(py_cui.keys.KEY_RIGHT_ARROW, self.try_load_right)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_LEFT_ARROW, self.try_load_left)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_P_LOWER, self.player_widget.player.toggle_pause)
@@ -245,6 +246,10 @@ class BrowserWidget:
         self.scroll_menu.set_selected_color(py_cui.MAGENTA_ON_CYAN)
 
         self.scroll_menu.add_item_list(self.content_state_stack[0].get_current_name_list())
+
+    def quit(self):
+        self.content_state_stack[0].tracker.save()
+        cui_handle.pycui.stop()
 
     def refresh(self):
         self.player_widget.refresh()
