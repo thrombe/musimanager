@@ -22,6 +22,7 @@ plan:
         . so maybe maintain a "last_song_key" or something
   . FIX CRASHES CUZ OF ONLINE TIMEOUTS and stuff
   . provide options to rename playlists/queues/artists
+  . a way to check what artists dont have their albums checked in a while
   . make it work offline (no crashes)
   . have a options menu for stuff like
     . toggling album art if not available

@@ -253,8 +253,8 @@ class ArtistProvider(SongProvider):
                     content_provider.add_song(s)
         def remove_artist():
             self.remove_artist(a)
-        def get_albums_untracked_as_playlist():
-            asy = AlbumSearchYTM.albums_for_artist(a)
+        def get_albums_untracked_as_playlist(search_term=None):
+            asy = AlbumSearchYTM.albums_for_artist(a, search_term=search_term)
             # content_stack.append(asy)
             # main_provider.data_list[5] = asy
             songs = []
@@ -262,8 +262,8 @@ class ArtistProvider(SongProvider):
                 try: songs.extend(al.get_songs())
                 except: continue
             main_provider.data_list[2].add_new(songs, f"all songs by {a.name}")
-        def get_new_albums_tracked_as_playlist():
-            asy = AlbumSearchYTM.albums_for_artist(a)
+        def get_new_albums_tracked_as_playlist(search_term=None):
+            asy = AlbumSearchYTM.albums_for_artist(a, search_term=search_term)
             # main_provider.data_list[5] = copy.deepcopy(asy)
             for al in copy.copy(asy.data_list):
                 for al2 in a.known_albums:
@@ -276,6 +276,10 @@ class ArtistProvider(SongProvider):
                 except: continue
                 a.known_albums.append(al)
             main_provider.data_list[2].add_new(songs, f"new songs by {a.name}")
+        def get_new_albums_tracked_custom_search_term():
+            cui_handle.pycui.show_text_box_popup("search term: ", lambda x: get_new_albums_tracked_as_playlist(search_term=x))
+        def get_albums_untracked_custom_search_term():
+            cui_handle.pycui.show_text_box_popup("search term: ", lambda x: get_albums_untracked_as_playlist(search_term=x))
         def add_to_playlist():
             select_item_using_popup(main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func)
         def add_to_queue():
@@ -306,7 +310,9 @@ class ArtistProvider(SongProvider):
         menu_funcs = [
             add_to_queue,
             get_new_albums_tracked_as_playlist,
+            get_new_albums_tracked_custom_search_term,
             get_albums_untracked_as_playlist,
+            get_albums_untracked_custom_search_term,
             add_to_playlist,
             fuse_into_another_artist,
             yeet_key,
@@ -317,7 +323,6 @@ class ArtistProvider(SongProvider):
         present_menu_popup(menu_funcs, execute_func_index, a.name)
 
 
-# TODO: use picui.run_on_exit func to save playlists and stuff
 class PlaylistProvider(SongProvider):
     def __init__(self, t):
         playlists = t.playlists
@@ -375,9 +380,6 @@ class PlaylistProvider(SongProvider):
         if no_remove: menu_funcs.pop(menu_funcs.index(remove_playlist))
         present_menu_popup(menu_funcs, execute_func_index, playlist.name)
 
-# 1 queue is store in player, rest here, if new queue created, the older one gets sent here
-# if queue selected from here, send it to player and yeet it from here
-# when queue complete, yeet it from player too
 class QueueProvider(SongProvider):
     def __init__(self, t):
         queues = t.queues
@@ -570,10 +572,16 @@ class AlbumSearchYTM(SongProvider):
         super().__init__([], "Album Search")
         self.content_type = WidgetContentType.SEARCHER
     
-    def albums_for_artist(a):
-        # TODO: increase search limit for first search when tracked -> i.e. when 0 known albums
+    def albums_for_artist(a, search_term=None):
         asy = AlbumSearchYTM()
-        asy.search(a.name)
+        # increase search limit for first search when tracked -> i.e. when 0 known albums
+        if a.known_albums == [] or search_term is not None:
+            search_limit = opts.musitracker_search_limit_first_time
+        else:
+            search_limit = opts.musitracker_search_limit
+        if search_term is None:
+            search_term = a.name
+        asy.search(search_term, limit=search_limit)
         albums = []
         for al in asy.data_list:
             for k in al.artist_keys:
@@ -590,7 +598,7 @@ class AlbumSearchYTM(SongProvider):
         asy.data_list = albums
         return asy
 
-    def search(self, search_term, get_search_box_title=False):
+    def search(self, search_term, limit=opts.musitracker_search_limit, get_search_box_title=False):
         if get_search_box_title: return "enter album/artist name"
 
         self.current_search_term = search_term
@@ -599,7 +607,7 @@ class AlbumSearchYTM(SongProvider):
         self.data_list = []
         self.reset_indices()
         # TODO: support arbitary search results (maybe "<name> | <num resullts>" or somethin)
-        data = opts.ytmusic.search(self.current_search_term, filter="albums", limit=opts.musitracker_search_limit, ignore_spelling=True)
+        data = opts.ytmusic.search(self.current_search_term, filter="albums", limit=limit, ignore_spelling=True)
         for album_data in data:
             a = album.Album.load(album_data)
             self.data_list.append(a)
