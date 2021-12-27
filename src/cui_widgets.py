@@ -216,7 +216,7 @@ class PlayerWidget:
     def y_blank(self): return self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom
 
 class BrowserWidget:
-    def __init__(self, widget, player_widget):
+    def __init__(self, widget, player_widget: PlayerWidget):
         self.content_state_stack = [cui_content_providers.MainProvider()]
         self.scroll_menu = widget
         self.player_widget = player_widget # needs to be able to change songs at any time

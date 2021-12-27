@@ -3,7 +3,6 @@
 db/
 db_main/
 src/py_cui
-py_cui/
 src/olb/
 
 # Byte-compiled / optimized / DLL files

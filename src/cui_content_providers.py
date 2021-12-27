@@ -537,7 +537,7 @@ class AlbumSearchYTM(SongProvider):
         self.content_type = WidgetContentType.SEARCHER
     
     def albums_for_artist(a):
-        # TODO: increase search limit for first search when tracked
+        # TODO: increase search limit for first search when tracked -> i.e. when 0 known albums
         asy = AlbumSearchYTM()
         asy.search(a.name)
         albums = []

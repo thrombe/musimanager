@@ -45,7 +45,7 @@ def chop_image_into_square(imag):
     return imag.getvalue()
 
 def chop_black_borders(imag):
-    y_nonzero, x_nonzero, _ = np.nonzero(blur_rows(np.array(imag))>20)
+    y_nonzero, x_nonzero, _ = np.nonzero(blur_rows(np.array(imag))>10)
     # return imag.crop((np.min(x_nonzero), np.min(y_nonzero), np.max(x_nonzero), np.max(y_nonzero)))
     return imag.crop((0, np.min(y_nonzero), imag.width-1, np.max(y_nonzero)))
 
