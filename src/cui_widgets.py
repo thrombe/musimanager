@@ -69,6 +69,9 @@ class Player:
 
     # TODO: simplify this bs with self.playback_handle.get_pos()
     def try_seek(self, secs):
+        if self.is_paused_since:
+            return
+        delta = 0.5 # there might be some difference between what the song duration is and what seek() works without crash
         tme = time.time() - self.song_psuedo_start_time
         if tme > self.song_duration:
             flac_filelike = copy.deepcopy(self.flac_filelike_copy)
@@ -79,11 +82,11 @@ class Player:
         self.song_psuedo_start_time -= secs
         tme = time.time() - self.song_psuedo_start_time
         if tme > self.song_duration:
-            tme = self.song_duration-0.1
-            self.song_psuedo_start_time = time.time()-self.song_duration - 0.1
+            tme = self.song_duration - delta
+            self.song_psuedo_start_time = time.time()-self.song_duration - delta
         elif tme < 0:
-            tme = 0.1
-            self.song_psuedo_start_time = time.time() + 0.1
+            tme = delta
+            self.song_psuedo_start_time = time.time() + delta
         self.playback_handle.set_pos(tme)
 
     def seek_10_secs_forward(self):
@@ -305,7 +308,7 @@ class BrowserWidget:
         content = content_provider.get_at(self.scroll_menu.get_selected_item_index())
         if content is None: return
         if content_provider.content_type is cui_content_providers.WidgetContentType.SONGS:
-            content_provider_copy = copy.deepcopy(content_provider)
+            content_provider_copy = copy.deepcopy(content_provider) if not self.current_queue_view else content_provider
             self.player_widget.play(content_provider_copy.get_at(self.scroll_menu.get_selected_item_index())) # getting it again so playing song is the same as the one in song_provider
             self.change_queue(content_provider_copy)
             return
