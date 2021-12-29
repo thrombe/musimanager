@@ -2,7 +2,7 @@
 
 # PATHS WITH SEPERATORS(at end) PLZ
 
-musi_path = "/home/issac/Music/" # path where music should be stored and stuff
+musi_path = "/home/issac/daata/phon-data/.musi/IsBac/" # path where music should be stored and stuff
 musi_download_ext = "m4a"
 musimanager_directory = "/home/issac/0Git/musimanager/db/" # directory where musimanager can store files
 temp_dir = musimanager_directory + ".temp/"
@@ -17,9 +17,9 @@ musitracker_plist_name = "musitracker"
 musitracker_search_limit = 75 # 200 uplimit with returns (300 in case of aimer but whatever)
 musitracker_search_limit_first_time = 300
 
-search_under = "/home/issac/"
+auto_search_under = "/home/issac/daata/phon-data/.musi/"
+file_explorer_base_dir = "/home/issac/"
 search_exts = ["mp3", "m4a", "flac", "ogg"]
-do_not_sort = True
 force_ascii_art = False # linux only (cuz theres ueberzug too)
 disable_ascii_art = False
 
@@ -41,3 +41,9 @@ ASCII_ART = ((False or not LUUNIX) or force_ascii_art) and not disable_ascii_art
 import ytmusicapi
 # https://ytmusicapi.readthedocs.io/en/latest/setup.html
 ytmusic = ytmusicapi.YTMusic(auth=ytmusic_headers_path)
+
+
+# random options
+show_artist_name_besides_song_name = True
+show_hidden_in_file_explorer = False
+save_on_exit = True

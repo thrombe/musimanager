@@ -220,7 +220,7 @@ class PlayerWidget:
 
 class BrowserWidget:
     def __init__(self, widget, player_widget: PlayerWidget):
-        self.content_state_stack = [cui_content_providers.MainProvider()]
+        self.content_state_stack = [cui_content_providers.MainProvider.new()]
         self.scroll_menu = widget
         self.player_widget = player_widget # needs to be able to change songs at any time
         self.current_queue_view = False
@@ -244,6 +244,7 @@ class BrowserWidget:
         self.scroll_menu.add_key_command(py_cui.keys.KEY_U_LOWER, self.toggle_queue_view)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_S_LOWER, self.search)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_G_LOWER, self.menu_for_selected)
+        self.scroll_menu.add_key_command(py_cui.keys.KEY_G_UPPER, self.global_menu)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_F_LOWER, self.filter)
         self.scroll_menu.add_key_command(py_cui.keys.KEY_F_UPPER, self.shuffle_if_current_queue)
         self.scroll_menu.set_selected_color(py_cui.MAGENTA_ON_CYAN)
@@ -251,7 +252,8 @@ class BrowserWidget:
         self.scroll_menu.add_item_list(self.content_state_stack[0].get_current_name_list())
 
     def quit(self):
-        self.content_state_stack[0].tracker.save()
+        if opts.save_on_exit:
+            self.content_state_stack[0].tracker.save()
         cui_handle.pycui.stop()
 
     def refresh(self):
@@ -309,6 +311,7 @@ class BrowserWidget:
         if content is None: return
         if content_provider.content_type is cui_content_providers.WidgetContentType.SONGS:
             content_provider_copy = copy.deepcopy(content_provider) if not self.current_queue_view else content_provider
+            content_provider_copy.data_list = [s for s in content_provider.data_list] # making sure songs are not copied so that their info is set in playlist when played
             self.player_widget.play(content_provider_copy.get_at(self.scroll_menu.get_selected_item_index())) # getting it again so playing song is the same as the one in song_provider
             self.change_queue(content_provider_copy)
             return
@@ -331,7 +334,7 @@ class BrowserWidget:
             return
 
         content = self.content_state_stack[-1]
-        if content.content_type is cui_content_providers.WidgetContentType.MAIN:
+        if len(self.content_state_stack) == 1:
             return
         if self.content_state_stack[-2].content_type is not cui_content_providers.WidgetContentType.QUEUES:
             content.reset_indices()
@@ -418,3 +421,16 @@ class BrowserWidget:
             self.player_widget.player.current_queue.shuffle()
             self.content_state_stack[-1].reset_indices()
             self.refresh_names(self.content_state_stack[-1])
+
+    def global_menu(self):
+        # TODO: maybe stuff these in a dict instead this uglyness
+        # TODO: show the status besides the names
+        options = [
+            "opts.show_artist_name_besides_song_name",
+            "opts.show_hidden_in_file_explorer",
+            "opts.save_on_exit",
+        ]
+        def toggle(x):
+            exec("%s = not %s" %(x, x))
+        cui_handle.pycui.show_menu_popup("toggle options", options, toggle)
+        cui_handle.pycui._popup.set_selected_color(py_cui.MAGENTA_ON_CYAN)

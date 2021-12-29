@@ -91,7 +91,7 @@ class Album(serde.Model):
         album = self.get_album_data_ytdl()
         for song_data in album["entries"]:
             if song_data["id"] is None: continue # songs without video id are no longer available
-            songs.append(song.Song.new(song_data["title"], song_data["id"], None))
+            songs.append(song.Song.new(song_data["title"], song_data["id"], self.artist_name))
         return songs
 
     def get_songs_ytmusic(self):
@@ -99,6 +99,6 @@ class Album(serde.Model):
         album = self.get_album_data_ytmusic()
         for song_data in album["tracks"]:
             if song_data["videoId"] is None: continue # songs without video id are no longer available
-            songs.append(song.Song.new(song_data["title"], song_data["videoId"], None))
+            songs.append(song.Song.new(song_data["title"], song_data["videoId"], self.artist_name))
         return songs
     

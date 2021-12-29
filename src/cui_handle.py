@@ -44,9 +44,11 @@ class CUI_handle:
     def safe_start(self):
         try:
             self.start()
-        except Exception as e:
-            self.browser_widget.content_state_stack[0].tracker.save()
-            print(e)
+        except Exception:
+            import traceback
+            if opts.save_on_exit:
+                self.browser_widget.content_state_stack[0].tracker.save()
+            print(traceback.format_exc())
             quit()
 
     def start(self):
