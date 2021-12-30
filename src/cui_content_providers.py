@@ -36,15 +36,16 @@ class WidgetContentType(enum.Enum):
 class SongProvider(serde.Model):
     data_list: serde.fields.List(serde.fields.Nested(song.Song))
     name: serde.fields.Str()
+    current_index: serde.fields.Int()
 
     def __init__(self, data, name):
         self.data_list = data
         self.name = name
+        self.current_index = 0
         self.default_untracked_attrs()
 
     def default_untracked_attrs(self):
         self.content_type = WidgetContentType.SONGS
-        self.current_index = 0
         self.current_scroll_top_index = 0
         self.unfiltered_data = None
 
@@ -358,6 +359,7 @@ class PlaylistProvider(SongProvider):
         playlists = t.playlists
         for playlist in playlists:
             playlist.default_untracked_attrs()
+            playlist.current_index = 0
         super().__init__(playlists, "Playlists")
         self.content_type = WidgetContentType.PLAYLISTS
     
