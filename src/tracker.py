@@ -61,8 +61,7 @@ class Tracker(serde.Model):
         self.artists.append(a)
 
     def add_song(self, s: song.Song):
-        if s.info.channel_id == "":
-            s.get_info()
+        s.try_get_info()
         a = self.get_suitable_artist_for_song(s)
         new = False
         if a is None:
@@ -81,7 +80,7 @@ class Tracker(serde.Model):
         return (s, a) if new else (s, None)
 
     def get_suitable_artist_for_song(self, s: song.Song):
-        threshold = 0.75
+        # threshold = 0.75
         for artist in self.artists:
             if s.key in artist.keywords:
                 return artist

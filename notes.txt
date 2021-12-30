@@ -6,10 +6,12 @@ bugs:
   . filtering changes order (important in queues)
   . is current_queue_view variable even required anymore?
   . auto play_next causes wrong values of _top_view
-  . try fixing the 2 width char bug directly from py_cui
-    . fork it
+  . 2 width chars still cause alignment probs
+    . try fixing the 2 width char bug directly from py_cui
+      . fork it
   . spamming pause freezes the terminal
   . spamming seek continues to seek even after the song changes
+  . git diff is always different for musitracker.json
 
 plan:
   . show selected song/album/whatever info on the player widget and add shortcut to switch and show playing song

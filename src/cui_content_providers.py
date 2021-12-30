@@ -138,7 +138,7 @@ class SongProvider(serde.Model):
 
     def menu_for_selected(self, content_stack, no_moves=False, execute_func_index=None):
         main_provider = content_stack[0]
-        s = self.get_at(self.current_index)
+        s: song.Song = self.get_at(self.current_index)
         s = copy.deepcopy(s) # cuz artists need a copy (cuz they change some info) # else can use different final_func for the artists with a deepcopy
         
         def download_song(): # TODO
@@ -172,6 +172,9 @@ class SongProvider(serde.Model):
         def try_delete_from_tracker(): # TODO
             # yeet from artists and move to temp_dir
             pass
+        def tag():
+            s.try_get_info()
+            s.tag(img_bytes=s.download_cover_image())
 
         menu_funcs = [
             add_to_queue,
@@ -181,6 +184,7 @@ class SongProvider(serde.Model):
             try_delete_from_tracker, #! danger
             add_to_artist,
             add_uploaders_key_to_artist,
+            tag,
             download_song,
             remove_song,
         ]
