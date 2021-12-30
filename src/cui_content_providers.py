@@ -137,6 +137,10 @@ class SongProvider(serde.Model):
         else:
             self.filter(None)
 
+    def try_undo_filter(self):
+        if self.unfiltered_data is not None:
+            self.filter(None)
+
     def menu_for_selected(self, content_stack, no_moves=False, execute_func_index=None):
         main_provider = content_stack[0]
         s: song.Song = self.get_at(self.current_index)

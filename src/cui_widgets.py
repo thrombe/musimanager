@@ -252,9 +252,22 @@ class BrowserWidget:
         self.scroll_menu.add_item_list(self.content_state_stack[0].get_current_name_list())
 
     def quit(self):
-        if opts.save_on_exit:
-            self.content_state_stack[0].tracker.save()
+        self.save()
         cui_handle.pycui.stop()
+
+    def save(self):
+        if not opts.save_on_exit: return
+        mp = self.content_state_stack[0]
+
+        # do not save the filtered/custom sorted data
+        mp.data_list[2].try_undo_filter()
+        for q in mp.data_list[2].data_list:
+            q.try_undo_filter()
+        mp.data_list[3].try_undo_filter()
+        for p in mp.data_list[3].data_list:
+            p.try_undo_filter()
+        
+        mp.tracker.save()
 
     def refresh(self):
         self.player_widget.refresh()

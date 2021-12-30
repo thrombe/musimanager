@@ -46,8 +46,7 @@ class CUI_handle:
             self.start()
         except Exception:
             import traceback
-            if opts.save_on_exit:
-                self.browser_widget.content_state_stack[0].tracker.save()
+            self.browser_widget.save()
             print(traceback.format_exc())
             quit()
 
