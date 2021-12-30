@@ -12,6 +12,7 @@ bugs:
   . spamming pause freezes the terminal
   . spamming seek continues to seek even after the song changes
   . git diff is always different for musitracker.json
+    . 1 edit at the top of the songs list and git considers all songs in the list edited as some lines are still the same
 
 plan:
   . show selected song/album/whatever info on the player widget and add shortcut to switch and show playing song

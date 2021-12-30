@@ -260,6 +260,9 @@ class BrowserWidget:
         mp = self.content_state_stack[0]
 
         # do not save the filtered/custom sorted data
+        mp.data_list[0].try_undo_filter()
+        for i in range(len(mp.data_list[0].data_list)):
+            mp.data_list[0].get_at(i).try_undo_filter()
         mp.data_list[2].try_undo_filter()
         for q in mp.data_list[2].data_list:
             q.try_undo_filter()
@@ -323,10 +326,14 @@ class BrowserWidget:
         content = content_provider.get_at(self.scroll_menu.get_selected_item_index())
         if content is None: return
         if content_provider.content_type is cui_content_providers.WidgetContentType.SONGS:
-            content_provider_copy = copy.deepcopy(content_provider) if not self.current_queue_view else content_provider
-            content_provider_copy.data_list = [s for s in content_provider.data_list] # making sure songs are not copied so that their info is set in playlist when played
-            self.player_widget.play(content_provider_copy.get_at(self.scroll_menu.get_selected_item_index())) # getting it again so playing song is the same as the one in song_provider
-            self.change_queue(content_provider_copy)
+            # if content_provider is a queue, no need to copy the provider
+            if self.current_queue_view or self.content_state_stack[-2].content_type == cui_content_providers.WidgetContentType.QUEUES:
+                content_provider_maybe_copy = content_provider
+            else:
+                content_provider_maybe_copy = copy.deepcopy(content_provider)
+                content_provider_maybe_copy.data_list = [s for s in content_provider.data_list] # making sure songs are not copied so that their info is set in playlist when played
+            self.player_widget.play(content_provider_maybe_copy.get_at(self.scroll_menu.get_selected_item_index())) # getting it again so playing song is the same as the one in song_provider
+            self.change_queue(content_provider_maybe_copy)
             return
         elif content.content_type is cui_content_providers.WidgetContentType.SEARCHER:
             self.content_state_stack.append(content)
