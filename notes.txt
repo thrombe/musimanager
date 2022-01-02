@@ -1,21 +1,45 @@
 
 bugs:
-  . yeet unnecessary uses of funcs for 2 width chars
+  . freezes
+    . spamming pause freezes the terminal
+      . apparantly spamming isnt even necessary, it sometimes freezes on pause
+    . maybe just switch music backends and test the spamming freeze
+    . freezes after waking up from sleep
+  . songs end about a second or half early and its a super apparent cut
+    . i think the stuff youtube provides is rounded to second (not sure)
+    . check if problem there with songs played from AutoSearch (cuz that uses duration from phrydy)
   . since content_provider.current_index is updated every frame, yeet them from the get_at arguments and stuff
     . check if its necessary somewhere first
   . filtering changes order (important in queues)
   . is current_queue_view variable even required anymore?
-  . auto play_next causes wrong values of _top_view
   . 2 width chars still cause alignment probs
     . try fixing the 2 width char bug directly from py_cui
       . fork it
-  . spamming pause freezes the terminal
   . spamming seek continues to seek even after the song changes
-  . git diff is always different for musitracker.json
-    . 1 edit at the top of the songs list and git considers all songs in the list edited as some lines are still the same
+    . fixable with command_queue. just clear all seek commands from queue when next()
+    . the seek bug happens cuz the button presses pile up when the song is being imported and are released all at once,
+      when it is done being imported. so will need to move that to a seperate thread to fix it
+  \. git diff is always different for musitracker.json
+    \. 1 edit at the top of the songs list and git considers all songs in the list edited as some lines are still the same
+  . yeet unnecessary uses of funcs for 2 width chars
 
 plan:
-  . show selected song/album/whatever info on the player widget and add shortcut to switch and show playing song
+  . maybe global shortcuts?
+    . https://pynput.readthedocs.io/en/latest/
+    . https://github.com/moses-palmer/pynput
+  . FIX CRASHES CUZ OF ONLINE TIMEOUTS and stuff
+  . make it work offline (no crashes)
+  . maybe have general buttons for refresh, and stuff
+  . show some loading thing when doing online stuff/doing stuff with songs (when the screen freezes otherwise)
+  . maybe replace popup menus with menu in the browser widget
+    . album art dosent have to disappear
+    . other shortcuts still work
+    . just another implimentation of song_provider needed so not too difficult
+    . sorting and adding new dosent require to be in the list (kb shortcuts)
+    . no need to display the numbers
+  . multithreaing for time consuming stuff (async??)
+    . including the live player info change on browser selection change 
+    . show selected song/album/whatever info on the player widget and add shortcut to switch and show playing song
   . maintain a song history
     . queue history?
     . save song progress and show when searching online (for discoverability)
@@ -27,39 +51,25 @@ plan:
       . mark the progress for songs that are offline too
       . if the song changes or next() is executed (for last song in a queue), enter the new progress in dict
         . so maybe maintain a "last_song_key" or something
-  . FIX CRASHES CUZ OF ONLINE TIMEOUTS and stuff
   . provide options to rename playlists/queues/artists
   . a way to check what artists dont have their albums checked in a while
-  . make it work offline (no crashes)
   . have a options menu for stuff like
     . toggling album art if not available
     . toggling song progress (from history) indicator
     . toggling to show currently selected content info or playing song info
-  . maybe replace popup menus with menu in the browser widget
-    . album art dosent have to disappear
-    . other shortcuts still work
-    . just another implimentation of song_provider needed
-    . sorting and adding new dosent require to be in the list (kb shortcuts)
-    . no need to display the numbers
+  . do something useful with the bottom statusbar
+    . show scroll progress (2/234) so its easy to tell how many more songs left after cuurently selected one
   . are cached musidata and albumdata really needed?
     . it can be a bit quick maybe?
   . maybe show a smol q besides song names so that a quickshortcut for add_to_current_queue can be added
   . add logging
-  . maybe global shortcuts?
-    . https://pynput.readthedocs.io/en/latest/
-    . https://github.com/moses-palmer/pynput
-  . yeet artist name confirmation var and add a menu func for it
-  . artist.search_term for artists that dont give good enough results for just their names for albums
-    . multiple artist search terms + smol limit
-  . multithreaing for time consuming stuff (async??)
-    . including the live player info change on browser selection change 
-  . maybe have general buttons for refresh, and stuff
+  \. yeet artist name confirmation var and add a menu func for it
+  \. artist.search_term for artists that dont give good enough results for just their names for albums
+    \. multiple artist search terms + smol limit
   ?. have a "trigger_on_<button>" method on song provider (:pass), and have required implimentations on subclasses
   . add a popup for showing available shortcuts
-  . do something useful with the bottom statusbar
   . cleanup all downloaded songs from temp_dir on exit
   . make an init func that checks and setus up the temp dirs and stuff on startup
-  . show some loading thing when doing online stuff/doing stuff with songs (when the screen freezes otherwise)
 
 
 dev_plan: 

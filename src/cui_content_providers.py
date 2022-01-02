@@ -486,8 +486,10 @@ class QueueProvider(SongProvider):
         def append_to_playlist():
             select_item_using_popup(main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func)
         def merge_into_queue():
-            remove_queue()
-            select_item_using_popup(main_provider.data_list[3], "queue", main_provider.data_list[3].data_list, final_func)
+            def final_func2(c):
+                final_func(c)
+                remove_queue()
+            select_item_using_popup(main_provider.data_list[3], "queue", main_provider.data_list[3].data_list, final_func2)
 
         menu_funcs = [
             merge_into_queue,

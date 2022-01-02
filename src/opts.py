@@ -23,6 +23,9 @@ search_exts = ["mp3", "m4a", "flac", "ogg"]
 force_ascii_art = False # linux only (cuz theres ueberzug too)
 disable_ascii_art = False
 
+enable_global_shortcuts = False
+pause_global_shortcut = "<cmd>+<F10>" # meta + f10
+
 # debugs
 # manager_sort_debug = True
 # debug_no_edits_to_stored = False

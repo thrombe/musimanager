@@ -14,6 +14,7 @@ import cui_content_providers
 import cui_handle
 import helpers
 
+if opts.enable_global_shortcuts: import pynput
 if opts.ASCII_ART: import ascii_magic
 if opts.LUUNIX: import ueberzug.lib.v0 as ueberzug
 
@@ -39,7 +40,6 @@ class Player:
         song_path = song.last_known_path if song.last_known_path is not None and os.path.exists(song.last_known_path) else song.temporary_download()
                 
         self.song_duration = song.get_duration(path=song_path)
-        self.song_psuedo_start_time = time.time()
         self.is_paused_since = None
         self.playback_handle = mixer.music
         flac_filelike = io.BytesIO()
@@ -57,6 +57,7 @@ class Player:
         flac_filelike.seek(0)
         self.playback_handle.load(flac_filelike, namehint=convert_to)
         self.playback_handle.play()
+        self.song_psuedo_start_time = time.time()
         
     def toggle_pause(self):
         if self.is_paused_since is not None:
@@ -224,32 +225,56 @@ class BrowserWidget:
         self.scroll_menu = widget
         self.player_widget = player_widget # needs to be able to change songs at any time
         self.current_queue_view = False
+        self.command_queue = []
+        self.commands = []
 
     def setup(self):
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_Q_LOWER, self.quit)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_Q_UPPER, cui_handle.pycui.stop) # quit without save
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_RIGHT_ARROW, self.try_load_right)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_LEFT_ARROW, self.try_load_left)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_P_LOWER, self.player_widget.player.toggle_pause)
-        # self.scroll_menu.add_key_command(py_cui.keys.KEY_O_LOWER, lambda: self.menu_for_selected(execute_func_index=2)) # add song to playlists # TODO these crash on non songs
-        # self.scroll_menu.add_key_command(py_cui.keys.KEY_I_LOWER, lambda: self.menu_for_selected(execute_func_index=3)) # add song to queues
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_J_LOWER, self.player_widget.player.seek_10_secs_behind)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_K_LOWER, self.player_widget.player.seek_10_secs_forward)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_H_LOWER, self.play_prev)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_L_LOWER, self.play_next)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_M_LOWER, self.view_down)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_N_LOWER, self.view_up)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_V_LOWER, self.move_item_down)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_B_LOWER, self.move_item_up)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_U_LOWER, self.toggle_queue_view)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_S_LOWER, self.search)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_G_LOWER, self.menu_for_selected)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_G_UPPER, self.global_menu)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_F_LOWER, self.filter)
-        self.scroll_menu.add_key_command(py_cui.keys.KEY_F_UPPER, self.shuffle_if_current_queue)
+        self.commands = [
+            (py_cui.keys.KEY_Q_LOWER, self.quit),
+            (py_cui.keys.KEY_Q_UPPER, cui_handle.pycui.stop), # quit without save
+            (py_cui.keys.KEY_RIGHT_ARROW, self.try_load_right),
+            (py_cui.keys.KEY_LEFT_ARROW, self.try_load_left),
+            (py_cui.keys.KEY_P_LOWER, self.player_widget.player.toggle_pause),
+            # (py_cui.keys.KEY_O_LOWER, lambda: self.menu_for_selected(execute_func_index=2)), # add song to playlists # TODO these crash on non songs
+            # (py_cui.keys.KEY_I_LOWER, lambda: self.menu_for_selected(execute_func_index=3)), # add song to queues
+            (py_cui.keys.KEY_J_LOWER, self.player_widget.player.seek_10_secs_behind),
+            (py_cui.keys.KEY_K_LOWER, self.player_widget.player.seek_10_secs_forward),
+            (py_cui.keys.KEY_H_LOWER, self.play_prev),
+            (py_cui.keys.KEY_L_LOWER, self.play_next),
+            (py_cui.keys.KEY_M_LOWER, self.view_down),
+            (py_cui.keys.KEY_N_LOWER, self.view_up),
+            (py_cui.keys.KEY_V_LOWER, self.move_item_down),
+            (py_cui.keys.KEY_B_LOWER, self.move_item_up),
+            (py_cui.keys.KEY_U_LOWER, self.toggle_queue_view),
+            (py_cui.keys.KEY_S_LOWER, self.search),
+            (py_cui.keys.KEY_G_LOWER, self.menu_for_selected),
+            (py_cui.keys.KEY_G_UPPER, self.global_menu),
+            (py_cui.keys.KEY_F_LOWER, self.filter),
+            (py_cui.keys.KEY_F_UPPER, self.shuffle_if_current_queue),
+        ]
+        for k, c in self.commands:
+            # default valued arguments capture the value instead of the refrence (lambda i=k: some(i))
+            self.scroll_menu.add_key_command(k, lambda j=c: self.queue_command(j))
+            # self.scroll_menu.add_key_command(k, c)
         self.scroll_menu.set_selected_color(py_cui.MAGENTA_ON_CYAN)
-
         self.scroll_menu.add_item_list(self.content_state_stack[0].get_current_name_list())
+
+        if opts.enable_global_shortcuts:
+            pynput.keyboard.GlobalHotKeys({
+                opts.pause_global_shortcut: lambda: self.queue_command(self.player_widget.player.toggle_pause),
+            }).start()
+
+    def queue_command(self, cmd):
+        self.command_queue.append(cmd)
+
+    def clear_commands_from_queue(self, cmds):
+        i = 0
+        while True:
+            if len(self.command_queue) == 0 or len(self.command_queue) <= i: break
+            if self.command_queue[i] in cmds:
+                self.command_queue.pop(i)
+            else:
+                i += 1
 
     def quit(self):
         self.save()
