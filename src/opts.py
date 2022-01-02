@@ -20,10 +20,10 @@ musitracker_search_limit_first_time = 300
 auto_search_under = "/home/issac/daata/phon-data/.musi/"
 file_explorer_base_dir = "/home/issac/"
 search_exts = ["mp3", "m4a", "flac", "ogg"]
-force_ascii_art = False # linux only (cuz theres ueberzug too)
+force_ascii_art = False # linux only (cuz theres ueberzug too) # pip install ueberzug
 disable_ascii_art = False
 
-enable_global_shortcuts = False
+enable_global_shortcuts = False # pip install pynput
 pause_global_shortcut = "<cmd>+<F10>" # meta + f10
 
 # debugs
@@ -50,3 +50,15 @@ ytmusic = ytmusicapi.YTMusic(auth=ytmusic_headers_path)
 show_artist_name_besides_song_name = True
 show_hidden_in_file_explorer = False
 save_on_exit = True
+
+
+
+
+
+import os
+if not all([os.path.exists(musimanager_directory), os.path.exists(auto_search_under), os.path.exists(file_explorer_base_dir)]):
+    print("instructions in README.md")
+    quit()
+else:
+    if not os.path.exists(temp_dir):
+        os.mkdir(temp_dir)

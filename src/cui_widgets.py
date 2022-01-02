@@ -303,7 +303,13 @@ class BrowserWidget:
         content_provider.current_index = self.scroll_menu.get_selected_item_index()
         content_provider.current_scroll_top_index = self.scroll_menu._top_view
         self.refresh_names(content_provider)
+
+        self.auto_next()
+
+        while len(self.command_queue) > 0:
+            self.command_queue.pop(0)()
         
+    def auto_next(self):
         # if current song ended, play next
         if self.player_widget.player.song_psuedo_start_time is None: return
         if self.player_widget.player.is_paused_since is not None: return

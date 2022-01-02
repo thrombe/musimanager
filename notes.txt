@@ -5,9 +5,9 @@ bugs:
       . apparantly spamming isnt even necessary, it sometimes freezes on pause
     . maybe just switch music backends and test the spamming freeze
     . freezes after waking up from sleep
-  . songs end about a second or half early and its a super apparent cut
-    . i think the stuff youtube provides is rounded to second (not sure)
-    . check if problem there with songs played from AutoSearch (cuz that uses duration from phrydy)
+  \. songs end about a second or half early and its a super apparent cut
+    \. i think the stuff youtube provides is rounded to second (not sure)
+    \. check if problem there with songs played from AutoSearch (cuz that uses duration from phrydy)
   . since content_provider.current_index is updated every frame, yeet them from the get_at arguments and stuff
     . check if its necessary somewhere first
   . filtering changes order (important in queues)
@@ -24,9 +24,10 @@ bugs:
   . yeet unnecessary uses of funcs for 2 width chars
 
 plan:
-  . maybe global shortcuts?
-    . https://pynput.readthedocs.io/en/latest/
-    . https://github.com/moses-palmer/pynput
+  /. maybe global shortcuts?
+    /. https://pynput.readthedocs.io/en/latest/
+    /. https://github.com/moses-palmer/pynput
+  . add images to readme.md
   . FIX CRASHES CUZ OF ONLINE TIMEOUTS and stuff
   . make it work offline (no crashes)
   . maybe have general buttons for refresh, and stuff
@@ -40,6 +41,7 @@ plan:
   . multithreaing for time consuming stuff (async??)
     . including the live player info change on browser selection change 
     . show selected song/album/whatever info on the player widget and add shortcut to switch and show playing song
+    . how safe multithreading?
   . maintain a song history
     . queue history?
     . save song progress and show when searching online (for discoverability)

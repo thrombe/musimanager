@@ -6,7 +6,7 @@ import phrydy as tagg
 import requests
 import os
 import subprocess
-import ffmpeg
+# import ffmpeg # ffmpeg-python
 from PIL import Image
 import io
 import pydub

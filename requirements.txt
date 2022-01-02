@@ -6,3 +6,5 @@ pydub
 wcwidth
 pygame
 ascii-magic
+serde
+phrydy
