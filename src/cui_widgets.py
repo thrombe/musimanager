@@ -8,6 +8,7 @@ from PIL import Image
 import py_cui
 import time
 import copy
+import threading
 
 import opts
 import cui_content_providers
@@ -38,7 +39,7 @@ class Player:
         # len(song) is ~~ (duration of song in seconds (milliseconds in decimal))*1000
         self.current_song = song
         song_path = song.last_known_path if song.last_known_path is not None and os.path.exists(song.last_known_path) else song.temporary_download()
-                
+        
         self.song_duration = song.get_duration(path=song_path)
         self.is_paused_since = None
         self.playback_handle = mixer.music
@@ -70,7 +71,7 @@ class Player:
 
     # TODO: simplify this bs with self.playback_handle.get_pos()
     def try_seek(self, secs):
-        if self.is_paused_since:
+        if self.is_paused_since or self.song_psuedo_start_time is None:
             return
         delta = 0.5 # there might be some difference between what the song duration is and what seek() works without crash
         tme = time.time() - self.song_psuedo_start_time
@@ -114,7 +115,8 @@ class PlayerWidget:
         self.scroll_menu.clear()
         if opts.ASCII_ART: self.ascii_image_refresh()
         elif opts.LUUNIX: self.image_refresh()
-        if self.player.current_song is not None: self.print_song_metadata(self.player.current_song)
+        if self.player.current_song is not None and self.player.song_psuedo_start_time is not None:
+            self.print_song_metadata(self.player.current_song)
 
     def image_refresh(self):
         # TODO: use these instead
@@ -143,9 +145,13 @@ class PlayerWidget:
             self.scroll_menu.add_item(center(line))
 
     def play(self, song):
-        self.player.play(song)
-        self.replace_album_art(song)
-        self.print_song_metadata(song)
+        def execute():
+            # cui_handle.pycui.show_loading_icon_popup("loading song", "song loading")
+            self.player.play(song)
+            self.replace_album_art(song)
+            self.print_song_metadata(song)
+            # cui_handle.pycui.stop_loading_popup()
+        threading.Thread(target=execute, args=()).start()
 
     def play_next(self):
         if self.player.current_queue is None: return False
@@ -315,6 +321,8 @@ class BrowserWidget:
         if self.player_widget.player.is_paused_since is not None: return
         tme = time.time() - self.player_widget.player.song_psuedo_start_time
         if tme > self.player_widget.player.song_duration: # playback_handle.get_pos() >= song_duration
+            self.clear_commands_from_queue([self.player_widget.player.seek_10_secs_forward])
+            self.player_widget.player.song_psuedo_start_time = None
             self.play_next()
 
     def view_down(self):

@@ -41,7 +41,8 @@ plan:
   . multithreaing for time consuming stuff (async??)
     . including the live player info change on browser selection change 
     . show selected song/album/whatever info on the player widget and add shortcut to switch and show playing song
-    . how safe multithreading?
+    /. how safe multithreading?
+      /. global interpreter lock takes care of this
   . maintain a song history
     . queue history?
     . save song progress and show when searching online (for discoverability)
