@@ -11,7 +11,7 @@
 
 # Features
     . search albums on youtube and play the songs
-    . save songs in playlists and download them
+    . save songs in playlists
     . track new albums from artists
     . import playlists from newpipe backup zip
       . just save the backup zip in "opts.musimanager_directory" folder and choosing the newpipe playlists option in the browser widget will show the playlists
