@@ -18,6 +18,7 @@ bugs:
   . 2 width chars still cause alignment probs
     . try fixing the 2 width char bug directly from py_cui
       . fork it
+      . check if fit_text is used everywhere, and try just fixing fit_text if yes
   . spamming seek continues to seek even after the song changes
     . fixable with command_queue. just clear all seek commands from queue when next()
     . the seek bug happens cuz the button presses pile up when the song is being imported and are released all at once,
@@ -27,9 +28,19 @@ bugs:
   . yeet unnecessary uses of funcs for 2 width chars
 
 plan:
+  . musimanager, do the rust in python nightly gstreamer thing in a vm or something
+  . auto update/search new albums for artists after some interval in background thread
+    . maybe search new albums of 1 artist every boot and do more artists every 10~~ minutes
+    . have another artist provider for this to store newly found stuff?
+    . show popup on new finds?
+    . dont try for artists that havent been manually searched before?
+    . or maybe add a switch per artist to turn this on
   /. maybe global shortcuts?
     /. https://pynput.readthedocs.io/en/latest/
     /. https://github.com/moses-palmer/pynput
+  . some kinda versioning to update the contents of db to update to newer versions of db
+    . tracker.version: "x.x.x"
+    . [int(v) for v in tracker.version.split(".")]
   . add images to readme.md
   . FIX CRASHES CUZ OF ONLINE TIMEOUTS and stuff
   . make it work offline (no crashes)

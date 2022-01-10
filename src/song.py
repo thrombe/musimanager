@@ -236,7 +236,7 @@ class Song(serde.Model):
         return f"{ytdl.yt_url}{self.key}"
 
     def try_get_info(self):
-        if any(self.info.channel_id == "", self.info.thumbnail_url == "", self.info.video_id == ""):
+        if any([self.info.channel_id == "", self.info.thumbnail_url == "", self.info.video_id == ""]):
             return self.get_info()
         else:
             return self.info
