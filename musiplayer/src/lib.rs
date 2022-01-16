@@ -9,6 +9,7 @@ use pyo3::{pymodule, pyclass, pymethods};
 
 use gstreamer_player::prelude::Cast;
 use gstreamer_player as gst_player;
+use gstreamer;
 
 #[pymodule]
 fn musiplayer(_py: Python, m: &PyModule) -> PyResult<()> {
@@ -37,6 +38,10 @@ impl Player {
     }
 }
 
+fn map_time(t: gstreamer::ClockTime) -> u64 {
+    (t.mseconds() as f64/1000.0).round() as u64
+}
+
 #[pymethods]
 impl Player {
 
@@ -46,24 +51,25 @@ impl Player {
     }
 
     fn position(&mut self) -> PyResult<u64>{
-        // return Ok(self.gst_player.position().context("position none")?.seconds());
+        // return Ok(map_time(self.gst_player.position().context("position none")?));
 
         // gst_plsyer.position can return none even if its not supposed to be. so it needs to be catched
+        // gst_player often does not reach the value of sgt_player.duration, so it needs rounding off (hence the map_time function)
         let pos = self.gst_player.position();
         if pos.is_some() {
-            self.position = pos.unwrap().seconds();
+            self.position = map_time(pos.unwrap());
         }
         Ok(self.position)
     }
 
     fn duration(&mut self) -> PyResult<u64>{
-        // return Ok(self.gst_player.duration().context("duration none")?.seconds());
+        // return Ok(map_time(self.gst_player.duration().context("duration none")?));
 
         // duration 
         if self.duration == 0 {
             let duration = self.gst_player.duration();
             if duration.is_some() {
-                self.duration = duration.unwrap().seconds();
+                self.duration = map_time(duration.unwrap());
             }
         }
         Ok(self.duration)
@@ -88,7 +94,7 @@ impl Player {
         } else {
             gstreamer::ClockTime::from_seconds(0)
         }};
-        if seekpos.seconds() > self.duration && self.duration != 0 {
+        if map_time(seekpos) > self.duration && self.duration != 0 {
             self.position = self.duration;
             seekpos = gstreamer::ClockTime::from_seconds(self.duration);
         }

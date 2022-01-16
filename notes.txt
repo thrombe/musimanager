@@ -3,14 +3,6 @@ bugs:
   . memory leak?
     . maybe cuz of the threads?
     . but refrence counting should take care of that???
-  /. freezes
-    /. spamming pause freezes the terminal
-      /. apparantly spamming isnt even necessary, it sometimes freezes on pause
-    /. maybe just switch music backends and test the spamming freeze
-    /. freezes after waking up from sleep
-  \. songs end about a second or half early and its a super apparent cut
-    \. i think the stuff youtube provides is rounded to second (not sure)
-    \. check if problem there with songs played from AutoSearch (cuz that uses duration from phrydy)
   . since content_provider.current_index is updated every frame, yeet them from the get_at arguments and stuff
     . check if its necessary somewhere first
   . filtering changes order (important in queues)
@@ -20,15 +12,10 @@ bugs:
     . try fixing the 2 width char bug directly from py_cui
       . fork it
       . check if fit_text is used everywhere, and try just fixing fit_text if yes
-  /. spamming seek continues to seek even after the song changes
-    /. fixable with command_queue. just clear all seek commands from queue when next()
-    /. the seek bug happens cuz the button presses pile up when the song is being imported and are released all at once,
-      when it is done being imported. so will need to move that to a seperate thread to fix it
   \. git diff is always different for musitracker.json
     \. 1 edit at the top of the songs list and git considers all songs in the list edited as some lines are still the same
 
 plan:
-  /. musimanager, do the rust in python nightly gstreamer thing in a vm or something
   . auto update/search new albums for artists after some interval in background thread
     . maybe search new albums of 1 artist every boot and do more artists every 10~~ minutes
     . have another artist provider for this to store newly found stuff?
@@ -39,7 +26,6 @@ plan:
   . some kinda versioning to update the contents of db to update to newer versions of db
     . tracker.version: "x.x.x"
     . [int(v) for v in tracker.version.split(".")]
-  /. add images to readme.md
   . FIX CRASHES CUZ OF ONLINE TIMEOUTS and stuff
   . make it work offline (no crashes)
   . maybe have general buttons for refresh, and stuff
@@ -80,7 +66,6 @@ plan:
   \. artist.search_term for artists that dont give good enough results for just their names for albums
     \. multiple artist search terms + smol limit
   . add a popup for showing available shortcuts
-  \. cleanup all downloaded songs from temp_dir on exit
   . make an init func that checks and setus up the temp dirs and stuff on startup
 
 
