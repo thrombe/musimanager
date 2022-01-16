@@ -23,6 +23,7 @@ search_exts = ["mp3", "m4a", "flac", "ogg"]
 force_ascii_art = False # linux only (cuz theres ueberzug too) # pip install ueberzug
 disable_ascii_art = False
 
+ # https://github.com/moses-palmer/pynput
 enable_global_shortcuts = False # pip install pynput
 pause_global_shortcut = "<cmd>+<F10>" # meta + f10
 

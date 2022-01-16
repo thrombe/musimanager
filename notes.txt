@@ -3,11 +3,11 @@ bugs:
   . memory leak?
     . maybe cuz of the threads?
     . but refrence counting should take care of that???
-  . freezes
-    . spamming pause freezes the terminal
-      . apparantly spamming isnt even necessary, it sometimes freezes on pause
-    . maybe just switch music backends and test the spamming freeze
-    . freezes after waking up from sleep
+  /. freezes
+    /. spamming pause freezes the terminal
+      /. apparantly spamming isnt even necessary, it sometimes freezes on pause
+    /. maybe just switch music backends and test the spamming freeze
+    /. freezes after waking up from sleep
   \. songs end about a second or half early and its a super apparent cut
     \. i think the stuff youtube provides is rounded to second (not sure)
     \. check if problem there with songs played from AutoSearch (cuz that uses duration from phrydy)
@@ -16,32 +16,30 @@ bugs:
   . filtering changes order (important in queues)
   . is current_queue_view variable even required anymore?
   . 2 width chars still cause alignment probs
+  . yeet unnecessary uses of funcs for 2 width chars
     . try fixing the 2 width char bug directly from py_cui
       . fork it
       . check if fit_text is used everywhere, and try just fixing fit_text if yes
-  . spamming seek continues to seek even after the song changes
-    . fixable with command_queue. just clear all seek commands from queue when next()
-    . the seek bug happens cuz the button presses pile up when the song is being imported and are released all at once,
+  /. spamming seek continues to seek even after the song changes
+    /. fixable with command_queue. just clear all seek commands from queue when next()
+    /. the seek bug happens cuz the button presses pile up when the song is being imported and are released all at once,
       when it is done being imported. so will need to move that to a seperate thread to fix it
   \. git diff is always different for musitracker.json
     \. 1 edit at the top of the songs list and git considers all songs in the list edited as some lines are still the same
-  . yeet unnecessary uses of funcs for 2 width chars
 
 plan:
-  . musimanager, do the rust in python nightly gstreamer thing in a vm or something
+  /. musimanager, do the rust in python nightly gstreamer thing in a vm or something
   . auto update/search new albums for artists after some interval in background thread
     . maybe search new albums of 1 artist every boot and do more artists every 10~~ minutes
     . have another artist provider for this to store newly found stuff?
     . show popup on new finds?
     . dont try for artists that havent been manually searched before?
     . or maybe add a switch per artist to turn this on
-  /. maybe global shortcuts?
-    /. https://pynput.readthedocs.io/en/latest/
-    /. https://github.com/moses-palmer/pynput
+  . a way to check what artists dont have their albums checked in a while
   . some kinda versioning to update the contents of db to update to newer versions of db
     . tracker.version: "x.x.x"
     . [int(v) for v in tracker.version.split(".")]
-  . add images to readme.md
+  /. add images to readme.md
   . FIX CRASHES CUZ OF ONLINE TIMEOUTS and stuff
   . make it work offline (no crashes)
   . maybe have general buttons for refresh, and stuff
@@ -55,8 +53,6 @@ plan:
   . multithreaing for time consuming stuff (async??)
     . including the live player info change on browser selection change 
     . show selected song/album/whatever info on the player widget and add shortcut to switch and show playing song
-    /. how safe multithreading?
-      /. global interpreter lock takes care of this
   . maintain a song history
     . queue history?
     . save song progress and show when searching online (for discoverability)
@@ -69,13 +65,13 @@ plan:
       . if the song changes or next() is executed (for last song in a queue), enter the new progress in dict
         . so maybe maintain a "last_song_key" or something
   . provide options to rename playlists/queues/artists
-  . a way to check what artists dont have their albums checked in a while
   . have a options menu for stuff like
     . toggling album art if not available
     . toggling song progress (from history) indicator
     . toggling to show currently selected content info or playing song info
-  . do something useful with the bottom statusbar
-    . show scroll progress (2/234) so its easy to tell how many more songs left after cuurently selected one
+  \. do something useful with the bottom statusbar
+    \. show scroll progress (2/234) so its easy to tell how many more songs left after cuurently selected one
+    \. cant do cuz py_cui dosent allow
   . are cached musidata and albumdata really needed?
     . it can be a bit quick maybe?
   . maybe show a smol q besides song names so that a quickshortcut for add_to_current_queue can be added
@@ -83,15 +79,12 @@ plan:
   \. yeet artist name confirmation var and add a menu func for it
   \. artist.search_term for artists that dont give good enough results for just their names for albums
     \. multiple artist search terms + smol limit
-  ?. have a "trigger_on_<button>" method on song provider (:pass), and have required implimentations on subclasses
   . add a popup for showing available shortcuts
-  . cleanup all downloaded songs from temp_dir on exit
+  \. cleanup all downloaded songs from temp_dir on exit
   . make an init func that checks and setus up the temp dirs and stuff on startup
 
 
 dev_plan: 
-  . add fucking typer
   . allow import of cookies and tokens using cli
   . add hooks/functions for external programs to use this as a microservice/package.
   . allow import from .txt and .json files (idk if this actually exists in the code)
-  . make code more atomic (late goal, probably after this is stable.)
