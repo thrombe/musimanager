@@ -1,8 +1,9 @@
 
 bugs:
-  . memory leak?
-    . maybe cuz of the threads?
-    . but refrence counting should take care of that???
+  /. memory leak?
+    /. maybe cuz of the threads?
+    /. thread count keeps increasing
+    /. is it cuz of threading library or cuz of gstreamer?
   . since content_provider.current_index is updated every frame, yeet them from the get_at arguments and stuff
     . check if its necessary somewhere first
   . filtering changes order (important in queues)
