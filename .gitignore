@@ -5,6 +5,10 @@ db_main/
 src/py_cui
 src/olb/
 
+musiplayer.so
+target/
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

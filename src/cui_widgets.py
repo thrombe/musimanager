@@ -1,12 +1,8 @@
 
 import io
 import os
-import pydub
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
-import pygame.mixer as mixer
 from PIL import Image
 import py_cui
-import time
 import copy
 import threading
 
@@ -14,6 +10,7 @@ import opts
 import cui_content_providers
 import cui_handle
 import helpers
+import musiplayer
 
 if opts.enable_global_shortcuts: import pynput
 if opts.ASCII_ART: import ascii_magic
@@ -21,75 +18,21 @@ if opts.LUUNIX: import ueberzug.lib.v0 as ueberzug
 
 class Player:
     def __init__(self):
-        self.is_paused_since = None
-        self.song_duration = None
-        self.song_psuedo_start_time = None
-        self.song_progress_bar = 0
-        
-        mixer.init()
-        
         self.current_song = None # musimanager song
-        self.pydub_audio_segment = None
-        self.flac_filelike_copy = None
-        self.playback_handle = None
         self.current_queue = None
+        self.playback_handle = musiplayer.Player()
 
     def play(self, song):
-        if self.playback_handle is not None: self.playback_handle.stop()
-        # len(song) is ~~ (duration of song in seconds (milliseconds in decimal))*1000
         self.current_song = song
-        song_path = song.last_known_path if song.last_known_path is not None and os.path.exists(song.last_known_path) else song.temporary_download()
+        song_path = f"file://{song.last_known_path}" if song.last_known_path is not None and os.path.exists(song.last_known_path) else song.get_uri()
         
-        self.song_duration = song.get_duration(path=song_path)
-        self.is_paused_since = None
-        self.playback_handle = mixer.music
-        flac_filelike = io.BytesIO()
+        self.playback_handle.play(song_path)
 
-        # maybe TODO: try switching back to simpleaudio cuz converting to flac is slower than wav (about a second faster maybe)
-        convert_to = "flac"
-        if song_path.split(".")[-1] != convert_to:
-            self.pydub_audio_segment = pydub.AudioSegment.from_file(song_path, song_path.split(os.path.sep)[-1].split(".")[-1])
-            flac_filelike = self.pydub_audio_segment.export(flac_filelike, format=convert_to)
-        else:
-            with open(song_path, "rb") as f:
-                flac_filelike.write(f.read())
-
-        self.flac_filelike_copy = copy.deepcopy(flac_filelike)
-        flac_filelike.seek(0)
-        self.playback_handle.load(flac_filelike, namehint=convert_to)
-        self.playback_handle.play()
-        self.song_psuedo_start_time = time.time()
-        
     def toggle_pause(self):
-        if self.is_paused_since is not None:
-            self.playback_handle.unpause()
-            self.song_psuedo_start_time += time.time() - self.is_paused_since
-            self.is_paused_since = None
-        else:
-            self.playback_handle.pause()
-            self.is_paused_since = time.time()
+        self.playback_handle.toggle_pause()
 
-    # TODO: simplify this bs with self.playback_handle.get_pos()
     def try_seek(self, secs):
-        if self.is_paused_since or self.song_psuedo_start_time is None:
-            return
-        delta = 0.5 # there might be some difference between what the song duration is and what seek() works without crash
-        tme = time.time() - self.song_psuedo_start_time
-        if tme > self.song_duration:
-            flac_filelike = copy.deepcopy(self.flac_filelike_copy)
-            flac_filelike.seek(0)
-            self.playback_handle.load(flac_filelike, namehint="flac")
-            self.playback_handle.play()
-        
-        self.song_psuedo_start_time -= secs
-        tme = time.time() - self.song_psuedo_start_time
-        if tme > self.song_duration:
-            tme = self.song_duration - delta
-            self.song_psuedo_start_time = time.time()-self.song_duration - delta
-        elif tme < 0:
-            tme = delta
-            self.song_psuedo_start_time = time.time() + delta
-        self.playback_handle.set_pos(tme)
+        self.playback_handle.seek(secs)
 
     def seek_10_secs_forward(self):
         self.try_seek(10)
@@ -115,7 +58,7 @@ class PlayerWidget:
         self.scroll_menu.clear()
         if opts.ASCII_ART: self.ascii_image_refresh()
         elif opts.LUUNIX: self.image_refresh()
-        if self.player.current_song is not None and self.player.song_psuedo_start_time is not None:
+        if self.player.current_song is not None:
             self.print_song_metadata(self.player.current_song)
 
     def image_refresh(self):
@@ -151,6 +94,7 @@ class PlayerWidget:
             self.replace_album_art(song)
             self.print_song_metadata(song)
             # cui_handle.pycui.stop_loading_popup()
+        # execute()
         threading.Thread(target=execute, args=()).start()
 
     def play_next(self):
@@ -217,10 +161,15 @@ class PlayerWidget:
         self.scroll_menu.add_item(center(f"title: {song.title}"))
         self.scroll_menu.add_item(center(f"album: {song.info.album}"))
         self.scroll_menu.add_item(center(f"artist: {song.artist_name}"))
-        if self.player.is_paused_since is None:
-            self.player.song_progress_bar = (time.time()-self.player.song_psuedo_start_time)/self.player.song_duration
-        self.scroll_menu.add_item(f"{'█' * round(x_blank * self.player.song_progress_bar)}")
+        self.scroll_menu.add_item(f"{'█' * round(x_blank * self.player.playback_handle.progress())}")
         # "█", "▄", "▀", "■", "▓", "│", "▌", "▐", "─", 
+
+        if not True: # for debugging
+            self.scroll_menu.add_item(center(f"position: {self.player.playback_handle.position()}"))
+            self.scroll_menu.add_item(center(f"duration: {self.player.playback_handle.duration()}"))
+            self.scroll_menu.add_item(center(f"progress: {self.player.playback_handle.progress()}"))
+            self.scroll_menu.add_item(center(f"is_finished: {self.player.playback_handle.is_finished()}"))
+            # self.scroll_menu.add_item(center(f"uri: {self.player.current_song.get_uri()}"))
 
     def x_blank(self): return self.scroll_menu._stop_x - self.scroll_menu._start_x - self.border_padding_x*2
     def y_blank(self): return self.scroll_menu._stop_y - self.scroll_menu._start_y - self.border_padding_y_top - self.border_padding_y_bottom
@@ -317,12 +266,8 @@ class BrowserWidget:
         
     def auto_next(self):
         # if current song ended, play next
-        if self.player_widget.player.song_psuedo_start_time is None: return
-        if self.player_widget.player.is_paused_since is not None: return
-        tme = time.time() - self.player_widget.player.song_psuedo_start_time
-        if tme > self.player_widget.player.song_duration: # playback_handle.get_pos() >= song_duration
+        if self.player_widget.player.playback_handle.is_finished():
             self.clear_commands_from_queue([self.player_widget.player.seek_10_secs_forward])
-            self.player_widget.player.song_psuedo_start_time = None
             self.play_next()
 
     def view_down(self):
@@ -424,6 +369,8 @@ class BrowserWidget:
             self.scroll_menu.add_item_list([ # yes, pad is needed before and after fit_text (annoying 2 width chars)
                 helpers.pad_zwsp(helpers.fit_text(x_blank, name)) for name in name_list
                 ])
+
+        self.player_widget.scroll_menu.set_title(f"{content.current_index+1}/{len(name_list)}")
 
         y_blank = self.player_widget.y_blank()
 
