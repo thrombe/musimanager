@@ -1,9 +1,6 @@
 
 bugs:
-  /. memory leak?
-    /. maybe cuz of the threads?
-    /. thread count keeps increasing
-    /. is it cuz of threading library or cuz of gstreamer?
+  /. auto_next skips songs sometimes
   . since content_provider.current_index is updated every frame, yeet them from the get_at arguments and stuff
     . check if its necessary somewhere first
   . filtering changes order (important in queues)
@@ -24,6 +21,7 @@ plan:
     . dont try for artists that havent been manually searched before?
     . or maybe add a switch per artist to turn this on
   . a way to check what artists dont have their albums checked in a while
+  . profile code and find whats taking the most time to init
   . some kinda versioning to update the contents of db to update to newer versions of db
     . tracker.version: "x.x.x"
     . [int(v) for v in tracker.version.split(".")]

@@ -88,6 +88,7 @@ class PlayerWidget:
             self.scroll_menu.add_item(center(line))
 
     def play(self, song):
+        self.player.playback_handle.stop() # to prevent the auto_next from triggering multiple times
         def execute():
             # cui_handle.pycui.show_loading_icon_popup("loading song", "song loading")
             self.player.play(song)
