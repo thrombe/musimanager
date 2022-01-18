@@ -113,6 +113,9 @@ class Song(serde.Model):
             info = SongInfo.empty(),
             last_known_path = path,
         )
+
+    def change_name(self, new_name):
+        self.title = new_name
         
     def get_path(self):
         pass

@@ -65,6 +65,9 @@ class SongProvider(serde.Model):
                 return True
         return False
 
+    def change_name(self, new_name):
+        self.name = new_name
+
     def get_at(self, index):
         song = self.data_list[index]
         return song
@@ -144,23 +147,23 @@ class SongProvider(serde.Model):
     def menu_for_selected(self, content_stack, no_moves=False, execute_func_index=None):
         main_provider = content_stack[0]
         s: song.Song = self.get_at(self.current_index)
-        s = copy.deepcopy(s) # cuz artists need a copy (cuz they change some info) # else can use different final_func for the artists with a deepcopy
+        s_copy = copy.deepcopy(s) # cuz artists need a copy (cuz they change some info) # else can use different final_func for the artists with a deepcopy
         
         def download_song(): # TODO
-            _ = s.info
+            _ = s_copy.info
             pass
         def add_uploaders_key_to_artist():
             def final_func(content_provider):
-                content_provider.add_song(s)
-                content_provider.remove_song(s)
+                content_provider.add_song(s_copy)
+                content_provider.remove_song(s_copy)
             select_item_using_popup(main_provider.data_list[0], "artists", main_provider.data_list[0].data_list, final_func)
         def remove_song():
-            self.remove_song(s)
+            self.remove_song(s_copy)
         def final_func(content_provider):
-            if not content_provider.remove_song(s):
-                content_provider.add_song(s)
+            if not content_provider.remove_song(s_copy):
+                content_provider.add_song(s_copy)
         def tick_func(song_provider):
-            return song_provider.contains_song(s)
+            return song_provider.contains_song(s_copy)
         def add_to_playlist():
             select_item_using_popup(main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func, tick_func=tick_func)
         def move_to_playlist():
@@ -173,13 +176,16 @@ class SongProvider(serde.Model):
         def add_to_artist():
             select_item_using_popup(main_provider.data_list[0], "artists", main_provider.data_list[0].data_list, final_func, tick_func=tick_func)
         def add_to_tracker_offline():
-            return main_provider.tracker.add_song(s)
+            return main_provider.tracker.add_song(s_copy)
         def try_delete_from_tracker(): # TODO
             # yeet from artists and move to temp_dir
             pass
         def tag():
             s.try_get_info()
             s.tag(img_bytes=s.download_cover_image())
+        def change_name():
+            cui_handle.pycui.show_text_box_popup("new name: ", s.change_name)
+
 
         menu_funcs = [
             add_to_queue,
@@ -189,6 +195,7 @@ class SongProvider(serde.Model):
             try_delete_from_tracker, #! danger
             add_to_artist,
             add_uploaders_key_to_artist,
+            change_name,
             tag,
             download_song,
             remove_song,
@@ -197,7 +204,7 @@ class SongProvider(serde.Model):
             menu_funcs.remove(remove_song)
             menu_funcs.remove(move_to_playlist)
             menu_funcs.remove(download_song)
-        return present_menu_popup(menu_funcs, execute_func_index, s.title)
+        return present_menu_popup(menu_funcs, execute_func_index, s_copy.title)
 
     def search(self, search_term, get_search_box_title=False): return None
 
@@ -424,11 +431,15 @@ class PlaylistProvider(SongProvider):
                 playlist.current_index = i
                 playlist.menu_for_selected(content_stack, execute_func_index=4) #! dangerous
             playlist.current_index = 0
+        def change_name():
+            cui_handle.pycui.show_text_box_popup("new name: ", playlist.change_name)
+
 
         menu_funcs = [
             append_to_playlist,
             append_to_queue,
             add_to_tracker_offline,
+            change_name,
             try_delete_from_tracker,
             remove_playlist,
         ]
@@ -448,7 +459,7 @@ class QueueProvider(SongProvider):
 
     def add_new(self, songs, name):
         song_provider = SongProvider(songs, name)
-        self.data_list.append(song_provider)
+        self.data_list.insert(0, song_provider)
         return song_provider
 
     def add_queue(self, queue):
@@ -490,11 +501,14 @@ class QueueProvider(SongProvider):
                 final_func(c)
                 remove_queue()
             select_item_using_popup(main_provider.data_list[3], "queue", main_provider.data_list[3].data_list, final_func2)
+        def change_name():
+            cui_handle.pycui.show_text_box_popup("new name: ", queue.change_name)
 
         menu_funcs = [
             merge_into_queue,
             remove_queue,
             append_to_playlist,
+            change_name,
         ]
         return present_menu_popup(menu_funcs, execute_func_index, queue.name)
 

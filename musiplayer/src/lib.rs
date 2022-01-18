@@ -100,7 +100,6 @@ impl Player {
     }
 
     fn play(&mut self, url: String) -> PyResult<()> {
-        // self.gst_player.stop();
         self.gst_player.set_uri(&url);
         self.gst_player.play();
         self.paused = false;

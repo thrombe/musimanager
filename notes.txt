@@ -1,6 +1,5 @@
 
 bugs:
-  /. auto_next skips songs sometimes
   . since content_provider.current_index is updated every frame, yeet them from the get_at arguments and stuff
     . check if its necessary somewhere first
   . filtering changes order (important in queues)
@@ -49,7 +48,7 @@ plan:
       . mark the progress for songs that are offline too
       . if the song changes or next() is executed (for last song in a queue), enter the new progress in dict
         . so maybe maintain a "last_song_key" or something
-  . provide options to rename playlists/queues/artists
+  /. provide options to rename playlists/queues/artists
   . have a options menu for stuff like
     . toggling album art if not available
     . toggling song progress (from history) indicator
