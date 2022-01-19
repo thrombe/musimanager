@@ -33,6 +33,10 @@ plan:
     . just another implimentation of song_provider needed so not too difficult
     . sorting and adding new dosent require to be in the list (kb shortcuts)
     . no need to display the numbers
+  . check if the rust terminal ui libraries would be a good fit for the current structure of the project
+    . maybe change to that instead of py_cui and use rest of the python code + modifications
+    . maybe this way colored text (album art in text) is possible as py_cui dosen't play well with it
+  . save options in opts.toml or opts.json instead of opts.py
   . get albums of artists from the song
     . get artist from song, get albums from artist searching online
     . ask for custom search_term, leave blank for no custom search_term
@@ -40,6 +44,10 @@ plan:
   . some kinda versioning to update the contents of db to update to newer versions of db
     . tracker.version: "x.x.x"
     . [int(v) for v in tracker.version.split(".")]
+  . a content provider for a general search
+    . use scroll_menu for editing options like
+      . search what (songs/albums/artists/videos)
+      . filtering
   . FIX CRASHES CUZ OF ONLINE TIMEOUTS and stuff
   . make it work offline (no crashes)
   . maybe have general buttons for refresh, and stuff

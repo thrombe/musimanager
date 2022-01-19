@@ -1,10 +1,7 @@
 ytmusicapi
-mutagen
-youtube_dl
 py_cui
-pydub
 wcwidth
-pygame
 ascii-magic
 serde
 phrydy
+numpy

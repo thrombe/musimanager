@@ -1,15 +1,13 @@
 
-# import youtube_dl as ytdl
 import yt_dlp as yt_dl
 import serde
 import phrydy as tagg
 import requests
 import os
-import subprocess
+# import subprocess
 # import ffmpeg # ffmpeg-python
 from PIL import Image
 import io
-import pydub
 
 import opts
 
@@ -228,24 +226,13 @@ class Song(serde.Model):
 
     def move_to_artist_folder(self):
         if self.last_known_path.split(".")[-1] != opts.musi_download_ext:
-            if opts.musi_download_ext == "m4a":
-                self.download()
-            else:
-                self.convert_to_format(opts.musi_download_ext)
+            self.download()
         artist_folder = f"{opts.musi_path}{self.artist_name}{os.path.sep}"
         if not os.path.exists(artist_folder):
             os.mkdir(artist_folder)
         new_path = artist_folder + f"{self.key}.{opts.musi_download_ext}"
         os.rename(self.last_known_path, new_path)
         self.last_known_path = new_path
-
-    # output m4a not supported by pydub?
-    def convert_to_format(self, ext):
-        audio_segment = pydub.AudioSegment.from_file(self.last_known_path, self.last_known_path.split(os.path.sep)[-1].split(".")[-1])
-        old_path = self.last_known_path
-        self.last_known_path = self.last_known_path.rstrip(self.last_known_path.split(".")[-1]) + ext
-        audio_segment.export(self.last_known_path, format=ext)
-        os.remove(old_path)
 
     def url(self):
         return f"{ytdl.yt_url}{self.key}"
