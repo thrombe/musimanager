@@ -133,7 +133,7 @@ class PlayerWidget:
         self.player.current_queue = queue
 
     def replace_album_art(self, song):
-        img = song.get_cover_image_from_metadata() if song.last_known_path is not None else song.download_cover_image()
+        img = song.get_cover_image_from_metadata() if song.last_known_path is not None and os.path.exists(song.last_known_path) else song.download_cover_image()
         if img is None:
             img = Image.open(opts.default_album_art)
         else:

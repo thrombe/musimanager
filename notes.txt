@@ -1,5 +1,11 @@
 
 bugs:
+  . update readme with correct deps in requirements.txt
+    . mention gstreamer as dependency in readme + links for installation
+    . mention yt-dlp in readme as installation is a bit different
+  . if image gets too small, ueberzug freaks out
+    . disable image when too small and dont update the size till it gets a bit bigger
+  . why is there more delay for custom key commands?
   . since content_provider.current_index is updated every frame, yeet them from the get_at arguments and stuff
     . check if its necessary somewhere first
   . filtering changes order (important in queues)
@@ -20,6 +26,16 @@ plan:
     . dont try for artists that havent been manually searched before?
     . or maybe add a switch per artist to turn this on
   . a way to check what artists dont have their albums checked in a while
+  . replace ascii-magic with the rust project (if it works with curses)
+  . maybe replace popup menus with menu in the browser widget
+    . album art dosent have to disappear
+    . other shortcuts still work
+    . just another implimentation of song_provider needed so not too difficult
+    . sorting and adding new dosent require to be in the list (kb shortcuts)
+    . no need to display the numbers
+  . get albums of artists from the song
+    . get artist from song, get albums from artist searching online
+    . ask for custom search_term, leave blank for no custom search_term
   . profile code and find whats taking the most time to init
   . some kinda versioning to update the contents of db to update to newer versions of db
     . tracker.version: "x.x.x"
@@ -28,12 +44,6 @@ plan:
   . make it work offline (no crashes)
   . maybe have general buttons for refresh, and stuff
   . show some loading thing when doing online stuff/doing stuff with songs (when the screen freezes otherwise)
-  . maybe replace popup menus with menu in the browser widget
-    . album art dosent have to disappear
-    . other shortcuts still work
-    . just another implimentation of song_provider needed so not too difficult
-    . sorting and adding new dosent require to be in the list (kb shortcuts)
-    . no need to display the numbers
   . multithreaing for time consuming stuff (async??)
     . including the live player info change on browser selection change 
     . show selected song/album/whatever info on the player widget and add shortcut to switch and show playing song
@@ -48,7 +58,6 @@ plan:
       . mark the progress for songs that are offline too
       . if the song changes or next() is executed (for last song in a queue), enter the new progress in dict
         . so maybe maintain a "last_song_key" or something
-  /. provide options to rename playlists/queues/artists
   . have a options menu for stuff like
     . toggling album art if not available
     . toggling song progress (from history) indicator

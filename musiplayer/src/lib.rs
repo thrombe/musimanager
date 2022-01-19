@@ -39,7 +39,10 @@ impl Player {
 }
 
 fn map_time(t: gstreamer::ClockTime) -> u64 {
-    (t.mseconds() as f64/1000.0).round() as u64
+    // gstreamer_player.position() never reaches the values of .duration() so it needs rounding off
+    // it does not have a .is_finished() method (or atleast i could'nt find it)
+    // so trying to figure out what works by trial and error
+    (((t.mseconds() as f64/10.0).round()/10.0).round()/10.0).round() as u64
 }
 
 #[pymethods]
@@ -54,7 +57,6 @@ impl Player {
         // return Ok(map_time(self.gst_player.position().context("position none")?));
 
         // gst_plsyer.position can return none even if its not supposed to be. so it needs to be catched
-        // gst_player often does not reach the value of sgt_player.duration, so it needs rounding off (hence the map_time function)
         let pos = self.gst_player.position();
         if pos.is_some() {
             self.position = map_time(pos.unwrap());
