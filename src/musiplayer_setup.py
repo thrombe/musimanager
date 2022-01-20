@@ -8,12 +8,18 @@ def build_and_move():
     commands = '''
     cd ./musiplayer
     cargo build --release
-    cp ./target/release/libmusiplayer.so ./musiplayer.so
     '''
 
-    subprocess.check_output([commands, ], shell=True)
-
-    path1 = "./musiplayer/musiplayer.so"
+    try:
+        subprocess.check_output(
+            [commands, ],
+            shell=True,
+            # stderr=subprocess.STDOUT # mutes output
+        )
+    except:
+        raise Exception("failed to compile musiplayer")
+    
+    path1 = "./musiplayer/target/release/libmusiplayer.so"
     res_path = "./src/musiplayer.so"
 
     if os.path.exists(path1):
