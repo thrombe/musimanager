@@ -619,12 +619,13 @@ class NewpipePlaylistProvider(SongProvider):
 
 class FileExplorer(SongProvider):
     def __init__(self, base_path, name="File Explorer"):
+        self.show_hidden = opts.show_hidden_in_file_explorer
+
         self.base_path = base_path.rstrip(os.path.sep)
         self.folders = []
         self.files = []
         for f in os.scandir(self.base_path):
-            # TODO: changing the var should refresh the currently open file explorer too
-            if not opts.show_hidden_in_file_explorer and f.name.startswith("."):
+            if not self.show_hidden and f.name.startswith("."):
                 continue
             if f.is_dir():
                 self.folders.append(f.name)
@@ -661,6 +662,13 @@ class FileExplorer(SongProvider):
             return FileExplorer(os.path.join(self.base_path, self.folders[index]), name=self.folders[index])
 
     def get_current_name_list(self):
+        if self.show_hidden != opts.show_hidden_in_file_explorer:
+            fe = FileExplorer(self.base_path, self.name)
+            self.folders = fe.folders
+            self.files = fe.files
+            self.data_list = fe.data_list
+            self.show_hidden = opts.show_hidden_in_file_explorer
+
         return self.data_list
 
     def filter(self, filter_term):
