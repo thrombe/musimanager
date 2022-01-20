@@ -1,0 +1,33 @@
+
+[paths]
+musi_path = "~/Music" # path where music should be stored and stuff
+auto_search_under = "~/"
+file_explorer_base_dir = "~/"
+musimanager_directory = "~/Music/musimanager" # directory where musimanager can store files
+
+[newpipe]
+newpipe_playlists = []
+
+[ytmusic_search_limits]
+musitracker_search_limit = 75
+musitracker_search_limit_first_time = 300
+
+[music_formats]
+musi_download_ext = "m4a"
+search_exts = ["mp3", "m4a", "flac", "ogg"]
+
+[ascii_art]
+force_ascii_art = false # linux only (cuz theres ueberzug too)
+disable_ascii_art = false
+
+[global_shortcuts]
+enable_global_shortcuts = false # pip install pynput
+pause_global_shortcut = "<cmd>+<F10>" # meta + f10
+
+[random_options]
+show_artist_name_besides_song_name = true
+show_hidden_in_file_explorer = false
+save_on_exit = true
+auto_search_albums = false
+debug_prints = false
+
