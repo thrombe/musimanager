@@ -39,10 +39,7 @@ impl Player {
 }
 
 fn map_time(t: gstreamer::ClockTime) -> u64 {
-    // gstreamer_player.position() never reaches the values of .duration() so it needs rounding off
-    // it does not have a .is_finished() method (or atleast i could'nt find it)
-    // so trying to figure out what works by trial and error
-    (((t.mseconds() as f64/10.0).round()/10.0).round()/10.0).round() as u64
+    t.mseconds()
 }
 
 #[pymethods]
@@ -74,28 +71,18 @@ impl Player {
         Ok(self.duration)
     }
 
+    // t in seconds
     fn seek(&mut self, t: i64) -> PyResult<()> {
-        let pos = {
-            let pos = self.gst_player.position();
-            if pos.is_some() {
-                pos.unwrap()
-            } else {
-                gstreamer::ClockTime::from_seconds(self.position)
-            }
-        };
-        let seekpos = {if t.is_positive() {
+        let pos = gstreamer::ClockTime::from_mseconds(self.position()?);
+        let mut seekpos = {if t.is_positive() {
             pos.checked_add(gstreamer::ClockTime::from_seconds(t as u64))
         } else {
             pos.checked_sub(gstreamer::ClockTime::from_seconds(t.abs() as u64))
-        }};
-        let mut seekpos = {if let Some(t) = seekpos {
-            t
-        } else {
-            gstreamer::ClockTime::from_seconds(0)
-        }};
+        }}.unwrap_or(gstreamer::ClockTime::from_seconds(0)); // if -ve, set to 0
+
         if map_time(seekpos) > self.duration && self.duration != 0 {
-            self.position = self.duration;
-            seekpos = gstreamer::ClockTime::from_seconds(self.duration);
+            self.position = self.duration - 60; // 60 mseconds
+            seekpos = gstreamer::ClockTime::from_mseconds(self.position);
         }
         self.gst_player.seek(seekpos);
         Ok(())
@@ -119,8 +106,11 @@ impl Player {
     }
 
     fn is_finished(&mut self) -> PyResult<bool> {
+        // gstreamer_player.position() never reaches the values of .duration() (reaches around minimun .duration()-15 (mseconds))
+        // it does not have a .is_finished() method (or atleast i could'nt find it)
+
         if self.paused || self.duration == 0 {return Ok(false)}
-        Ok(self.position()? == self.duration()?)
+        Ok(self.duration()?-self.position()? < 50)
     }
 
     fn is_paused(&self) -> bool {

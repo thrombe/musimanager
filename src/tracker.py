@@ -25,6 +25,7 @@ class Tracker(serde.Model):
             queues=[],
             musicache={},
             albumcache={},
+            auto_search_artists=[],
         )
     
     def set_refs(self):

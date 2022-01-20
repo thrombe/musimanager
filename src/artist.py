@@ -4,7 +4,6 @@ import os
 
 import song
 import album
-import cui_content_providers
 import opts
 
 class Artist(serde.Model):
@@ -49,9 +48,11 @@ class Artist(serde.Model):
         s.artist_name = self.name
     
     def remove_song(self, s):
+        import cui_content_providers
         return cui_content_providers.SongProvider(self.songs, self.name).remove_song(s)
 
     def contains_song(self, s):
+        import cui_content_providers
         return cui_content_providers.SongProvider(self.songs, self.name).contains_song(s)
     
     def change_name(self, name):
