@@ -254,6 +254,7 @@ class BrowserWidget:
         mp.tracker.save()
 
     def refresh(self):
+        self.content_state_stack[0].refresh()
         self.player_widget.refresh()
         content_provider = self.content_state_stack[-1]
         content_provider.current_index = self.scroll_menu.get_selected_item_index()
@@ -436,6 +437,7 @@ class BrowserWidget:
             "opts.show_artist_name_besides_song_name",
             "opts.show_hidden_in_file_explorer",
             "opts.save_on_exit",
+            "opts.auto_search_albums",
         ]
         def toggle(x):
             exec("%s = not %s" %(x, x))

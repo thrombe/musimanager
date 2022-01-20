@@ -46,7 +46,7 @@ musicache = None
 class SongInfo(serde.Model): # all metadata that i might care about
     titles: serde.fields.List(serde.fields.Str())
     video_id: serde.fields.Str()
-    duration: serde.fields.Optional(serde.fields.Float())
+    duration: serde.fields.Optional(serde.fields.Float()) # TODO: no need?
     tags: serde.fields.List(serde.fields.Str())
     thumbnail_url: serde.fields.Str()
     album: serde.fields.Optional(serde.fields.Str())

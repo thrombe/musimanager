@@ -19,14 +19,18 @@ bugs:
     \. 1 edit at the top of the songs list and git considers all songs in the list edited as some lines are still the same
 
 plan:
-  . auto update/search new albums for artists after some interval in background thread
-    . maybe search new albums of 1 artist every boot and do more artists every 10~~ minutes
-    . have another artist provider for this to store newly found stuff?
+  /. auto update/search new albums for artists after some interval in background thread
+    /. maybe search new albums of 1 artist every boot and do more artists every 10~~ minutes
+    /. have another artist provider for this to store newly found stuff?
     . show popup on new finds?
-    . dont try for artists that havent been manually searched before?
-    . or maybe add a switch per artist to turn this on
-  . a way to check what artists dont have their albums checked in a while
+    /. dont try for artists that havent been manually searched before?
+    /. or maybe add a switch per artist to turn this on
+    . custom search_terms?
+    . present a list of albums instead of lis of songs?
+      . maybe a option for this
+  /. a way to check what artists dont have their albums checked in a while
   . replace ascii-magic with the rust project (if it works with curses)
+  . an option or something to add all songs from all artists to a playlist (to make sure all songs in tracker are in here)
   . maybe replace popup menus with menu in the browser widget
     . album art dosent have to disappear
     . other shortcuts still work

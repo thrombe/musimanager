@@ -10,13 +10,14 @@ import opts
 class Artist(serde.Model):
     name: serde.fields.Str()
     keys: serde.fields.List(serde.fields.Str())
-    check_stat: serde.fields.Bool()
+    check_stat: serde.fields.Bool() # TODO: not needed?
     ignore_no_songs: serde.fields.Bool() # wont be removed from db even if no songs in it (only tracking for new albums)
     name_confirmation_status: serde.fields.Bool()
     songs: serde.fields.List(serde.fields.Nested(song.Song))
     known_albums: serde.fields.List(serde.fields.Nested(album.Album)) # to track what albums the user has listened to
     keywords: serde.fields.List(serde.fields.Str()) # keywords for sort
     non_keywords: serde.fields.List(serde.fields.Str()) # keywords/keys to specifically ignore
+    last_auto_search: serde.fields.Optional(serde.fields.Int)
 
     def new(name, keys):
         if type(keys) == type(["key"]): keys = keys
@@ -31,6 +32,7 @@ class Artist(serde.Model):
             known_albums=[],
             keywords=[],
             non_keywords=[],
+            last_auto_search=None,
         )
     
     def add_song(self, s):

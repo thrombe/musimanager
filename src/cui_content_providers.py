@@ -6,6 +6,8 @@ import os
 import copy
 import random
 import serde
+import time
+import threading
 
 import opts
 import song
@@ -29,6 +31,7 @@ class WidgetContentType(enum.Enum):
 
     # content types which might do special stuff on startup and might change behaviour or return a primitive content type depending on what is chosen
     ARTISTS = enum.auto()
+    NEW_ALBUM_ARTISTS = enum.auto()
     AUTOSEARCH_SONGS = enum.auto()
     ALBUM_SEARCH = enum.auto()
 
@@ -69,6 +72,7 @@ class SongProvider(serde.Model):
         self.name = new_name
 
     def get_at(self, index):
+        if index < 0: return None
         song = self.data_list[index]
         return song
 
@@ -144,7 +148,7 @@ class SongProvider(serde.Model):
         if self.unfiltered_data is not None:
             self.filter(None)
 
-    def menu_for_selected(self, content_stack, no_moves=False, execute_func_index=None):
+    def get_menu_funcs(self, content_stack):
         main_provider = content_stack[0]
         s: song.Song = self.get_at(self.current_index)
         s_copy = copy.deepcopy(s) # cuz artists need a copy (cuz they change some info) # else can use different final_func for the artists with a deepcopy
@@ -200,11 +204,11 @@ class SongProvider(serde.Model):
             download_song,
             remove_song,
         ]
-        if no_moves:
-            menu_funcs.remove(remove_song)
-            menu_funcs.remove(move_to_playlist)
-            menu_funcs.remove(download_song)
-        return present_menu_popup(menu_funcs, execute_func_index, s_copy.title)
+        return menu_funcs, s_copy.title
+
+    def menu_for_selected(self, content_stack, execute_func_index=None):
+        menu_funcs, popup_title = self.get_menu_funcs(content_stack)
+        return present_menu_popup(menu_funcs, execute_func_index, popup_title)
 
     def search(self, search_term, get_search_box_title=False): return None
 
@@ -227,6 +231,7 @@ class MainProvider(SongProvider):
             FileExplorer.new(),
             AlbumSearchYTM(),
             NewpipePlaylistProvider(),
+            NewAlbumArtistProvider(t),
             ]
         return MainProvider(data, t)
 
@@ -235,6 +240,9 @@ class MainProvider(SongProvider):
 
     def get_current_name_list(self):
         return [x.name for x in self.data_list]
+
+    def refresh(self):
+        self.data_list[7].refresh()
 
     def menu_for_selected(self, content_stack, execute_func_index=None): pass
     def filter(self, _): pass
@@ -256,6 +264,7 @@ class ArtistProvider(SongProvider):
     
     def get_at(self, index):
         artist = super().get_at(index)
+        if artist is None: return None
         songs = artist.songs
         songs.sort(key=lambda x: x.title)
         return SongProvider(songs, f"songs by {artist.name}")
@@ -277,7 +286,7 @@ class ArtistProvider(SongProvider):
     def filter(self, filter_term):
         return super().filter(filter_term, name=lambda x: x.name)
 
-    def menu_for_selected(self, content_stack, execute_func_index=None):
+    def get_menu_funcs(self, content_stack):
         main_provider = content_stack[0]
         a = self.data_list[self.current_index]
 
@@ -287,39 +296,16 @@ class ArtistProvider(SongProvider):
                     content_provider.add_song(s)
         def remove_artist():
             self.remove_artist(a)
-        def get_albums_untracked_as_playlist(search_term=None):
-            asy = AlbumSearchYTM.albums_for_artist(a, search_term=search_term)
-            # content_stack.append(asy)
-            # main_provider.data_list[5] = asy
-            songs = []
-            for al in asy.data_list:
-                try: ss = al.get_songs()
-                except: continue
-                for s in ss:
-                    s.artist_name = a.name
-                songs.extend(ss)
-            main_provider.data_list[2].add_new(songs, f"all songs by {a.name}")
-        def get_new_albums_tracked_as_playlist(search_term=None):
-            asy = AlbumSearchYTM.albums_for_artist(a, search_term=search_term)
-            # main_provider.data_list[5] = copy.deepcopy(asy)
-            for al in copy.copy(asy.data_list):
-                for al2 in a.known_albums:
-                    if al.browse_id == al2.browse_id:
-                        asy.remove_album(al)
-                        break
-            songs = []
-            for al in asy.data_list:
-                try: ss = al.get_songs()
-                except: continue
-                for s in ss:
-                    s.artist_name = a.name
-                songs.extend(ss)
-                a.known_albums.append(al)
-            main_provider.data_list[2].add_new(songs, f"new songs by {a.name}")
+        def get_albums_untracked(search_term=None):
+            naap: NewAlbumArtistProvider = main_provider.data_list[7]
+            naap.search_for_artist(a, False, search_term=search_term)
+        def get_new_albums_tracked(search_term=None):
+            naap: NewAlbumArtistProvider = main_provider.data_list[7]
+            naap.search_for_artist(a, True, search_term=search_term)
         def get_new_albums_tracked_custom_search_term():
-            cui_handle.pycui.show_text_box_popup("search term: ", lambda x: get_new_albums_tracked_as_playlist(search_term=x))
+            cui_handle.pycui.show_text_box_popup("search term: ", lambda x: get_new_albums_tracked(search_term=x))
         def get_albums_untracked_custom_search_term():
-            cui_handle.pycui.show_text_box_popup("search term: ", lambda x: get_albums_untracked_as_playlist(search_term=x))
+            cui_handle.pycui.show_text_box_popup("search term: ", lambda x: get_albums_untracked(search_term=x))
         def add_to_playlist():
             select_item_using_popup(main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func)
         def add_to_queue():
@@ -351,9 +337,9 @@ class ArtistProvider(SongProvider):
 
         menu_funcs = [
             add_to_queue,
-            get_new_albums_tracked_as_playlist,
+            get_new_albums_tracked,
             get_new_albums_tracked_custom_search_term,
-            get_albums_untracked_as_playlist,
+            get_albums_untracked,
             get_albums_untracked_custom_search_term,
             add_to_playlist,
             fuse_into_another_artist,
@@ -363,7 +349,104 @@ class ArtistProvider(SongProvider):
             yeet_non_keyword,
             remove_artist,
         ]
-        return present_menu_popup(menu_funcs, execute_func_index, a.name)
+        return menu_funcs, a.name
+
+class NewAlbumArtistProvider(ArtistProvider):
+    def __init__(self, t, name="New Songs from Artists"):
+        self.tracker = t
+
+        self.last_check_time = time.time()
+
+        self.check_queue = [a for a in t.artists if a.last_auto_search is not None]
+        self.check_queue.sort(key=lambda a: a.last_auto_search)
+
+        data = self.tracker.auto_search_artists
+        data.sort(key=lambda x: x.last_auto_search)
+
+        super(ArtistProvider, self).__init__(data, name)
+        self.content_type = WidgetContentType.NEW_ALBUM_ARTISTS
+
+    def refresh(self):
+        if not opts.auto_search_albums or len(self.check_queue) == 0: return
+        now = time.time()
+        if now - self.last_check_time < 15 * 60: return
+        self.last_check_time = time.time()
+
+        def execute():
+            # try:
+            if True:
+                a = self.check_queue[0]
+                self.search_for_artist(a, True)
+            # except: # TODO: log problems
+            #     opts.auto_search_albums = False # turn it off until next boot
+
+        def execute():
+            # try:
+            if True:
+                for a in self.check_queue:
+                    if now - a.last_auto_search < 7 * 24 * 60 * 60: continue
+                    self.search_for_artist(a, True)
+                    break
+            # except: # TODO: log problems
+            #     opts.auto_search_albums = False # turn it off until next boot
+        
+        threading.Thread(target=execute, args=()).start()
+
+
+    def search_for_artist(self, a, mark_known, search_term=None): # TODO maybe: maybe option to show albums instead of songs
+        asy = AlbumSearchYTM.albums_for_artist(a, search_term=search_term)
+
+        if mark_known:
+            asy = self.filter_known_albums(a, asy)
+            a.last_auto_search = round(time.time())
+
+        songs = self.flatten_albums(a, asy, mark_known)
+        if len(songs) != 0:
+            a_new = self.get_new_artist(a)
+            a_new.songs.extend(songs)
+            self.data_list.append(a_new)
+
+        if mark_known:
+            if len(self.check_queue) != 0 and a.name == self.check_queue[0].name:
+                self.check_queue.pop(0)
+            self.check_queue.append(a)
+
+    def filter_known_albums(self, a, asy):
+        for al in copy.copy(asy.data_list):
+            for al2 in a.known_albums:
+                if al.browse_id == al2.browse_id:
+                    asy.remove_album(al)
+                    break
+        return asy
+    
+    def flatten_albums(self, a, asy, mark_known):
+        songs = []
+        for al in asy.data_list:
+            try: ss = al.get_songs()
+            except: continue
+            for s in ss:
+                s.artist_name = a.name
+            songs.extend(ss)
+            if mark_known:
+                a.known_albums.append(al)
+        return songs
+
+    def get_new_artist(self, a):
+        for a1 in self.data_list:
+            if a.name == a1.name:
+                return a1
+        a1 = copy.deepcopy(a)
+        a1.songs = []
+        return a1
+
+    def get_menu_funcs(self, content_stack):
+        menu_funcs, popup_title = super().get_menu_funcs(content_stack)
+
+        menu_funcs = [f for f in menu_funcs if f.__name__ in ["add_to_queue", "add_to_playlist", "remove_artist"]]
+
+        return menu_funcs, popup_title
+
+    def add_new(_, __): pass
 
 class PlaylistProvider(SongProvider):
     def __init__(self, t):
@@ -394,7 +477,7 @@ class PlaylistProvider(SongProvider):
     def filter(self, filter_term):
         return super().filter(filter_term, name=lambda x: x.name)
 
-    def menu_for_selected(self, content_stack, execute_func_index=None, no_remove=False):
+    def get_menu_funcs(self, content_stack):
         main_provider = content_stack[0]
         playlist = self.get_at(self.current_index)
 
@@ -443,8 +526,7 @@ class PlaylistProvider(SongProvider):
             try_delete_from_tracker,
             remove_playlist,
         ]
-        if no_remove: menu_funcs.pop(menu_funcs.index(remove_playlist))
-        return present_menu_popup(menu_funcs, execute_func_index, playlist.name)
+        return menu_funcs, playlist.name
 
 class QueueProvider(SongProvider):
     def __init__(self, t):
@@ -484,7 +566,7 @@ class QueueProvider(SongProvider):
     def filter(self, filter_term):
         return super().filter(filter_term, name=lambda x: x.name)
 
-    def menu_for_selected(self, content_stack, execute_func_index=None):
+    def get_menu_funcs(self, content_stack):
         main_provider = content_stack[0]
         queue = self.get_at(self.current_index)
 
@@ -510,7 +592,7 @@ class QueueProvider(SongProvider):
             append_to_playlist,
             change_name,
         ]
-        return present_menu_popup(menu_funcs, execute_func_index, queue.name)
+        return menu_funcs, queue.name
 
 class NewpipePlaylistProvider(SongProvider):
     def __init__(self):
@@ -536,8 +618,12 @@ class NewpipePlaylistProvider(SongProvider):
     def remove_playlist(self, playlist):
         return PlaylistProvider.remove_playlist(self, playlist)
 
-    def menu_for_selected(self, content_stack, execute_func_index=None, no_remove=False):
-        return PlaylistProvider.menu_for_selected(self, content_stack, execute_func_index=execute_func_index, no_remove=no_remove)
+    def get_menu_funcs(self, content_stack):
+        menu_funcs, popup_title = PlaylistProvider.get_menu_funcs(self, content_stack)
+
+        menu_funcs = [f for f in menu_funcs if f.__name__ != "remove_playlist"]
+
+        return menu_funcs, popup_title
 
 class FileExplorer(SongProvider):
     def __init__(self, base_path, name="File Explorer"):
@@ -601,12 +687,14 @@ class FileExplorer(SongProvider):
     def move_item_up(self, index, y_blank, top_view): pass
     def move_item_down(self, index, y_blank, top_view): pass
 
-    def menu_for_selected(self, main_provider, execute_func_index=None):
+    def get_menu_funcs(self, main_provider):
         if len(self.data_list) == 0: return None
         num_folders = len(self.folders)
         if self.current_index >= num_folders:
             sp = self.get_at(self.current_index)
-            return sp.menu_for_selected(main_provider, no_moves=True, execute_func_index=execute_func_index)
+            menu_funcs, popup_title = sp.get_menu_funcs(main_provider)
+            menu_funcs = [f for f in menu_funcs if f.__name__ not in ["remove_song", "move_to_playlist", "download_song"]]
+            return menu_funcs, popup_title
 
 class AutoSearchSongs(SongProvider):
     def __init__(self):
@@ -685,6 +773,7 @@ class AlbumSearchYTM(SongProvider):
     
     def get_at(self, index):
         a = super().get_at(index)
+        if a is None: return None
         return SongProvider(a.get_songs(), a.name)
     
     def get_current_name_list(self):
@@ -699,8 +788,12 @@ class AlbumSearchYTM(SongProvider):
     def filter(self, filter_term):
         return super().filter(filter_term, name=lambda x: x.name)
 
-    def menu_for_selected(self, main_provider, execute_func_index=None):
-        PlaylistProvider.menu_for_selected(self, main_provider, execute_func_index=execute_func_index, no_remove=True)
+    def get_menu_funcs(self, content_stack):
+        menu_funcs, p = PlaylistProvider.get_menu_funcs(self, content_stack)
+
+        menu_funcs = [f for f in menu_funcs if f.__name__ != "remove_playlist"]
+
+        return menu_funcs, p
 
 # constraints
     # destination_content_provider -> add_new(self, content_list, name)

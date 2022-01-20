@@ -11,6 +11,7 @@ import cui_content_providers
 
 class Tracker(serde.Model):
     artists: serde.fields.List(serde.fields.Nested(artist.Artist))
+    auto_search_artists: serde.fields.List(serde.fields.Nested(artist.Artist))
     playlists: serde.fields.List(serde.fields.Nested(cui_content_providers.SongProvider))
     queues: serde.fields.List(serde.fields.Nested(cui_content_providers.SongProvider))
     # progress_history: serde.fields.Dict() # {key: watch_progress in range (0, 1)}
