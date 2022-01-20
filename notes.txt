@@ -22,7 +22,7 @@ plan:
   /. auto update/search new albums for artists after some interval in background thread
     . show popup on new finds?
     . custom search_terms?
-    . present a list of albums instead of lis of songs?
+    . present a list of albums instead of list of songs?
       . maybe a option for this
   . replace ascii-magic with the rust project (if it works with curses)
   . an option or something to add all songs from all artists to a playlist (to make sure all songs in tracker are in here)
@@ -35,7 +35,6 @@ plan:
   . check if the rust terminal ui libraries would be a good fit for the current structure of the project
     . maybe change to that instead of py_cui and use rest of the python code + modifications
     . maybe this way colored text (album art in text) is possible as py_cui dosen't play well with it
-  /. save options in opts.toml or opts.json instead of opts.py
   . get albums of artists from the song
     . get artist from song, get albums from artist searching online
     . ask for custom search_term, leave blank for no custom search_term

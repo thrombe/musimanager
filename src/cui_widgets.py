@@ -126,7 +126,7 @@ class PlayerWidget:
             if s == self.player.current_song:
                 i = j
                 break
-        if i is None: raise ValueError("song not found in queue")
+        if i is None: raise Exception("song not found in queue")
         self.player.current_queue.current_index = i
 
     def set_queue(self, queue):
@@ -431,16 +431,8 @@ class BrowserWidget:
             self.refresh_names(self.content_state_stack[-1])
 
     def global_menu(self):
-        # TODO: maybe stuff these in a dict instead this uglyness
-        # TODO: show the status besides the names
-        options = [
-            "opts.show_artist_name_besides_song_name",
-            "opts.show_hidden_in_file_explorer",
-            "opts.save_on_exit",
-            "opts.auto_search_albums",
-            "opts.debug_prints",
-        ]
+        options = opts.opts["random_options"].keys()
         def toggle(x):
-            exec("%s = not %s" %(x, x))
+            exec("opts.%s = not opts.%s" %(x, x))
         cui_handle.pycui.show_menu_popup("toggle options", options, toggle)
         cui_handle.pycui._popup.set_selected_color(py_cui.MAGENTA_ON_CYAN)
