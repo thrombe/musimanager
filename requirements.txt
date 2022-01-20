@@ -6,3 +6,4 @@ serde
 phrydy
 numpy
 yt-dlp
+ueberzug; sys_platform == 'linux'
