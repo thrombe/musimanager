@@ -5,3 +5,4 @@ ascii-magic
 serde
 phrydy
 numpy
+yt-dlp

@@ -2,7 +2,6 @@
 - pip install -r requirements.txt
   - additional for linux: pip install uezerbug
   - optional global shortcuts: pip install pynput
-- install [yt-dlp](https://github.com/yt-dlp/yt-dlp#installation)
 - install [gstreamer](https://github.com/sdroege/gstreamer-rs#installation)
 - install [rust](https://www.rust-lang.org/tools/install)
 - clone repo
