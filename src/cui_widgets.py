@@ -165,7 +165,7 @@ class PlayerWidget:
         self.scroll_menu.add_item(f"{'█' * round(x_blank * self.player.playback_handle.progress())}")
         # "█", "▄", "▀", "■", "▓", "│", "▌", "▐", "─", 
 
-        if not True: # for debugging
+        if opts.debug_prints:
             self.scroll_menu.add_item(center(f"position: {self.player.playback_handle.position()}"))
             self.scroll_menu.add_item(center(f"duration: {self.player.playback_handle.duration()}"))
             self.scroll_menu.add_item(center(f"progress: {self.player.playback_handle.progress()}"))
@@ -438,6 +438,7 @@ class BrowserWidget:
             "opts.show_hidden_in_file_explorer",
             "opts.save_on_exit",
             "opts.auto_search_albums",
+            "opts.debug_prints",
         ]
         def toggle(x):
             exec("%s = not %s" %(x, x))

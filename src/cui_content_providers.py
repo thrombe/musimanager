@@ -375,14 +375,6 @@ class NewAlbumArtistProvider(ArtistProvider):
         def execute():
             # try:
             if True:
-                a = self.check_queue[0]
-                self.search_for_artist(a, True)
-            # except: # TODO: log problems
-            #     opts.auto_search_albums = False # turn it off until next boot
-
-        def execute():
-            # try:
-            if True:
                 for a in self.check_queue:
                     if now - a.last_auto_search < 7 * 24 * 60 * 60: continue
                     self.search_for_artist(a, True)

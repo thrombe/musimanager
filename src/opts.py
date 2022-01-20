@@ -52,6 +52,7 @@ show_artist_name_besides_song_name = True
 show_hidden_in_file_explorer = False
 save_on_exit = True
 auto_search_albums = False
+debug_prints = False
 
 
 

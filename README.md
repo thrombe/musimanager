@@ -1,6 +1,6 @@
 # how to use
-- pip install -r requirements.txt
-  - optional global shortcuts: pip install pynput
+- ```pip install -r requirements.txt```
+  - optional global shortcuts: ```pip install pynput```
 - install [gstreamer](https://github.com/sdroege/gstreamer-rs#installation)
 - install [rust](https://www.rust-lang.org/tools/install)
 - clone repo
