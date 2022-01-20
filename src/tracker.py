@@ -33,14 +33,12 @@ class Tracker(serde.Model):
 
     # TODO: save and load cache from different file so its easy to yeet
     def save(self):
-        if opts.debug_no_edits_to_db: return
         with open(opts.musitracker_path, "w") as f:
             dikt = self.to_dict()
             json.dump(dikt, f, indent=4)
 
     def load():
         if not os.path.exists(opts.musitracker_path):
-            if opts.debug_no_edits_to_db: return
             with open(opts.musitracker_path, "w") as f:
                 t = Tracker.new()
                 json.dump(t.to_dict(), f, indent=4)

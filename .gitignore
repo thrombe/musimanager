@@ -6,6 +6,7 @@ src/py_cui
 src/olb/
 
 musiplayer.so
+src/test.py
 target/
 
 

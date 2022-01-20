@@ -3,22 +3,20 @@
 # PATHS WITH SEPERATORS(at end) PLZ
 
 musi_path = "/home/issac/daata/phon-data/.musi/IsBac/" # path where music should be stored and stuff
-musi_download_ext = "m4a"
-musimanager_directory = "/home/issac/0Git/musimanager/db/" # directory where musimanager can store files
-temp_dir = musimanager_directory + ".temp/"
-
-newpipe_bkup_directory = musimanager_directory
-newpipe_playlists = [] # ['issac', 'sawitch'] # [] for all playlists
-
-ytmusic_headers_path = musimanager_directory + "headers_auth.json"
-musicache_path = musimanager_directory + "musicache.json"
-musitracker_path = musimanager_directory + "musitracker.json"
-musitracker_plist_name = "musitracker"
-musitracker_search_limit = 75 # 200 uplimit with returns (300 in case of aimer but whatever)
-musitracker_search_limit_first_time = 300
-
 auto_search_under = "/home/issac/daata/phon-data/.musi/"
 file_explorer_base_dir = "/home/issac/"
+musimanager_directory = "/home/issac/0Git/musimanager/db/" # directory where musimanager can store files
+
+newpipe_bkup_directory = musimanager_directory
+newpipe_playlists = [] # ['issac', 'sawitch']
+
+ytmusic_headers_path = musimanager_directory + "headers_auth.json"
+musitracker_path = musimanager_directory + "musitracker.json"
+temp_dir = musimanager_directory + ".temp/"
+musitracker_search_limit = 75
+musitracker_search_limit_first_time = 300
+
+musi_download_ext = "m4a"
 search_exts = ["mp3", "m4a", "flac", "ogg"]
 force_ascii_art = False # linux only (cuz theres ueberzug too) # pip install ueberzug
 disable_ascii_art = False
@@ -26,13 +24,6 @@ disable_ascii_art = False
  # https://github.com/moses-palmer/pynput
 enable_global_shortcuts = False # pip install pynput
 pause_global_shortcut = "<cmd>+<F10>" # meta + f10
-
-# debugs
-# manager_sort_debug = True
-# debug_no_edits_to_stored = False
-debug_no_edits_to_db = False
-
-
 
 
 
@@ -53,8 +44,6 @@ show_hidden_in_file_explorer = False
 save_on_exit = True
 auto_search_albums = False
 debug_prints = False
-
-
 
 
 
