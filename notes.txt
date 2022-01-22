@@ -35,6 +35,19 @@ plan:
   . check if the rust terminal ui libraries would be a good fit for the current structure of the project
     . maybe change to that instead of py_cui and use rest of the python code + modifications
     . maybe this way colored text (album art in text) is possible as py_cui dosen't play well with it
+  . shortcuts to change the position of items at any index
+    . shortcuts to move cursor at any index
+    . press a button and a text box pops up and takes in the index
+  . more layouts
+    . if length > 2.2~~*width, stack widgets vertically instead of horizontally
+    . if player_widget width > album_art width, shorten the player widget instead of centering it
+    . if empty space, have another widget below player_widget (horizontal mode) for queue
+    . seperate widget for options/queue ?
+    . editable stuff in layouts. can have seperate section per layout in toml [section]
+  . show info about selected item in player window
+    . have a toggle for this and current thing
+    . use multi-threaded + use a variable as a mutex and make sure multiple of these dont ruin everything
+    . do i have to do anything about caching pics and stuff?
   . get albums of artists from the song
     . get artist from song, get albums from artist searching online
     . ask for custom search_term, leave blank for no custom search_term
