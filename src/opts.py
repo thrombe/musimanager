@@ -5,12 +5,18 @@ import os
 default_opts_path = "./db/default_opts.toml"
 opts_path = "./db/opts.toml"
 
+# default options are necessary to run
 if os.path.exists(default_opts_path):
     with open(default_opts_path, "r") as f:
         opts = toml.load(f)
 else:
     print("default_options file missing")
 
+# if opts file is not in db/ , try to find in musimanager_dir else create one there
+if not os.path.exists(opts_path):
+    opts_path = os.path.join(os.path.expanduser(opts["paths"]["musimanager_directory"]), "opts.toml")
+
+# options from opts override default_opts
 if os.path.exists(opts_path):
     with open(opts_path, "r") as f:
         opts1 = toml.load(f)
@@ -20,6 +26,7 @@ if os.path.exists(opts_path):
                 opts[k1].update(opts1[k1])
                 break
 
+# make sure the paths are in correct format
 for k, p in opts["paths"].items():
     opts["paths"][k] = os.path.expanduser(p)
     if not p.endswith("/"):
@@ -76,3 +83,12 @@ for _, p in opts["paths"].items():
         print("created directory: ", p)
 if not os.path.exists(temp_dir):
     os.mkdir(temp_dir)
+if not os.path.exists(opts_path):
+    with open(default_opts_path, "r") as f:
+        d = f.read()
+    with open(opts_path, "w") as f:
+        f.write("""\
+# this is a config file for musimanager. you can edit the options here or remove them entirely
+# the values for removed items will be picked up from the default config file
+""")
+        f.write(d)

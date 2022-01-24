@@ -1,10 +1,12 @@
 # how to use
 - ```pip install -r requirements.txt```
-  - optional global shortcuts: ```pip install pynput```
+  - optional global shortcuts: ```pip install pynput==1.7.5```
 - install [gstreamer](https://github.com/sdroege/gstreamer-rs#installation)
 - install [rust](https://www.rust-lang.org/tools/install)
 - clone repo
-- ```cp db/default_opts.toml db/opts.toml```
+- (skipable) set up the config file
+  - ```cp db/default_opts.toml db/opts.toml```
+  - if skipped, an opts.toml file is created in "~/Music/musimanager/". you can use that as the config file
   - edit whatever you need to edit, and remove whatever you do not want to change from opts.toml. the unedited options will be picked up from default_opts.toml
 - ```python src/main.py``` to run (todo: improve)
 - setup [ytmusicapi cookies](https://ytmusicapi.readthedocs.io/en/latest/setup.html)
