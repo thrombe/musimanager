@@ -130,6 +130,8 @@ class PlayerWidget:
         self.player.current_queue.current_index = i
 
     def set_queue(self, queue):
+        if self.player.current_queue is not None and self.player.current_song is not None:
+            self.set_current_queue_index_to_playing_song()
         self.player.current_queue = queue
 
     def replace_album_art(self, song):
@@ -238,6 +240,10 @@ class BrowserWidget:
 
     def save(self):
         if not opts.save_on_exit: return
+
+        if self.player_widget.player.current_song is None:
+            self.player_widget.set_current_queue_index_to_playing_song()
+        
         mp = self.content_state_stack[0]
 
         # do not save the filtered/custom sorted data
@@ -245,11 +251,11 @@ class BrowserWidget:
         for i in range(len(mp.data_list[0].data_list)):
             mp.data_list[0].get_at(i).try_undo_filter()
         mp.data_list[2].try_undo_filter()
-        for q in mp.data_list[2].data_list:
-            q.try_undo_filter()
-        mp.data_list[3].try_undo_filter()
-        for p in mp.data_list[3].data_list:
+        for p in mp.data_list[2].data_list:
             p.try_undo_filter()
+        mp.data_list[3].try_undo_filter()
+        for q in mp.data_list[3].data_list:
+            q.try_undo_filter()
         
         mp.tracker.save()
 
@@ -318,8 +324,8 @@ class BrowserWidget:
             else:
                 content_provider_maybe_copy = copy.deepcopy(content_provider)
                 content_provider_maybe_copy.data_list = [s for s in content_provider.data_list] # making sure songs are not copied so that their info is set in playlist when played
-            self.player_widget.play(content_provider_maybe_copy.get_at(self.scroll_menu.get_selected_item_index())) # getting it again so playing song is the same as the one in song_provider
             self.change_queue(content_provider_maybe_copy)
+            self.player_widget.play(content_provider_maybe_copy.get_at(self.scroll_menu.get_selected_item_index())) # getting it again so playing song is the same as the one in song_provider
             return
         elif content.content_type is cui_content_providers.WidgetContentType.SEARCHER:
             self.content_state_stack.append(content)
