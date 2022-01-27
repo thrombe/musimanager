@@ -247,16 +247,16 @@ class BrowserWidget:
         mp = self.content_state_stack[0]
 
         # do not save the filtered/custom sorted data
-        mp.data_list[0].try_undo_filter() # artists
-        for i in range(len(mp.data_list[0].data_list)):
-            mp.data_list[0].get_at(i).try_undo_filter()
+        mp.artist_provider.try_undo_filter()
+        for i in range(len(mp.artist_provider.data_list)):
+            mp.artist_provider.get_at(i).try_undo_filter()
 
-        mp.data_list[2].try_undo_filter() # playlists
-        for p in mp.data_list[2].data_list:
+        mp.playlist_provider.try_undo_filter()
+        for p in mp.playlist_provider.data_list:
             p.try_undo_filter()
 
-        mp.data_list[3].try_undo_filter() # queues
-        for q in mp.data_list[3].data_list:
+        mp.queue_provider.try_undo_filter()
+        for q in mp.queue_provider.data_list:
             q.try_undo_filter()
         
         mp.tracker.save()
@@ -404,7 +404,7 @@ class BrowserWidget:
         self.scroll_menu._top_view = content.current_scroll_top_index
 
     def change_queue(self, queue):
-        queue_provider = self.content_state_stack[0].data_list[3]
+        queue_provider = self.content_state_stack[0].queue_provider
         queue_provider.add_queue(queue)
         self.player_widget.set_queue(queue)
 

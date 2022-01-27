@@ -160,7 +160,7 @@ class SongProvider(serde.Model):
             def final_func(content_provider):
                 content_provider.add_song(s_copy)
                 content_provider.remove_song(s_copy)
-            select_item_using_popup(main_provider.data_list[0], "artists", main_provider.data_list[0].data_list, final_func)
+            select_item_using_popup(main_provider.artist_provider, "artists", main_provider.artist_provider.data_list, final_func)
         def remove_song():
             self.remove_song(s_copy)
         def final_func(content_provider):
@@ -169,16 +169,16 @@ class SongProvider(serde.Model):
         def tick_func(song_provider):
             return song_provider.contains_song(s_copy)
         def add_to_playlist():
-            select_item_using_popup(main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func, tick_func=tick_func)
+            select_item_using_popup(main_provider.playlist_provider, "playlist", main_provider.playlist_provider.data_list, final_func, tick_func=tick_func)
         def move_to_playlist():
             def final_func2(content_provider):
                 remove_song()
                 final_func(content_provider)
-            select_item_using_popup(main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func2, tick_func=tick_func)
+            select_item_using_popup(main_provider.playlist_provider, "playlist", main_provider.playlist_provider.data_list, final_func2, tick_func=tick_func)
         def add_to_queue():
-            select_item_using_popup(main_provider.data_list[3], "queue", main_provider.data_list[3].data_list, final_func, tick_func=tick_func)
+            select_item_using_popup(main_provider.queue_provider, "queue", main_provider.queue_provider.data_list, final_func, tick_func=tick_func)
         def add_to_artist():
-            select_item_using_popup(main_provider.data_list[0], "artists", main_provider.data_list[0].data_list, final_func, tick_func=tick_func)
+            select_item_using_popup(main_provider.artist_provider, "artists", main_provider.artist_provider.data_list, final_func, tick_func=tick_func)
         def add_to_tracker_offline():
             return main_provider.tracker.add_song(s_copy)
         def try_delete_from_tracker(): # TODO
@@ -222,7 +222,6 @@ class MainProvider(SongProvider):
     def new():
         import tracker
         t = tracker.Tracker.load()
-        # TODO: find a way to rely less on hard coded indices in this list
         data = [
             ArtistProvider(t),
             AutoSearchSongs(),
@@ -233,7 +232,12 @@ class MainProvider(SongProvider):
             NewpipePlaylistProvider(),
             NewAlbumArtistProvider(t),
             ]
-        return MainProvider(data, t)
+        mp = MainProvider(data, t)
+        mp.artist_provider = data[0]
+        mp.playlist_provider = data[2]
+        mp.queue_provider = data[3]
+        mp.new_album_artist_provider = data[7]
+        return mp
 
     def get_at(self, index):
         return super().get_at(index)
@@ -242,7 +246,7 @@ class MainProvider(SongProvider):
         return [x.name for x in self.data_list]
 
     def refresh(self):
-        self.data_list[7].refresh()
+        self.new_album_artist_provider.refresh()
 
     def menu_for_selected(self, content_stack, execute_func_index=None): pass
     def filter(self, _): pass
@@ -297,24 +301,24 @@ class ArtistProvider(SongProvider):
         def remove_artist():
             self.remove_artist(a)
         def get_albums_untracked(search_term=None):
-            naap: NewAlbumArtistProvider = main_provider.data_list[7]
+            naap: NewAlbumArtistProvider = main_provider.new_album_artist_provider
             naap.search_for_artist(a, False, search_term=search_term)
         def get_new_albums_tracked(search_term=None):
-            naap: NewAlbumArtistProvider = main_provider.data_list[7]
+            naap: NewAlbumArtistProvider = main_provider.new_album_artist_provider
             naap.search_for_artist(a, True, search_term=search_term)
         def get_new_albums_tracked_custom_search_term():
             cui_handle.pycui.show_text_box_popup("search term: ", lambda x: get_new_albums_tracked(search_term=x))
         def get_albums_untracked_custom_search_term():
             cui_handle.pycui.show_text_box_popup("search term: ", lambda x: get_albums_untracked(search_term=x))
         def add_to_playlist():
-            select_item_using_popup(main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func)
+            select_item_using_popup(main_provider.playlist_provider, "playlist", main_provider.playlist_provider.data_list, final_func)
         def add_to_queue():
-            select_item_using_popup(main_provider.data_list[3], "queue", main_provider.data_list[3].data_list, final_func)
+            select_item_using_popup(main_provider.queue_provider, "queue", main_provider.queue_provider.data_list, final_func)
         def fuse_into_another_artist():
             def final_func2(a):
                 final_func(a)
                 remove_artist()
-            select_item_using_popup(main_provider.data_list[0], "artists", main_provider.data_list[0].data_list, final_func2)
+            select_item_using_popup(main_provider.artist_provider, "artists", main_provider.artist_provider.data_list, final_func2)
         def yeet(list, title): # put in non-keywords # how will user know what key is what?
             class A:
                 def __init__(self, name): self.name = name
@@ -479,9 +483,9 @@ class PlaylistProvider(SongProvider):
                 if not content_provider.contains_song(s):
                     content_provider.add_song(s)
         def append_to_playlist():
-            select_item_using_popup(main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func)
+            select_item_using_popup(main_provider.playlist_provider, "playlist", main_provider.playlist_provider.data_list, final_func)
         def append_to_queue():
-            select_item_using_popup(main_provider.data_list[3], "queue", main_provider.data_list[3].data_list, final_func)
+            select_item_using_popup(main_provider.queue_provider, "queue", main_provider.queue_provider.data_list, final_func)
         def remove_playlist():
             self.remove_playlist(playlist)
         def add_to_tracker_offline():
@@ -570,12 +574,12 @@ class QueueProvider(SongProvider):
         def remove_queue():
             self.remove_queue(queue)
         def append_to_playlist():
-            select_item_using_popup(main_provider.data_list[2], "playlist", main_provider.data_list[2].data_list, final_func)
+            select_item_using_popup(main_provider.playlist_provider, "playlist", main_provider.playlist_provider.data_list, final_func)
         def merge_into_queue():
             def final_func2(c):
                 final_func(c)
                 remove_queue()
-            select_item_using_popup(main_provider.data_list[3], "queue", main_provider.data_list[3].data_list, final_func2)
+            select_item_using_popup(main_provider.queue_provider, "queue", main_provider.queue_provider.data_list, final_func2)
         def change_name():
             cui_handle.pycui.show_text_box_popup("new name: ", queue.change_name)
 

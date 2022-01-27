@@ -24,6 +24,12 @@ plan:
     . custom search_terms?
     . present a list of albums instead of list of songs?
       . maybe a option for this
+  . some kinda undo system
+    . create enum for supported actions
+      . added, removed, position_changed?, 
+    . new class for undo: Undoer
+      . class.edited_list, class.action: enum(action), class.items: things_added_or_removed_or_changed_position_etc
+      . what about name changes and stuff?
   . replace ascii-magic with the rust project (if it works with curses)
   . an option or something to add all songs from all artists to a playlist (to make sure all songs in tracker are in here)
   . maybe replace popup menus with menu in the browser widget
