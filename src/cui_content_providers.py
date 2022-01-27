@@ -255,7 +255,7 @@ class ArtistProvider(SongProvider):
     def __init__(self, t, name="Artists"):
         self.tracker = t
         data = self.tracker.artists
-        data.sort(key=lambda x: x.name)
+        data.sort(key=lambda x: -len(x.songs))
         super().__init__(data, name)
         self.content_type = WidgetContentType.ARTISTS
     
@@ -266,7 +266,7 @@ class ArtistProvider(SongProvider):
         artist = super().get_at(index)
         if artist is None: return None
         songs = artist.songs
-        songs.sort(key=lambda x: x.title)
+        # songs.sort(key=lambda x: x.title)
         return SongProvider(songs, f"songs by {artist.name}")
 
     def add_new(self, songs, name):
@@ -274,7 +274,7 @@ class ArtistProvider(SongProvider):
         for s in songs:
             a.add_song(s)
         self.tracker.artists.append(a)
-        self.data_list.sort(key=lambda x: x.name) # same list as that in tracker
+        # self.data_list.sort(key=lambda x: x.name) # same list as that in tracker
         return a
     
     def remove_artist(self, a):
