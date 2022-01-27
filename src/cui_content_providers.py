@@ -394,9 +394,8 @@ class NewAlbumArtistProvider(ArtistProvider):
 
         songs = self.flatten_albums(a, asy, mark_known)
         if len(songs) != 0:
-            a_new = self.get_new_artist(a)
+            a_new = self.get_new_artist(a, True)
             a_new.songs.extend(songs)
-            self.data_list.append(a_new)
 
         if mark_known:
             if len(self.check_queue) != 0 and a.name == self.check_queue[0].name:
@@ -423,12 +422,14 @@ class NewAlbumArtistProvider(ArtistProvider):
                 a.known_albums.append(al)
         return songs
 
-    def get_new_artist(self, a):
+    def get_new_artist(self, a, add_if_new):
         for a1 in self.data_list:
             if a.name == a1.name:
                 return a1
         a1 = copy.deepcopy(a)
         a1.songs = []
+        if add_if_new:
+            self.data_list.append(a1)
         return a1
 
     def get_menu_funcs(self, content_stack):
