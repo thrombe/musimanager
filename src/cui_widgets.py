@@ -241,19 +241,21 @@ class BrowserWidget:
     def save(self):
         if not opts.save_on_exit: return
 
-        if self.player_widget.player.current_song is None:
+        if self.player_widget.player.current_song is not None:
             self.player_widget.set_current_queue_index_to_playing_song()
         
         mp = self.content_state_stack[0]
 
         # do not save the filtered/custom sorted data
-        mp.data_list[0].try_undo_filter()
+        mp.data_list[0].try_undo_filter() # artists
         for i in range(len(mp.data_list[0].data_list)):
             mp.data_list[0].get_at(i).try_undo_filter()
-        mp.data_list[2].try_undo_filter()
+
+        mp.data_list[2].try_undo_filter() # playlists
         for p in mp.data_list[2].data_list:
             p.try_undo_filter()
-        mp.data_list[3].try_undo_filter()
+
+        mp.data_list[3].try_undo_filter() # queues
         for q in mp.data_list[3].data_list:
             q.try_undo_filter()
         
