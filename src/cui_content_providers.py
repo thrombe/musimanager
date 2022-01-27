@@ -206,9 +206,9 @@ class SongProvider(serde.Model):
         ]
         return menu_funcs, s_copy.title
 
-    def menu_for_selected(self, content_stack, execute_func_index=None):
+    def menu_for_selected(self, content_stack):
         menu_funcs, popup_title = self.get_menu_funcs(content_stack)
-        return present_menu_popup(menu_funcs, execute_func_index, popup_title)
+        return present_menu_popup(menu_funcs, popup_title)
 
     def search(self, search_term, get_search_box_title=False): return None
 
@@ -248,7 +248,7 @@ class MainProvider(SongProvider):
     def refresh(self):
         self.new_album_artist_provider.refresh()
 
-    def menu_for_selected(self, content_stack, execute_func_index=None): pass
+    def menu_for_selected(self, content_stack): pass
     def filter(self, _): pass
 
     # thou shall not move items here
@@ -493,7 +493,7 @@ class PlaylistProvider(SongProvider):
             songs = []
             for i in range(len(playlist.data_list)):
                 playlist.current_index = i
-                s, a = playlist.menu_for_selected(content_stack, execute_func_index=3) #! dangerous
+                s, a = [f for f in playlist.get_menu_funcs(content_stack) if f.__name__ == "add_to_tracker_offline"][0]()
                 songs.append(s)
                 if a is not None:
                     new_artists.append(a)
@@ -509,7 +509,7 @@ class PlaylistProvider(SongProvider):
         def try_delete_from_tracker():
             for i in range(len(playlist.data_list)):
                 playlist.current_index = i
-                playlist.menu_for_selected(content_stack, execute_func_index=4) #! dangerous
+                [f for f in playlist.get_menu_funcs(content_stack) if f.__name__ == "try_delete_from_tracker"][0]()
             playlist.current_index = 0
         def change_name():
             cui_handle.pycui.show_text_box_popup("new name: ", playlist.change_name)
@@ -833,11 +833,7 @@ def select_item_using_popup(destination_content_provider, add_new_what, content_
         options.append(a)
     cui_handle.pycui._popup.add_item_list(options)
 
-# TODO: can execute_func_index be replaced with some enum while still being tidy ???
-    # how to make sure that given func exists for this content type?
-def present_menu_popup(menu_funcs, execute_func_index, popup_title):
-    if execute_func_index is not None:
-        return menu_funcs[execute_func_index]()
+def present_menu_popup(menu_funcs, popup_title):
     menu_func_names = [f"{i}│ "+func.__name__.replace("_", " ") for i, func in enumerate(menu_funcs)]
     def helper_func(x):
         i = int(x.split("│")[0])

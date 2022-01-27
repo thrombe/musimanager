@@ -193,8 +193,6 @@ class BrowserWidget:
             (py_cui.keys.KEY_RIGHT_ARROW, self.try_load_right),
             (py_cui.keys.KEY_LEFT_ARROW, self.try_load_left),
             (py_cui.keys.KEY_P_LOWER, self.player_widget.player.toggle_pause),
-            # (py_cui.keys.KEY_O_LOWER, lambda: self.menu_for_selected(execute_func_index=2)), # add song to playlists # TODO these crash on non songs
-            # (py_cui.keys.KEY_I_LOWER, lambda: self.menu_for_selected(execute_func_index=3)), # add song to queues
             (py_cui.keys.KEY_J_LOWER, self.player_widget.player.seek_10_secs_behind),
             (py_cui.keys.KEY_K_LOWER, self.player_widget.player.seek_10_secs_forward),
             (py_cui.keys.KEY_H_LOWER, self.play_prev),
@@ -419,8 +417,8 @@ class BrowserWidget:
             self.content_state_stack.append(self.player_widget.player.current_queue)
             self.refresh_names(self.content_state_stack[-1])
 
-    def menu_for_selected(self, execute_func_index=None):
-        self.content_state_stack[-1].menu_for_selected(self.content_state_stack, execute_func_index=execute_func_index)
+    def menu_for_selected(self):
+        self.content_state_stack[-1].menu_for_selected(self.content_state_stack)
     
     def filter(self):
         def filter_func(filter_term):
