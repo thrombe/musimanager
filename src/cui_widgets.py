@@ -106,7 +106,6 @@ class PlayerWidget:
             self.play(next)
             return True
         else:
-            self.player.current_queue = None
             return False
 
     def play_prev(self):
@@ -239,7 +238,7 @@ class BrowserWidget:
     def save(self):
         if not opts.save_on_exit: return
 
-        if self.player_widget.player.current_song is not None:
+        if self.player_widget.player.current_song is not None and self.player_widget.player.current_queue is not None:
             self.player_widget.set_current_queue_index_to_playing_song()
         
         mp = self.content_state_stack[0]

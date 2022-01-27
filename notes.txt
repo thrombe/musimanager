@@ -30,6 +30,10 @@ plan:
     . new class for undo: Undoer
       . class.edited_list, class.action: enum(action), class.items: things_added_or_removed_or_changed_position_etc
       . what about name changes and stuff?
+  . a log screen that appears when a shortcut is pressed
+    . maybe with multiple levels
+    . if debug is on, it shows ~~all things it does
+    . if not debug, it shows big things like added x to y, found new albums for artist, etc
   . replace ascii-magic with the rust project (if it works with curses)
   . an option or something to add all songs from all artists to a playlist (to make sure all songs in tracker are in here)
   . maybe replace popup menus with menu in the browser widget
