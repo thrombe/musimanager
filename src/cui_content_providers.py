@@ -62,6 +62,10 @@ class SongProvider(serde.Model):
                 return True
         return False
 
+    def mass_remove_songs(self, songs):
+        for s in songs:
+            self.remove_song(s)
+
     def contains_song(self, song):
         for s in self.data_list:
             if s.key == song.key:
@@ -118,6 +122,19 @@ class SongProvider(serde.Model):
         self.data_list.insert(index, song)
         self.current_index = index
     
+    def move_item(self, from_i, to_i):
+        if from_i > len(self.data_list)-1 or to_i > len(self.data_list)-1 or from_i == to_i: return
+        if to_i < 0 and -to_i > len(self.data_list): return
+        a = self.data_list.pop(from_i)
+        if to_i > from_i:
+            to_i -= 1
+        if to_i == -1:
+            self.data_list.append(a)
+            return
+        elif to_i < 0:
+            to_i += 1
+        self.data_list.insert(to_i, a)
+
     def filter(self, filter_term, name=lambda x: x.title):
         if self.unfiltered_data is None:
             self.unfiltered_data = [a for a in self.data_list]
@@ -179,6 +196,8 @@ class SongProvider(serde.Model):
             select_item_using_popup(main_provider.queue_provider, "queue", main_provider.queue_provider.data_list, final_func, tick_func=tick_func)
         def add_to_artist():
             select_item_using_popup(main_provider.artist_provider, "artists", main_provider.artist_provider.data_list, final_func, tick_func=tick_func)
+        def add_to_new_album_artist():
+            select_item_using_popup(main_provider.new_album_artist_provider, "new album artists", main_provider.new_album_artist_provider.data_list, final_func, tick_func=tick_func)
         def add_to_tracker_offline():
             return main_provider.tracker.add_song(s_copy)
         def try_delete_from_tracker(): # TODO
@@ -189,15 +208,19 @@ class SongProvider(serde.Model):
             s.tag(img_bytes=s.download_cover_image())
         def change_name():
             cui_handle.pycui.show_text_box_popup("new name: ", s.change_name)
+        def move_to_index():
+            cui_handle.pycui.show_text_box_popup("enter index: ", lambda x: self.move_item(self.current_index, int(x)))
 
 
         menu_funcs = [
             add_to_queue,
             add_to_playlist,
             move_to_playlist,
-            add_to_tracker_offline, #! danger, careful while changing index (also change in playlist provider func)
-            try_delete_from_tracker, #! danger
+            move_to_index,
+            add_to_tracker_offline,
+            try_delete_from_tracker,
             add_to_artist,
+            add_to_new_album_artist,
             add_uploaders_key_to_artist,
             change_name,
             tag,
@@ -302,10 +325,12 @@ class ArtistProvider(SongProvider):
             self.remove_artist(a)
         def get_albums_untracked(search_term=None):
             naap: NewAlbumArtistProvider = main_provider.new_album_artist_provider
-            naap.search_for_artist(a, False, search_term=search_term)
+            func = lambda: naap.search_for_artist(a, False, search_term=search_term)
+            threading.Thread(target=func, args=()).start()
         def get_new_albums_tracked(search_term=None):
             naap: NewAlbumArtistProvider = main_provider.new_album_artist_provider
-            naap.search_for_artist(a, True, search_term=search_term)
+            func = lambda: naap.search_for_artist(a, True, search_term=search_term)
+            threading.Thread(target=func, args=()).start()
         def get_new_albums_tracked_custom_search_term():
             cui_handle.pycui.show_text_box_popup("search term: ", lambda x: get_new_albums_tracked(search_term=x))
         def get_albums_untracked_custom_search_term():
@@ -365,7 +390,6 @@ class NewAlbumArtistProvider(ArtistProvider):
         self.check_queue.sort(key=lambda a: a.last_auto_search)
 
         data = self.tracker.auto_search_artists
-        data.sort(key=lambda x: x.last_auto_search)
 
         super(ArtistProvider, self).__init__(data, name)
         self.content_type = WidgetContentType.NEW_ALBUM_ARTISTS
@@ -397,6 +421,8 @@ class NewAlbumArtistProvider(ArtistProvider):
             a.last_auto_search = round(time.time())
 
         songs = self.flatten_albums(a, asy, mark_known)
+        if mark_known:
+            songs = self.remove_known_songs(a, songs)
         if len(songs) != 0:
             a_new = self.get_new_artist(a, True)
             a_new.songs.extend(songs)
@@ -424,6 +450,11 @@ class NewAlbumArtistProvider(ArtistProvider):
             songs.extend(ss)
             if mark_known:
                 a.known_albums.append(al)
+        return songs
+
+    def remove_known_songs(self, a, songs):
+        s = SongProvider(songs, a.name)
+        s.mass_remove_songs(a.songs)
         return songs
 
     def get_new_artist(self, a, add_if_new):
@@ -513,6 +544,14 @@ class PlaylistProvider(SongProvider):
             playlist.current_index = 0
         def change_name():
             cui_handle.pycui.show_text_box_popup("new name: ", playlist.change_name)
+        def mass_remove_from_playlist():
+            def final_func(content_provider):
+                content_provider.mass_remove_songs(playlist.data_list)
+            select_item_using_popup(main_provider.playlist_provider, "playlist", main_provider.playlist_provider.data_list, final_func)
+        def mass_remove_from_queue():
+            def final_func(content_provider):
+                content_provider.mass_remove_songs(playlist.data_list)
+            select_item_using_popup(main_provider.queue_provider, "queue", main_provider.queue_provider.data_list, final_func)
 
 
         menu_funcs = [
@@ -520,6 +559,8 @@ class PlaylistProvider(SongProvider):
             append_to_queue,
             add_to_tracker_offline,
             change_name,
+            mass_remove_from_playlist,
+            mass_remove_from_queue,
             try_delete_from_tracker,
             remove_playlist,
         ]
@@ -542,18 +583,16 @@ class QueueProvider(SongProvider):
         return song_provider
 
     def add_queue(self, queue):
-        for i, q in enumerate(self.data_list):
-            # TODO: maybe improve this with some kind of unique queue id
-            if queue.name == q.name and len(queue.data_list) == len(q.data_list):
-                self.data_list.pop(i)
-                break
+        self.remove_queue(queue)
         self.data_list.insert(0, queue)
         self.current_index = 0
         if len(self.data_list) > 15: self.data_list.pop()
 
     def remove_queue(self, queue):
         for i, q in enumerate(self.data_list):
-            if q.name == queue.name and len(q.data_list) == len(queue.data_list):
+            # TODO: maybe improve this with some kind of unique queue id
+            # if q.name == queue.name and len(q.data_list) == len(queue.data_list):
+            if q.name == queue.name:
                 self.data_list.pop(i)
                 break
 
