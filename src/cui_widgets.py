@@ -34,11 +34,11 @@ class Player:
     def try_seek(self, secs):
         self.playback_handle.seek(secs)
 
-    def seek_10_secs_forward(self):
-        self.try_seek(10)
+    def seek_n_secs_forward(self):
+        self.try_seek(opts.seek_interval)
 
-    def seek_10_secs_behind(self):
-        self.try_seek(-10)
+    def seek_n_secs_behind(self):
+        self.try_seek(-opts.seek_interval)
 
 class PlayerWidget:
     def __init__(self, widget):
@@ -192,8 +192,8 @@ class BrowserWidget:
             (py_cui.keys.KEY_RIGHT_ARROW, self.try_load_right),
             (py_cui.keys.KEY_LEFT_ARROW, self.try_load_left),
             (py_cui.keys.KEY_P_LOWER, self.player_widget.player.toggle_pause),
-            (py_cui.keys.KEY_J_LOWER, self.player_widget.player.seek_10_secs_behind),
-            (py_cui.keys.KEY_K_LOWER, self.player_widget.player.seek_10_secs_forward),
+            (py_cui.keys.KEY_J_LOWER, self.player_widget.player.seek_n_secs_behind),
+            (py_cui.keys.KEY_K_LOWER, self.player_widget.player.seek_n_secs_forward),
             (py_cui.keys.KEY_H_LOWER, self.play_prev),
             (py_cui.keys.KEY_L_LOWER, self.play_next),
             (py_cui.keys.KEY_M_LOWER, self.view_down),
@@ -274,7 +274,7 @@ class BrowserWidget:
     def auto_next(self):
         # if current song ended, play next
         if self.player_widget.player.playback_handle.is_finished():
-            self.clear_commands_from_queue([self.player_widget.player.seek_10_secs_forward])
+            self.clear_commands_from_queue([self.player_widget.player.seek_n_secs_forward])
             self.play_next()
 
     def view_down(self):

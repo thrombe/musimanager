@@ -49,6 +49,7 @@ force_ascii_art = opts["ascii_art"]["force_ascii_art"]
 disable_ascii_art = opts["ascii_art"]["disable_ascii_art"]
 enable_global_shortcuts = opts["global_shortcuts"]["enable_global_shortcuts"]
 pause_global_shortcut = opts["global_shortcuts"]["pause_global_shortcut"]
+seek_interval = opts["player"]["seek_interval"]
 
 # random options
 show_artist_name_besides_song_name = opts["random_options"]["show_artist_name_besides_song_name"]

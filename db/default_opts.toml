@@ -31,3 +31,5 @@ save_on_exit = true
 auto_search_albums = false
 debug_prints = false
 
+[player]
+seek_interval = 10 # seconds
