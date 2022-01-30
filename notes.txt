@@ -1,5 +1,8 @@
 
 bugs:
+  /. crashes if current song removed from queue and then tries to do something
+    /. saving
+    /. next_song
   . update readme with correct deps in requirements.txt
     . mention gstreamer as dependency in readme + links for installation
     . mention yt-dlp in readme as installation is a bit different

@@ -100,7 +100,10 @@ class PlayerWidget:
 
     def play_next(self):
         if self.player.current_queue is None: return False
-        self.set_current_queue_index_to_playing_song()
+        if self.set_current_queue_index_to_playing_song() is None:
+            if self.player.current_queue.current_index >= 0:
+                self.player.current_queue.current_index -= 1
+                self.player.current_queue.current_scroll_top_index -= 1
         next = self.player.current_queue.next()
         if next is not None:
             self.play(next)
@@ -110,7 +113,9 @@ class PlayerWidget:
 
     def play_prev(self):
         if self.player.current_queue is None: return False
-        self.set_current_queue_index_to_playing_song()
+        if self.set_current_queue_index_to_playing_song() is None:
+            if self.player.current_queue.current_index == len(self.player.current_queue.data_list):
+                self.player.current_queue.current_index += 1 # so that if current element is deleted, correct prev song plays
         prev = self.player.current_queue.previous()
         if prev is not None:
             self.play(prev)
@@ -125,8 +130,8 @@ class PlayerWidget:
             if s == self.player.current_song:
                 i = j
                 break
-        if i is None: raise Exception("song not found in queue")
-        self.player.current_queue.current_index = i
+        if i is not None: self.player.current_queue.current_index = i
+        return i
 
     def set_queue(self, queue):
         if self.player.current_queue is not None and self.player.current_song is not None:
