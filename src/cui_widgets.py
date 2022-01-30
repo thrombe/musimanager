@@ -197,6 +197,7 @@ class BrowserWidget:
             (py_cui.keys.KEY_RIGHT_ARROW, self.try_load_right),
             (py_cui.keys.KEY_LEFT_ARROW, self.try_load_left),
             (py_cui.keys.KEY_P_LOWER, self.player_widget.player.toggle_pause),
+            (py_cui.keys.KEY_I_LOWER, self.try_move_cursor_to_current_song),
             (py_cui.keys.KEY_J_LOWER, self.player_widget.player.seek_n_secs_behind),
             (py_cui.keys.KEY_K_LOWER, self.player_widget.player.seek_n_secs_forward),
             (py_cui.keys.KEY_H_LOWER, self.play_prev),
@@ -439,6 +440,14 @@ class BrowserWidget:
             self.player_widget.player.current_queue.shuffle()
             self.content_state_stack[-1].reset_indices()
             self.refresh_names(self.content_state_stack[-1])
+
+    def try_move_cursor_to_current_song(self):
+        if self.content_state_stack[-1].content_type != cui_content_providers.WidgetContentType.SONGS: return
+        for i, s in enumerate(self.content_state_stack[-1].data_list):
+            if s.title == self.player_widget.player.current_song.title:
+                self.content_state_stack[-1].current_index = i
+                self.refresh_names(self.content_state_stack[-1])
+                return
 
     def global_menu(self):
         options = opts.opts["random_options"].keys()
