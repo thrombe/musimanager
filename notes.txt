@@ -1,14 +1,13 @@
 
 bugs:
-  . update readme with correct deps in requirements.txt
-    . mention gstreamer as dependency in readme + links for installation
-    . mention yt-dlp in readme as installation is a bit different
   . if image gets too small, ueberzug freaks out
     . disable image when too small and dont update the size till it gets a bit bigger
   . why is there more delay for custom key commands?
   . since content_provider.current_index is updated every frame, yeet them from the get_at arguments and stuff
     . check if its necessary somewhere first
-  . filtering changes order (important in queues)
+  . filtering
+    . filtering changes order (important in queues)
+    /. filtering on artists and moving out and then in screws up the unfiltering process (the original order is deleted as its in the song_provider and not in the artist)
   . is current_queue_view variable even required anymore?
   . 2 width chars still cause alignment probs
   . yeet unnecessary uses of funcs for 2 width chars

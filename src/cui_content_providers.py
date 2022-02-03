@@ -50,7 +50,7 @@ class SongProvider(serde.Model):
     def default_untracked_attrs(self):
         self.content_type = WidgetContentType.SONGS
         self.current_scroll_top_index = 0
-        self.unfiltered_data = None
+        self.unfiltered_data = []
 
     def add_song(self, song):
         self.data_list.append(song)
@@ -136,8 +136,8 @@ class SongProvider(serde.Model):
         self.data_list.insert(to_i, a)
 
     def filter(self, filter_term, name=lambda x: x.title):
-        if self.unfiltered_data is None:
-            self.unfiltered_data = [a for a in self.data_list]
+        if len(self.unfiltered_data) == 0:
+            self.unfiltered_data.extend([a for a in self.data_list])
             self.data_list.sort(key=lambda c: -helpers.kinda_similar_perc(name(c), filter_term))
         else:
             # making sure changes are synced between filtered and unfiltered lists
@@ -152,17 +152,17 @@ class SongProvider(serde.Model):
 
             self.data_list.clear()
             for a in self.unfiltered_data: self.data_list.append(a)
-            self.unfiltered_data = None
+            self.unfiltered_data.clear()
 
     def shuffle(self):
-        if self.unfiltered_data is None:
-            self.unfiltered_data = [a for a in self.data_list]
+        if len(self.unfiltered_data) == 0:
+            self.unfiltered_data.extend([a for a in self.data_list])
             random.shuffle(self.data_list)
         else:
             self.filter(None)
 
     def try_undo_filter(self):
-        if self.unfiltered_data is not None:
+        if len(self.unfiltered_data) != 0:
             self.filter(None)
 
     def get_menu_funcs(self, content_stack):
@@ -247,19 +247,19 @@ class MainProvider(SongProvider):
         t = tracker.Tracker.load()
         data = [
             ArtistProvider(t),
-            AutoSearchSongs(),
             PlaylistProvider(t),
             QueueProvider(t),
+            NewAlbumArtistProvider(t),
             FileExplorer.new(),
+            AutoSearchSongs(),
             AlbumSearchYTM(),
             NewpipePlaylistProvider(),
-            NewAlbumArtistProvider(t),
             ]
         mp = MainProvider(data, t)
         mp.artist_provider = data[0]
-        mp.playlist_provider = data[2]
-        mp.queue_provider = data[3]
-        mp.new_album_artist_provider = data[7]
+        mp.playlist_provider = data[1]
+        mp.queue_provider = data[2]
+        mp.new_album_artist_provider = data[3]
         return mp
 
     def get_at(self, index):
@@ -292,9 +292,12 @@ class ArtistProvider(SongProvider):
     def get_at(self, index):
         artist = super().get_at(index)
         if artist is None: return None
+        if getattr(artist, "unfiltered_data", None) is None: artist.unfiltered_data = []
         songs = artist.songs
         # songs.sort(key=lambda x: x.title)
-        return SongProvider(songs, f"songs by {artist.name}")
+        sp = SongProvider(songs, f"songs by {artist.name}")
+        sp.unfiltered_data = artist.unfiltered_data
+        return sp
 
     def add_new(self, songs, name):
         a = artist.Artist.new(name, [])
@@ -716,7 +719,7 @@ class FileExplorer(SongProvider):
         return self.data_list
 
     def filter(self, filter_term):
-        if self.unfiltered_data is None:
+        if len(self.unfiltered_data) == 0:
             self.unfiltered_data = self.data_list
             self.folders.sort(key=lambda c: -helpers.kinda_similar_perc(c, filter_term))
             self.files.sort(key=lambda c: -helpers.kinda_similar_perc(c, filter_term))
@@ -725,7 +728,7 @@ class FileExplorer(SongProvider):
             self.folders.sort()
             self.files.sort()
             self.data_list = self.folders + self.files
-            self.unfiltered_data = None
+            self.unfiltered_data = []
 
     # thou shall not move items here
     def move_item_up(self, index, y_blank, top_view): pass

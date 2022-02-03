@@ -430,7 +430,7 @@ class BrowserWidget:
             self.content_state_stack[-1].filter(filter_term)
             self.content_state_stack[-1].reset_indices()
             self.refresh_names(self.content_state_stack[-1])
-        if self.content_state_stack[-1].unfiltered_data is not None:
+        if len(self.content_state_stack[-1].unfiltered_data) != 0:
             filter_func(None)
             return
         cui_handle.pycui.show_text_box_popup("filter", filter_func)
