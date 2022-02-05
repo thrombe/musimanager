@@ -175,6 +175,7 @@ class SongProvider(serde.Model):
             pass
         def add_uploaders_key_to_artist():
             def final_func(content_provider):
+                s_copy.try_get_info()
                 content_provider.add_song(s_copy)
                 content_provider.remove_song(s_copy)
             select_item_using_popup(main_provider.artist_provider, "artists", main_provider.artist_provider.data_list, final_func)
@@ -366,6 +367,13 @@ class ArtistProvider(SongProvider):
             yeet(a.keywords, "keyword")
         def yeet_non_keyword():
             yeet(a.non_keywords, "non keyword")
+        def yeet_search_keyword():
+            yeet(a.search_keywords, "search keyword")
+        def add_search_keyword():
+            def append_search_keyword(x):
+                if not any([term == x for term in a.search_keywords]):
+                    a.search_keywords.append(x)
+            cui_handle.pycui.show_text_box_popup("new search term: ", append_search_keyword)
 
         menu_funcs = [
             add_to_queue,
@@ -376,9 +384,11 @@ class ArtistProvider(SongProvider):
             add_to_playlist,
             fuse_into_another_artist,
             change_name,
+            add_search_keyword,
             yeet_key,
             yeet_keyword,
             yeet_non_keyword,
+            yeet_search_keyword,
             remove_artist,
         ]
         return menu_funcs, a.name
@@ -785,16 +795,22 @@ class AlbumSearchYTM(SongProvider):
             search_limit = opts.musitracker_search_limit_first_time
         else:
             search_limit = opts.musitracker_search_limit
-        if search_term is None:
-            search_term = a.name
-        asy.search(search_term, limit=search_limit)
+
         albums = []
-        for al in asy.data_list:
-            for k in al.artist_keys:
-                if k in a.keys:
-                    if not any([al.browse_id == a2.browse_id for a2 in albums]):
-                        albums.append(al)
-                    break
+        if search_term is None:
+            search_terms = a.search_keywords
+        if type(search_term) == type("str"):
+            search_terms = [search_term]
+        
+        for search_term in search_terms:
+            asy.search(search_term, limit=search_limit)
+            for al in asy.data_list:
+                for k in al.artist_keys:
+                    if k in a.keys:
+                        if not any([al.browse_id == a2.browse_id for a2 in albums]):
+                            albums.append(al)
+                        break
+
         for key in a.keys:
             aa = album.Album.load_albums_from_artist_key(key)
             for a1 in aa:

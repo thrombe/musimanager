@@ -16,6 +16,7 @@ class Artist(serde.Model):
     known_albums: serde.fields.List(serde.fields.Nested(album.Album)) # to track what albums the user has listened to
     keywords: serde.fields.List(serde.fields.Str()) # keywords for sort
     non_keywords: serde.fields.List(serde.fields.Str()) # keywords/keys to specifically ignore
+    search_keywords: serde.fields.List(serde.fields.Str())
     last_auto_search: serde.fields.Optional(serde.fields.Int)
 
     def new(name, keys):
@@ -31,6 +32,7 @@ class Artist(serde.Model):
             known_albums=[],
             keywords=[],
             non_keywords=[],
+            search_keywords=[name],
             last_auto_search=None,
         )
     
@@ -58,6 +60,7 @@ class Artist(serde.Model):
     def change_name(self, name):
         self.name_confirmation_status = True
         if name == self.name: return
+        self.search_keywords.append(name) # older name not removed
         old_name = self.name
         self.name = name
         if name not in self.keywords:

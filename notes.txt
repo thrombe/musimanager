@@ -7,7 +7,6 @@ bugs:
     . check if its necessary somewhere first
   . filtering
     . filtering changes order (important in queues)
-    /. filtering on artists and moving out and then in screws up the unfiltering process (the original order is deleted as its in the song_provider and not in the artist)
   . is current_queue_view variable even required anymore?
   . 2 width chars still cause alignment probs
   . yeet unnecessary uses of funcs for 2 width chars
