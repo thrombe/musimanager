@@ -209,6 +209,18 @@ class SongProvider(serde.Model):
             cui_handle.pycui.show_text_box_popup("new name: ", s.change_name)
         def move_to_index():
             cui_handle.pycui.show_text_box_popup("enter index: ", lambda x: self.move_item(self.current_index, int(x)))
+        def fetch_songs_from_artist(search_term=None):
+            artist_name = search_term if search_term is not None else s_copy.artist_name
+            def func():
+                s_copy.try_get_info()
+                a = artist.Artist.new(artist_name, [])
+                a.add_song(s_copy)
+                naap: NewAlbumArtistProvider = main_provider.new_album_artist_provider
+                naap.search_for_artist(a, False, search_term=search_term)
+            threading.Thread(target=func, args=()).start()
+        def fetch_songs_from_artist_custom_search():
+            func = lambda x: fetch_songs_from_artist(search_term=x)
+            cui_handle.pycui.show_text_box_popup("Enter search term: ", func)
 
 
         menu_funcs = [
@@ -216,6 +228,8 @@ class SongProvider(serde.Model):
             add_to_playlist,
             move_to_playlist,
             move_to_index,
+            fetch_songs_from_artist,
+            fetch_songs_from_artist_custom_search,
             add_to_tracker_offline,
             try_delete_from_tracker,
             add_to_artist,
