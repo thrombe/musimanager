@@ -126,8 +126,6 @@ class SongProvider(serde.Model):
         if from_i > len(self.data_list)-1 or to_i > len(self.data_list)-1 or from_i == to_i: return
         if to_i < 0 and -to_i > len(self.data_list): return
         a = self.data_list.pop(from_i)
-        if to_i > from_i:
-            to_i -= 1
         if to_i == -1:
             self.data_list.append(a)
             return
@@ -374,14 +372,17 @@ class ArtistProvider(SongProvider):
                 if not any([term == x for term in a.search_keywords]):
                     a.search_keywords.append(x)
             cui_handle.pycui.show_text_box_popup("new search term: ", append_search_keyword)
+        def move_to_index():
+            cui_handle.pycui.show_text_box_popup("enter index: ", lambda x: self.move_item(self.current_index, int(x)))
 
         menu_funcs = [
             add_to_queue,
+            add_to_playlist,
+            move_to_index,
             get_new_albums_tracked,
             get_new_albums_tracked_custom_search_term,
             get_albums_untracked,
             get_albums_untracked_custom_search_term,
-            add_to_playlist,
             fuse_into_another_artist,
             change_name,
             add_search_keyword,
@@ -483,7 +484,7 @@ class NewAlbumArtistProvider(ArtistProvider):
     def get_menu_funcs(self, content_stack):
         menu_funcs, popup_title = super().get_menu_funcs(content_stack)
 
-        menu_funcs = [f for f in menu_funcs if f.__name__ in ["add_to_queue", "add_to_playlist", "remove_artist"]]
+        menu_funcs = [f for f in menu_funcs if f.__name__ in ["add_to_queue", "add_to_playlist", "remove_artist", "move_to_index"]]
 
         return menu_funcs, popup_title
 
@@ -565,11 +566,14 @@ class PlaylistProvider(SongProvider):
             def final_func(content_provider):
                 content_provider.mass_remove_songs(playlist.data_list)
             select_item_using_popup(main_provider.queue_provider, "queue", main_provider.queue_provider.data_list, final_func)
+        def move_to_index():
+            cui_handle.pycui.show_text_box_popup("enter index: ", lambda x: self.move_item(self.current_index, int(x)))
 
 
         menu_funcs = [
             append_to_playlist,
             append_to_queue,
+            move_to_index,
             add_to_tracker_offline,
             change_name,
             mass_remove_from_playlist,
@@ -634,9 +638,12 @@ class QueueProvider(SongProvider):
             select_item_using_popup(main_provider.queue_provider, "queue", main_provider.queue_provider.data_list, final_func2)
         def change_name():
             cui_handle.pycui.show_text_box_popup("new name: ", queue.change_name)
+        def move_to_index():
+            cui_handle.pycui.show_text_box_popup("enter index: ", lambda x: self.move_item(self.current_index, int(x)))
 
         menu_funcs = [
             merge_into_queue,
+            move_to_index,
             remove_queue,
             append_to_playlist,
             change_name,
