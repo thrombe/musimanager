@@ -42,6 +42,10 @@ fn map_time(t: gstreamer::ClockTime) -> u64 {
     t.mseconds()
 }
 
+fn unmap_time(t: u64) -> gstreamer::ClockTime {
+    gstreamer::ClockTime::from_mseconds(t)
+}
+
 #[pymethods]
 impl Player {
 
@@ -55,10 +59,14 @@ impl Player {
 
         // gst_plsyer.position can return none even if its not supposed to be. so it needs to be catched
         let pos = self.gst_player.position();
+        let cached_position = self.position;
         if pos.is_some() {
             self.position = map_time(pos.unwrap());
         }
-        Ok(self.position)
+
+        // max needed to make seeking more reliable (self.seek() sets the value of self.position, and
+        // self.position() might still return the old value as the audio may not be loaded yet)
+        Ok(u64::max(self.position, cached_position))
     }
 
     fn duration(&mut self) -> PyResult<u64>{
@@ -73,7 +81,18 @@ impl Player {
 
     // t in seconds
     fn seek(&mut self, t: i64) -> PyResult<()> {
-        let pos = gstreamer::ClockTime::from_mseconds(self.position()?);
+
+        let pos = gstreamer::ClockTime::from_mseconds({
+            let cached_pos = self.position;
+            let pos = self.position()?;
+
+            // this is needed to make seeking more reliable, allows seek to work even when spamming this method
+            if t.is_negative() {
+                u64::min(cached_pos, pos)
+            } else {
+                u64::max(cached_pos, pos)
+            }
+        });
         let mut seekpos = {if t.is_positive() {
             pos.checked_add(gstreamer::ClockTime::from_seconds(t as u64))
         } else {
@@ -81,9 +100,11 @@ impl Player {
         }}.unwrap_or(gstreamer::ClockTime::from_seconds(0)); // if -ve, set to 0
 
         if map_time(seekpos) > self.duration && self.duration != 0 {
-            self.position = self.duration - 60; // 60 mseconds
-            seekpos = gstreamer::ClockTime::from_mseconds(self.position);
+            seekpos = unmap_time(self.duration) - gstreamer::ClockTime::from_mseconds(60);
         }
+
+        // overwriting position with new value, so that correct value is returned by self.position() even if audio hasnt completed loading
+        self.position = map_time(seekpos);
         self.gst_player.seek(seekpos);
         Ok(())
     }

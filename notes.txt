@@ -2,7 +2,11 @@
 bugs:
   . if image gets too small, ueberzug freaks out
     . disable image when too small and dont update the size till it gets a bit bigger
-  . why is there more delay for custom key commands?
+  /. player ignores/overwrites previous seeks if seek requests are sent faster than it happens
+    /. super noticable when online
+    /. player should automatically handle this.
+  /. why is there more delay for custom key commands?
+    /. fixed using higher refresh times + refresh it refreshes on button press
   . since content_provider.current_index is updated every frame, yeet them from the get_at arguments and stuff
     . check if its necessary somewhere first
   . filtering
@@ -17,11 +21,6 @@ bugs:
     \. 1 edit at the top of the songs list and git considers all songs in the list edited as some lines are still the same
 
 plan:
-  /. eats too much cpu on rendering
-    /. increase the refresh delay
-    \. maybe increase refresh delay if song pause + no inputs in some timeout
-    \. maybe just yeet autoupdating? how update progress bar then?
-    \. is no inputs receieved, increase refresh dalay till user does something
   /. auto update/search new albums for artists after some interval in background thread
     . show popup on new finds?
     . custom search_terms?
