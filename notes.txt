@@ -17,6 +17,11 @@ bugs:
     \. 1 edit at the top of the songs list and git considers all songs in the list edited as some lines are still the same
 
 plan:
+  /. eats too much cpu on rendering
+    /. increase the refresh delay
+    \. maybe increase refresh delay if song pause + no inputs in some timeout
+    \. maybe just yeet autoupdating? how update progress bar then?
+    \. is no inputs receieved, increase refresh dalay till user does something
   /. auto update/search new albums for artists after some interval in background thread
     . show popup on new finds?
     . custom search_terms?

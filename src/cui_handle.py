@@ -24,7 +24,7 @@ class CUI_handle:
         self.pycui.set_title('cuisiman')
         # self.master.enable_logging(logging_level=logging.ERROR)
         # self.master.toggle_live_debug_mode()
-        self.pycui.set_refresh_timeout(0.1)
+        self.pycui.set_refresh_timeout(0.7)
         self.pycui.set_on_draw_update_func(self.refresh)
 
 

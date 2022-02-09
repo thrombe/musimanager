@@ -225,8 +225,10 @@ class BrowserWidget:
                 opts.pause_global_shortcut: lambda: self.queue_command(self.player_widget.player.toggle_pause),
             }).start()
 
-    def queue_command(self, cmd):
-        self.command_queue.append(cmd)
+    def queue_command(self, cmd): # TODO: no need??
+        # self.command_queue.append(cmd)
+
+        cmd()
 
     def clear_commands_from_queue(self, cmds):
         i = 0
