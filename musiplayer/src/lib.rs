@@ -2,13 +2,14 @@
 // https://pyo3.rs/latest/
 // https://docs.rs/pyo3/latest/pyo3/
 
+// https://gstreamer.pages.freedesktop.org/gstreamer-rs/stable/latest/docs/gstreamer_player/struct.Player.html
+
 // use anyhow::Context;
 
 use pyo3::prelude::{Python, PyModule, PyResult};
 use pyo3::{pymodule, pyclass, pymethods};
 
-use gstreamer_player::prelude::Cast;
-use gstreamer_player as gst_player;
+use gstreamer_player::{self, prelude::Cast};
 use gstreamer;
 
 #[pymodule]
@@ -19,7 +20,7 @@ fn musiplayer(_py: Python, m: &PyModule) -> PyResult<()> {
 
 #[pyclass]
 struct Player {
-    gst_player: gst_player::Player,
+    gst_player: gstreamer_player::Player,
     paused: bool,
     position: u64,
     duration: u64,
@@ -27,10 +28,10 @@ struct Player {
 
 impl Player {
     fn new_player() -> gstreamer_player::Player {
-        let dispatcher = gst_player::PlayerGMainContextSignalDispatcher::new(None);
-        let player = gst_player::Player::new(
+        let dispatcher = gstreamer_player::PlayerGMainContextSignalDispatcher::new(None);
+        let player = gstreamer_player::Player::new(
             None,
-            Some(&dispatcher.upcast::<gst_player::PlayerSignalDispatcher>()),
+            Some(&dispatcher.upcast::<gstreamer_player::PlayerSignalDispatcher>()),
         );
         player.set_video_track_enabled(false);
 

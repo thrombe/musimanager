@@ -2,11 +2,6 @@
 bugs:
   . if image gets too small, ueberzug freaks out
     . disable image when too small and dont update the size till it gets a bit bigger
-  /. player ignores/overwrites previous seeks if seek requests are sent faster than it happens
-    /. super noticable when online
-    /. player should automatically handle this.
-  /. why is there more delay for custom key commands?
-    /. fixed using higher refresh times + refresh it refreshes on button press
   . since content_provider.current_index is updated every frame, yeet them from the get_at arguments and stuff
     . check if its necessary somewhere first
   . filtering
@@ -26,6 +21,9 @@ plan:
     . custom search_terms?
     . present a list of albums instead of list of songs?
       . maybe a option for this
+  . commandline flags
+    . pass a flag for no-save mode
+    . a flag for showcase mode or something?
   . some kinda undo system
     . create enum for supported actions
       . added, removed, position_changed?, 
@@ -73,6 +71,9 @@ plan:
       . filtering
   . FIX CRASHES CUZ OF ONLINE TIMEOUTS and stuff
   . make it work offline (no crashes)
+  . maybe try symphonia backend and yeet gst
+    . https://github.com/tramhao/termusic
+    . maybe search for a rodio example?
   . maybe have general buttons for refresh, and stuff
   . show some loading thing when doing online stuff/doing stuff with songs (when the screen freezes otherwise)
   . multithreaing for time consuming stuff (async??)
