@@ -24,6 +24,8 @@ plan:
   . commandline flags
     . pass a flag for no-save mode
     . a flag for showcase mode or something?
+  /. add opts option to skip recompilation of musimanager (this way, no rust needed?)
+    /. make sure the musimanager.so file is in place, if not -> quit
   . some kinda undo system
     . create enum for supported actions
       . added, removed, position_changed?, 

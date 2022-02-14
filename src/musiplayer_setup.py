@@ -2,6 +2,7 @@
 
 import subprocess
 import os
+import opts
 
 def build_and_move():
     dir_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.path.pardir)
@@ -10,6 +11,10 @@ def build_and_move():
     if not os.path.exists(musiplayer_path):
         print("musiplayer code not found")
         quit()
+
+    if not opts.compile_on_every_boot:
+        if os.path.exists(os.path.join(dir_path, "src/musiplayer.so")):
+            return
 
     commands = f'''
     cd {musiplayer_path}

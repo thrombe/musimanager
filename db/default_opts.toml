@@ -33,3 +33,4 @@ debug_prints = false
 
 [player]
 seek_interval = 10 # seconds
+compile_on_every_boot = false # mostly needed for debugging/developing

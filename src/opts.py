@@ -51,6 +51,7 @@ disable_ascii_art = opts["ascii_art"]["disable_ascii_art"]
 enable_global_shortcuts = opts["global_shortcuts"]["enable_global_shortcuts"]
 pause_global_shortcut = opts["global_shortcuts"]["pause_global_shortcut"]
 seek_interval = opts["player"]["seek_interval"]
+compile_on_every_boot = opts["player"]["compile_on_every_boot"]
 
 # random options
 show_artist_name_besides_song_name = opts["random_options"]["show_artist_name_besides_song_name"]
@@ -73,10 +74,14 @@ import platform
 LUUNIX = platform.system() == "Linux"
 ASCII_ART = ((False or not LUUNIX) or force_ascii_art) and not disable_ascii_art
 
-import ytmusicapi
-# https://ytmusicapi.readthedocs.io/en/latest/setup.html
-ytmusic = ytmusicapi.YTMusic(auth=ytmusic_headers_path)
 
+ytmusic = None
+
+def load_ytmusic():
+    import ytmusicapi
+    # https://ytmusicapi.readthedocs.io/en/latest/setup.html
+    global ytmusic
+    ytmusic = ytmusicapi.YTMusic(auth=ytmusic_headers_path)
 
 
 for _, p in opts["paths"].items():
