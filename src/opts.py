@@ -2,8 +2,9 @@
 import toml
 import os
 
-default_opts_path = "/home/issac/0Git/musimanager/db/default_opts.toml"
-opts_path = "/home/issac/0Git/musimanager/db/opts.toml"
+dir_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.path.pardir)
+default_opts_path = os.path.join(dir_path, "db/default_opts.toml")
+opts_path = os.path.join(dir_path, "db/opts.toml")
 
 # default options are necessary to run
 if os.path.exists(default_opts_path):

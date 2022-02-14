@@ -4,9 +4,15 @@ import subprocess
 import os
 
 def build_and_move():
+    dir_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.path.pardir)
+    
+    musiplayer_path = os.path.join(dir_path, "musiplayer")
+    if not os.path.exists(musiplayer_path):
+        print("musiplayer code not found")
+        quit()
 
-    commands = '''
-    cd ./musiplayer
+    commands = f'''
+    cd {musiplayer_path}
     cargo build --release
     '''
 
@@ -19,9 +25,8 @@ def build_and_move():
     except:
         raise Exception("failed to compile musiplayer")
     
-    path1 = "./musiplayer/target/release/libmusiplayer.so"
-    res_path = "./src/musiplayer.so"
-
+    path1 = os.path.join(dir_path, "musiplayer/target/release/libmusiplayer.so")
+    res_path = os.path.join(dir_path, "src/musiplayer.so")
     if os.path.exists(path1):
         if os.path.exists(res_path): os.remove(res_path)
         os.rename(path1, res_path)
