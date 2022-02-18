@@ -59,6 +59,7 @@ show_hidden_in_file_explorer = opts["random_options"]["show_hidden_in_file_explo
 save_on_exit = opts["random_options"]["save_on_exit"]
 auto_search_albums = opts["random_options"]["auto_search_albums"]
 debug_prints = opts["random_options"]["debug_prints"]
+hide_ueberzug_album_art = opts["random_options"]["hide_ueberzug_album_art"]
 
 
 

@@ -24,12 +24,13 @@ disable_ascii_art = false
 enable_global_shortcuts = false # pip install pynput
 pause_global_shortcut = "<cmd>+<F10>" # meta + f10
 
-[random_options]
+[random_options] # toggle using "G" menu
 show_artist_name_besides_song_name = true
 show_hidden_in_file_explorer = false
 save_on_exit = true
 auto_search_albums = false
 debug_prints = false
+hide_ueberzug_album_art = false # only works if using this when ueberzug is being used
 
 [player]
 seek_interval = 10 # seconds

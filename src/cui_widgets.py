@@ -64,6 +64,14 @@ class PlayerWidget:
             self.print_song_metadata(self.player.current_song)
 
     def image_refresh(self):
+        # disable ueberzug album art while popups are up (as the image sits on top of the ui)
+        if not opts.LUUNIX or opts.ASCII_ART: return
+        if self.image_placement.path is None: return
+        if cui_handle.pycui._popup is not None:
+            if self.image_placement.visibility == ueberzug.Visibility.VISIBLE:
+                self.image_placement.visibility = ueberzug.Visibility.INVISIBLE
+            return
+
         # TODO: use these instead
         #   self.play_window.get_absolute_{start, stop}_pos() -> (x, y)
         #       or .get_start_position(), not sure
@@ -75,6 +83,13 @@ class PlayerWidget:
         a = self.image_placement.width - 2.1*self.image_placement.height
         if round(a/2) > 2: self.image_placement.x = round(a/2) + self.scroll_menu._start_x + self.border_padding_x - 1
         else: self.image_placement.x = self.scroll_menu._start_x + self.border_padding_x
+
+        if opts.hide_ueberzug_album_art and self.image_placement.visibility == ueberzug.Visibility.VISIBLE:
+            self.image_placement.visibility = ueberzug.Visibility.INVISIBLE
+        elif (not opts.hide_ueberzug_album_art) and self.image_placement.visibility == ueberzug.Visibility.INVISIBLE:
+            self.image_placement.visibility = ueberzug.Visibility.VISIBLE
+        elif opts.hide_ueberzug_album_art and self.image_placement.visibility == ueberzug.Visibility.INVISIBLE:
+            return
 
     def ascii_image_refresh(self):
         if self.player.current_song is None: return
@@ -153,7 +168,6 @@ class PlayerWidget:
 
         if not opts.ASCII_ART:
             self.image_placement.path = img_path
-            self.image_placement.visibility = ueberzug.Visibility.VISIBLE
 
     def print_song_metadata(self, song):
         x_blank = self.x_blank()
@@ -231,6 +245,8 @@ class BrowserWidget:
         # self.command_queue.append(cmd)
 
         cmd()
+        if any([cmd.__name__ == f.__name__ for f in [self.global_menu, self.filter, self.menu_for_selected, self.search, self.play_next, self.play_prev]]):
+            cui_handle.pycui._on_draw_update_func()
 
     def clear_commands_from_queue(self, cmds):
         i = 0

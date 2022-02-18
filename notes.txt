@@ -24,8 +24,6 @@ plan:
   . commandline flags
     . pass a flag for no-save mode
     . a flag for showcase mode or something?
-  /. add opts option to skip recompilation of musimanager (this way, no rust needed?)
-    /. make sure the musimanager.so file is in place, if not -> quit
   . some kinda undo system
     . create enum for supported actions
       . added, removed, position_changed?, 
@@ -47,9 +45,9 @@ plan:
   . check if the rust terminal ui libraries would be a good fit for the current structure of the project
     . maybe change to that instead of py_cui and use rest of the python code + modifications
     . maybe this way colored text (album art in text) is possible as py_cui dosen't play well with it
-  . shortcuts to change the position of items at any index
+  /. shortcuts to change the position of items at any index
     . shortcuts to move cursor at any index
-    . press a button and a text box pops up and takes in the index
+    /. press a button and a text box pops up and takes in the index
   . more layouts
     . if length > 2.2~~*width, stack widgets vertically instead of horizontally
     . if player_widget width > album_art width, shorten the player widget instead of centering it

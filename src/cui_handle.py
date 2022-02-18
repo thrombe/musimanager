@@ -64,11 +64,3 @@ class CUI_handle:
     def refresh(self):
         self.browser_widget.refresh()
         if not self.pycui._in_focused_mode: self.pycui.move_focus(self.browser_widget.scroll_menu) # hacky way to force focus on browser widget
-
-        # disable ueberzug album art while popups are up (as the image sits on top of the ui)
-        if not opts.LUUNIX or opts.ASCII_ART: return
-        if self.player_widget.image_placement.path is None: return
-        if self.pycui._popup is not None:
-            self.player_widget.image_placement.visibility = ueberzug.Visibility.INVISIBLE
-        elif self.player_widget.image_placement.visibility == ueberzug.Visibility.INVISIBLE:
-            self.player_widget.image_placement.visibility = ueberzug.Visibility.VISIBLE
