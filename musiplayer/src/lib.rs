@@ -2,7 +2,7 @@
 // https://pyo3.rs/latest/
 // https://docs.rs/pyo3/latest/pyo3/
 
-// use anyhow::Context;
+// use anyhow::{Result};
 
 use pyo3::prelude::{Python, PyModule, PyResult};
 use pyo3::{pymodule};
@@ -29,3 +29,9 @@ fn musiplayer(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Player>()?;
     Ok(())
 }
+
+// cant do pymethods in triat implementations
+// pub trait MusiPlayer {
+//     fn new() -> Self;
+//     fn position(&mut self) -> Result<u64>;
+// }

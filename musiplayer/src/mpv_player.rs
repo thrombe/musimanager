@@ -63,32 +63,6 @@ impl Player {
         }
     }
 
-    // pub fn loop_current_song(&mut self) {
-    //     let next_loop = match self.mpv.get_property::<&str>("loop-file") {
-    //         Ok(x) => {
-    //             if x == "inf" || x == "yes" {
-    //                 println!("Toggling loop off");
-    //                 "no"
-    //             } else if x == "no" || x == "1" {
-    //                 println!("Toggling loop on");
-    //                 "inf"
-    //             } else {
-    //                 panic!("Unexpected value for loop-file property")
-    //             }
-    //         }
-    //         Err(e) => panic!("{}", e),
-    //     };
-    //     self.mpv.set_property("loop-file", next_loop).expect(
-    //         "Toggling loop-file property",
-    //     );
-    // }
-
-    // pub fn queue(&mut self, new: String) {
-    //     self.mpv
-    //         .command(&["loadfile", &new, "append-play"])
-    //         .expect("Error loading file");
-    // }
-
     // pub fn seek_percentage(&mut self, t: f32) -> Result<()> {
     //     self.clear_event_loop();
     //     self.mpv.command(&["seek", &t.to_string(), "absolute-percent"])?;
@@ -128,20 +102,9 @@ impl Player {
         self.mpv.get_property::<f64>("time-remaining").ok()
     }
 
-    // fn paused_for_cache(&self) -> bool {
-    //     self.mpv.get_property::<bool>("paused-for-cache").unwrap_or(false)
-    // }
-    
     fn percent_pos(&self) -> f64 {
         self.mpv.get_property::<f64>("percent-pos").unwrap_or(0.0)*0.01
     }
-
-    // fn is_not_started_or_is_finished(&self) -> bool {
-    //     match self.mpv.get_property::<f64>("percent-pos") {
-    //         Ok(_) => false,
-    //         Err(_) => true,
-    //     }
-    // }
 
     fn reset_vars(&mut self) {
         self.started = false;
