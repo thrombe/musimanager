@@ -1,7 +1,11 @@
 # how to use
 - ```pip install -r requirements.txt```
   - optional global shortcuts: ```pip install pynput==1.7.5```
-- install [gstreamer](https://github.com/sdroege/gstreamer-rs#installation)
+  - optional ascii art: ```pip install ascii-magic```
+- for desktops: install [gstreamer](https://github.com/sdroege/gstreamer-rs#installation)
+- for android (termux): install mpv
+  - ```apt/pgk install mpv```
+  - you might have to ```apt install openssl-1.1```
 - install [rust](https://www.rust-lang.org/tools/install)
 - clone repo
 - (skipable) set up the config file

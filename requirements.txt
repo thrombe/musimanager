@@ -1,10 +1,9 @@
 ytmusicapi
 py_cui
 wcwidth
-ascii-magic
 serde
 phrydy
 numpy
 yt-dlp
 toml
-ueberzug; sys_platform == 'linux'
+ueberzug; sys_platform == 'linux'and platform_machine == "x86_64"

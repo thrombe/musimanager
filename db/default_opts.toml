@@ -18,7 +18,7 @@ search_exts = ["mp3", "m4a", "flac", "ogg"]
 
 [ascii_art]
 force_ascii_art = false # linux only (cuz theres ueberzug too)
-disable_ascii_art = false
+disable_ascii_art = true # disabled cuz its crashing with some error which i don't wanna debug rn
 
 [global_shortcuts]
 enable_global_shortcuts = false # pip install pynput
