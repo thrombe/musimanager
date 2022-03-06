@@ -93,9 +93,11 @@ class PlayerWidget:
 
     def ascii_image_refresh(self):
         if self.player.current_song is None: return
+        img_path = opts.temp_dir + "img.png"
+        if not os.path.exists(img_path): return
         x_blank = self.x_blank()
         center = lambda text: int((x_blank-len(text))/2)*" "+text
-        img = Image.open(opts.temp_dir+"img.png")
+        img = Image.open(img_path)
         columns = min(
             x_blank,
             round(2.2 * (self.y_blank() - self.lines_of_song_info + 1)),
@@ -166,7 +168,7 @@ class PlayerWidget:
         img_path = opts.temp_dir + "img.png"
         img.save(img_path)
 
-        if not opts.ASCII_ART:
+        if not opts.ASCII_ART and self.image_placement is not None:
             self.image_placement.path = img_path
 
     def print_song_metadata(self, song):
