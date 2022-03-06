@@ -17,7 +17,7 @@ class NewpipeDBHandler:
 
     def get_latest_zip_path(self):
         for directory, subdir, files in os.walk(self.bkup_directory):
-            files = [directory+file for file in files]
+            files = [os.path.join(directory, file) for file in files]
             files.sort(key = os.path.getctime, reverse = True)
             # files.sort(key = os.path.getmtime, reverse = True)
             for file in files:
@@ -27,7 +27,7 @@ class NewpipeDBHandler:
 
     def extract_from_zip(self):
         zip_path = self.get_latest_zip_path()
-        if zip_path is None: {}
+        if zip_path is None or zip_path.endswith("zip"): return {}
         input_zip = ZipFile(zip_path)
         newpipe_db = {name: input_zip.read(name) for name in input_zip.namelist()}["newpipe.db"]
         db_path = self.bkup_directory+"newpipe.db"
