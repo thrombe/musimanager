@@ -9,6 +9,7 @@ use mpv;
 
 #[pyclass]
 pub struct Player {
+    // mpv never seems to not return stuff when it should. unlike gst_player
     pub mpv: mpv::MpvHandler,
     finished: bool,
     url: Option<String>,
@@ -93,21 +94,6 @@ impl Player {
     //     Ok(())
     // }
 
-    fn block_till_song_ready(&self) {
-        while self.duration_option().is_none() {}
-    }
-
-    pub fn play(&mut self, url: String) -> Result<()> {
-        self.clear_event_loop();
-
-        self.finished = false;
-        self.dur = None;
-        self.pos = 0.0;
-        self.mpv.command(&["loadfile", &url, "replace"])?;
-        self.url = Some(url);
-        Ok(())
-    }
-
     pub fn stop(&mut self) -> Result<()> {
         self.clear_event_loop();
         self.mpv.command(&["stop"])?;
@@ -128,31 +114,55 @@ impl Player {
         self.clear_event_loop();
         Ok(self.mpv.get_property::<bool>("pause")?)
     }
-
-    pub fn seek(&mut self, t: f64) -> Result<()> {
-        self.clear_event_loop();
-
-        if self.url.is_some() {
-            if self.duration_option().is_none() {
-                if self.dur.is_none() {
-                    self.block_till_song_ready();
-                } else {
-                    self.play(self.url.as_ref().unwrap().clone())?;
-                    self.block_till_song_ready();
-                    self.seek(self.pos+t)?;
-                }
-            }
-            self.mpv.command(&["seek", &t.to_string()])?;
-        }
-        Ok(())
-    }
-
+    
     pub fn toggle_pause(&mut self) -> Result<()> {
         self.clear_event_loop();
         if self.is_paused()? {
             self.unpause()?;
         } else {
             self.pause()?;
+        }
+        Ok(())
+    }
+
+    fn duration_option(&self) -> Option<f64> {
+        self.mpv.get_property::<f64>("duration").ok()
+    }
+
+    fn position_option(&mut self) -> Option<f64> {
+        self.mpv.get_property::<f64>("time-remaining").ok()
+    }
+
+    fn block_till_song_ready(&self) {
+        if self.finished || self.dur.is_some() || self.url.is_none() {return}
+        while self.duration_option().is_none() {}
+    }
+
+    pub fn play(&mut self, url: String) -> Result<()> {
+        self.clear_event_loop();
+
+        self.finished = false;
+        self.dur = None;
+        self.pos = 0.0;
+        self.mpv.command(&["loadfile", &url, "replace"])?;
+        self.url = Some(url);
+        Ok(())
+    }
+
+    pub fn seek(&mut self, t: f64) -> Result<()> {
+        self.clear_event_loop();
+
+        if self.url.is_some() { // url is sent to mpv
+            if self.duration_option().is_none() {
+                if self.dur.is_none() { // song is not ready yet, its probably too soon
+                    self.block_till_song_ready();
+                } else { // its too late, song ended
+                    self.play(self.url.as_ref().unwrap().clone())?;
+                    self.block_till_song_ready();
+                    self.seek(self.pos+t)?;
+                }
+            }
+            self.mpv.command(&["seek", &t.to_string()])?;
         }
         Ok(())
     }
@@ -170,26 +180,12 @@ impl Player {
             },
             Some(p) => p,
         };
-        let dur = match self.duration_option() {
-            None => {
-                self.maybe_mark_finished();
-                return 0.0
-            },
-            Some(d) => d,
-        };
+        let dur = self.duration(); // rem returned Some, so duration should return Some too
         dur - rem
     }
 
-    fn duration_option(&self) -> Option<f64> {
-        self.mpv.get_property::<f64>("duration").ok()
-    }
-
-    fn position_option(&mut self) -> Option<f64> {
-        self.mpv.get_property::<f64>("time-remaining").ok()
-    }
-
     fn maybe_mark_finished(&mut self) {
-        if self.dur.is_some() {
+        if self.dur.is_some() && self.duration_option().is_none() {
             self.finished = true;
         }
     }
@@ -197,9 +193,11 @@ impl Player {
     pub fn duration(&mut self) -> f64 {
         self.clear_event_loop();
 
-        let dur = self.duration_option().unwrap_or(f64::MAX);
-        if dur != f64::MAX {
-            self.dur = Some(dur);
+        let dur = self.duration_option();
+        if dur.is_some() {
+            self.dur = dur;
+        } else {
+            self.maybe_mark_finished();
         }
         *self.dur.as_ref().unwrap_or(&0.0)
     }
@@ -214,7 +212,8 @@ impl Player {
 
     pub fn is_finished(&mut self) -> bool {
         self.clear_event_loop();
-
+        
+        self.maybe_mark_finished();
         self.finished
     }
 }
