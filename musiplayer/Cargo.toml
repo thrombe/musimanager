@@ -20,8 +20,10 @@ mpv = {version = "0.2.3", optional = true}
 libmpv = {version = "2.0", optional = true}
 
 [dependencies.pyo3]
-version = "0.15.1"
-features = ["extension-module", "serde", "anyhow"]
+version = "0.16"
+# docs say "extension-module" feature is also required for building python extension module. but no probs so far without it
+# https://pyo3.rs/main/features.html
+features = ["serde", "anyhow"]
 
 [features]
 # default = ["player-gst", "force"]

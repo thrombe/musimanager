@@ -57,25 +57,25 @@ impl Player {
         }
     }
 
-    pub fn loop_current_song(&mut self) {
-        let next_loop = match self.mpv.get_property::<&str>("loop-file") {
-            Ok(x) => {
-                if x == "inf" || x == "yes" {
-                    println!("Toggling loop off");
-                    "no"
-                } else if x == "no" || x == "1" {
-                    println!("Toggling loop on");
-                    "inf"
-                } else {
-                    panic!("Unexpected value for loop-file property")
-                }
-            }
-            Err(e) => panic!("{}", e),
-        };
-        self.mpv.set_property("loop-file", next_loop).expect(
-            "Toggling loop-file property",
-        );
-    }
+    // pub fn loop_current_song(&mut self) {
+    //     let next_loop = match self.mpv.get_property::<&str>("loop-file") {
+    //         Ok(x) => {
+    //             if x == "inf" || x == "yes" {
+    //                 println!("Toggling loop off");
+    //                 "no"
+    //             } else if x == "no" || x == "1" {
+    //                 println!("Toggling loop on");
+    //                 "inf"
+    //             } else {
+    //                 panic!("Unexpected value for loop-file property")
+    //             }
+    //         }
+    //         Err(e) => panic!("{}", e),
+    //     };
+    //     self.mpv.set_property("loop-file", next_loop).expect(
+    //         "Toggling loop-file property",
+    //     );
+    // }
 
     // pub fn queue(&mut self, new: String) {
     //     self.mpv
@@ -110,14 +110,15 @@ impl Player {
         Ok(self.mpv.get_property::<bool>("pause")?)
     }
 
-    pub fn seek(&mut self, t: i32) -> Result<()> {
+    pub fn seek(&mut self, t: f64) -> Result<()> {
         self.clear_event_loop();
         Ok(self.mpv.command(&["seek", &t.to_string()])?)
     }
 
-    pub fn seek_percentage(&mut self, t: f32) {
+    pub fn seek_percentage(&mut self, t: f32) -> Result<()> {
         self.clear_event_loop();
-        self.mpv.command(&["seek", &t.to_string(), "absolute-percent"]).expect("lol");
+        self.mpv.command(&["seek", &t.to_string(), "absolute-percent"])?;
+        Ok(())
     }
 
     pub fn toggle_pause(&mut self) -> Result<()> {
@@ -130,25 +131,25 @@ impl Player {
         Ok(())
     }
 
-    pub fn position(&mut self) -> Result<f64> {
+    pub fn position(&mut self) -> f64 {
         self.clear_event_loop();
-        let dur = self.duration()?;
-        if dur > 99999999998.0 {return Ok(0.0)}
-        Ok(dur - self.mpv.get_property::<f64>("time-remaining").unwrap_or(0.0))
+        let dur = self.duration();
+        if dur > 99999999998.0 {return 0.0}
+        dur - self.mpv.get_property::<f64>("time-remaining").unwrap_or(0.0)
     }
 
-    pub fn duration(&mut self) -> Result<f64> {
+    pub fn duration(&mut self) -> f64 {
         self.clear_event_loop();
-        Ok(self.mpv.get_property::<f64>("duration").unwrap_or(99999999999.0))
+        self.mpv.get_property::<f64>("duration").unwrap_or(99999999999.0)
     }
 
-    pub fn progress(&mut self) -> Result<f64> {
+    pub fn progress(&mut self) -> f64 {
         self.clear_event_loop();
-        Ok(self.position()?/self.duration()?)
+        self.position()/self.duration()
     }
 
-    pub fn is_finished(&mut self) -> Result<bool> {
+    pub fn is_finished(&mut self) -> bool {
         self.clear_event_loop();
-        Ok(0.01 > 1.0 - self.progress()?)
+        0.5 > self.duration() - self.position() // last 0.5 secs ignored
     }
 }

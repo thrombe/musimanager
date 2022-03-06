@@ -18,7 +18,7 @@ class CUI_handle:
 
     def setup(self):
         if opts.ANDROID_64:
-            self.pycui = py_cui.PyCUI(4, 1)
+            self.pycui = py_cui.PyCUI(8, 1)
         else:
             self.pycui = py_cui.PyCUI(1, 2)
         global pycui 
@@ -40,7 +40,7 @@ class CUI_handle:
                 self.pycui.add_scroll_menu('Player', row=0, column=0, row_span=1, column_span=1, padx = 1, pady = 0)
                 )
             self.browser_widget = cui_widgets.BrowserWidget(
-                self.pycui.add_scroll_menu('Browser',  row=1, column=0, row_span=3, column_span=1, padx = 1, pady = 0),
+                self.pycui.add_scroll_menu('Browser',  row=1, column=0, row_span=7, column_span=1, padx = 1, pady = 0),
                 self.player_widget,
                 )
         else:
