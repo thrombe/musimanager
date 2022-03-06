@@ -12,6 +12,7 @@ pub struct Player {
     // mpv never seems to not return stuff when it should. unlike gst_player
     pub mpv: mpv::MpvHandler,
     finished: bool,
+    started: bool,
     url: Option<String>,
     dur: Option<f64>,
     pos: f64,
@@ -35,7 +36,7 @@ impl Player {
         mpv.set_option("vo", "null").expect(
             "Couldn't set vo=null in libmpv",
         );
-        let mut p = Player {mpv, url: None, finished: false, pos: 0.0, dur: None};
+        let mut p = Player {mpv, url: None, finished: false, pos: 0.0, dur: None, started: false};
         p.clear_event_loop();
         p
     }
@@ -94,12 +95,6 @@ impl Player {
     //     Ok(())
     // }
 
-    pub fn stop(&mut self) -> Result<()> {
-        self.clear_event_loop();
-        self.mpv.command(&["stop"])?;
-        Ok(())
-    }
-
     pub fn pause(&mut self) -> Result<()> {
         self.clear_event_loop();
         Ok(self.mpv.set_property("pause", true)?)
@@ -133,87 +128,117 @@ impl Player {
         self.mpv.get_property::<f64>("time-remaining").ok()
     }
 
-    fn block_till_song_ready(&self) {
-        if self.finished || self.dur.is_some() || self.url.is_none() {return}
-        while self.duration_option().is_none() {}
+    // fn paused_for_cache(&self) -> bool {
+    //     self.mpv.get_property::<bool>("paused-for-cache").unwrap_or(false)
+    // }
+    
+    fn percent_pos(&self) -> f64 {
+        self.mpv.get_property::<f64>("percent-pos").unwrap_or(0.0)*0.01
     }
 
-    pub fn play(&mut self, url: String) -> Result<()> {
-        self.clear_event_loop();
+    // fn is_not_started_or_is_finished(&self) -> bool {
+    //     match self.mpv.get_property::<f64>("percent-pos") {
+    //         Ok(_) => false,
+    //         Err(_) => true,
+    //     }
+    // }
 
+    fn reset_vars(&mut self) {
+        self.started = false;
         self.finished = false;
         self.dur = None;
         self.pos = 0.0;
-        self.mpv.command(&["loadfile", &url, "replace"])?;
-        self.url = Some(url);
+    }
+
+    pub fn stop(&mut self) -> Result<()> {
+        self.clear_event_loop();
+        
+        self.reset_vars();
+        self.mpv.command(&["stop"])?;
         Ok(())
     }
 
-    pub fn seek(&mut self, t: f64) -> Result<()> {
-        self.clear_event_loop();
-
-        if self.url.is_some() { // url is sent to mpv
-            if self.duration_option().is_none() {
-                if self.dur.is_none() { // song is not ready yet, its probably too soon
-                    self.block_till_song_ready();
-                } else { // its too late, song ended
-                    self.play(self.url.as_ref().unwrap().clone())?;
-                    self.block_till_song_ready();
-                    self.seek(self.pos+t)?;
+    pub fn play(&mut self, url: String) -> Result<()> {
+        self.reset_vars();
+        self.mpv.command(&["loadfile", &url, "replace"])?;
+        self.url = Some(url);
+        
+        // assuming that it never not returns stuff till its done playing
+        // blocking till the player is ready
+        'loup: loop {
+            while let Some(event) = self.mpv.wait_event(0.0) {
+                match event {
+                    mpv::Event::Shutdown | mpv::Event::Idle => {
+                        panic!("could not play song");
+                    }
+                    mpv::Event::PlaybackRestart => {
+                        break 'loup;
+                    }
+                    _ => (),
                 }
             }
-            self.mpv.command(&["seek", &t.to_string()])?;
         }
+        self.started = true;
+        self.dur = Some(self.duration_option().unwrap());
+
+        self.clear_event_loop();
+        Ok(())
+    }
+
+    pub fn seek(&mut self, mut t: f64) -> Result<()> {
+        if !self.started {return Ok(())}
+        if self.is_finished() {
+            if t > 0.0 {
+                return Ok(());
+            }
+            self.play(self.url.as_ref().unwrap().clone())?;
+            t += self.duration();
+        }
+        self.mpv.command(&["seek", &t.to_string()])?;
         Ok(())
     }
 
     pub fn position(&mut self) -> f64 {
-        self.clear_event_loop();
+        if !self.started {
+            return self.pos;
+        }
 
-        if self.finished {
+        if self.is_finished() {
             return self.duration();
         }
-        let rem = match self.position_option() {
-            None => {
-                self.maybe_mark_finished();
-                return 0.0
-            },
-            Some(p) => p,
-        };
-        let dur = self.duration(); // rem returned Some, so duration should return Some too
-        dur - rem
-    }
+        let rem = self.position_option().unwrap();
+        let dur = self.duration();
 
-    fn maybe_mark_finished(&mut self) {
-        if self.dur.is_some() && self.duration_option().is_none() {
-            self.finished = true;
-        }
+        self.pos = dur - rem;
+        self.pos
     }
 
     pub fn duration(&mut self) -> f64 {
         self.clear_event_loop();
 
-        let dur = self.duration_option();
-        if dur.is_some() {
-            self.dur = dur;
-        } else {
-            self.maybe_mark_finished();
+        if !self.started {
+            return f64::MAX;
         }
-        *self.dur.as_ref().unwrap_or(&0.0)
+        *self.dur.as_ref().unwrap()
     }
 
     pub fn progress(&mut self) -> f64 {
-        self.clear_event_loop();
-
-        // let progress = self.pos/self.dur.unwrap_or(f64::MAX);
-        let new_prog = self.position()/self.duration();
-        new_prog
+        if self.is_finished() {
+            1.0
+        } else {
+            self.percent_pos()
+        }
     }
 
     pub fn is_finished(&mut self) -> bool {
         self.clear_event_loop();
         
-        self.maybe_mark_finished();
-        self.finished
+        if !self.started {return false;}
+        if self.dur.is_some() && self.duration_option().is_none() {
+            self.finished = true;
+            true
+        } else {
+            false
+        }
     }
 }
