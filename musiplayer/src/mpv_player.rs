@@ -4,13 +4,17 @@ use pyo3::{pyclass, pymethods};
 use anyhow::Result;
 // use pyo3::PyResult as Result;
 
+// https://docs.rs/mpv/0.2.3/mpv/enum.Event.html
 use mpv;
 
 #[pyclass]
 pub struct Player {
     pub mpv: mpv::MpvHandler,
+    finished: bool,
+    url: Option<String>,
+    dur: Option<f64>,
+    pos: f64,
 }
-// https://docs.rs/mpv/0.2.3/mpv/enum.Event.html
 
 unsafe impl Send for Player {}
 unsafe impl Sync for Player {}
@@ -30,7 +34,7 @@ impl Player {
         mpv.set_option("vo", "null").expect(
             "Couldn't set vo=null in libmpv",
         );
-        let mut p = Player {mpv};
+        let mut p = Player {mpv, url: None, finished: false, pos: 0.0, dur: None};
         p.clear_event_loop();
         p
     }
@@ -83,9 +87,24 @@ impl Player {
     //         .expect("Error loading file");
     // }
 
-    pub fn play(&mut self, new: &str) -> Result<()> {
+    // pub fn seek_percentage(&mut self, t: f32) -> Result<()> {
+    //     self.clear_event_loop();
+    //     self.mpv.command(&["seek", &t.to_string(), "absolute-percent"])?;
+    //     Ok(())
+    // }
+
+    fn block_till_song_ready(&self) {
+        while self.duration_option().is_none() {}
+    }
+
+    pub fn play(&mut self, url: String) -> Result<()> {
         self.clear_event_loop();
-        self.mpv.command(&["loadfile", &new, "replace"])?;
+
+        self.finished = false;
+        self.dur = None;
+        self.pos = 0.0;
+        self.mpv.command(&["loadfile", &url, "replace"])?;
+        self.url = Some(url);
         Ok(())
     }
 
@@ -112,12 +131,19 @@ impl Player {
 
     pub fn seek(&mut self, t: f64) -> Result<()> {
         self.clear_event_loop();
-        Ok(self.mpv.command(&["seek", &t.to_string()])?)
-    }
 
-    pub fn seek_percentage(&mut self, t: f32) -> Result<()> {
-        self.clear_event_loop();
-        self.mpv.command(&["seek", &t.to_string(), "absolute-percent"])?;
+        if self.url.is_some() {
+            if self.duration_option().is_none() {
+                if self.dur.is_none() {
+                    self.block_till_song_ready();
+                } else {
+                    self.play(self.url.as_ref().unwrap().clone())?;
+                    self.block_till_song_ready();
+                    self.seek(self.pos+t)?;
+                }
+            }
+            self.mpv.command(&["seek", &t.to_string()])?;
+        }
         Ok(())
     }
 
@@ -133,23 +159,62 @@ impl Player {
 
     pub fn position(&mut self) -> f64 {
         self.clear_event_loop();
-        let dur = self.duration();
-        if dur > 99999999998.0 {return 0.0}
-        dur - self.mpv.get_property::<f64>("time-remaining").unwrap_or(0.0)
+
+        if self.finished {
+            return self.duration();
+        }
+        let rem = match self.position_option() {
+            None => {
+                self.maybe_mark_finished();
+                return 0.0
+            },
+            Some(p) => p,
+        };
+        let dur = match self.duration_option() {
+            None => {
+                self.maybe_mark_finished();
+                return 0.0
+            },
+            Some(d) => d,
+        };
+        dur - rem
+    }
+
+    fn duration_option(&self) -> Option<f64> {
+        self.mpv.get_property::<f64>("duration").ok()
+    }
+
+    fn position_option(&mut self) -> Option<f64> {
+        self.mpv.get_property::<f64>("time-remaining").ok()
+    }
+
+    fn maybe_mark_finished(&mut self) {
+        if self.dur.is_some() {
+            self.finished = true;
+        }
     }
 
     pub fn duration(&mut self) -> f64 {
         self.clear_event_loop();
-        self.mpv.get_property::<f64>("duration").unwrap_or(99999999999.0)
+
+        let dur = self.duration_option().unwrap_or(f64::MAX);
+        if dur != f64::MAX {
+            self.dur = Some(dur);
+        }
+        *self.dur.as_ref().unwrap_or(&0.0)
     }
 
     pub fn progress(&mut self) -> f64 {
         self.clear_event_loop();
-        self.position()/self.duration()
+
+        // let progress = self.pos/self.dur.unwrap_or(f64::MAX);
+        let new_prog = self.position()/self.duration();
+        new_prog
     }
 
     pub fn is_finished(&mut self) -> bool {
         self.clear_event_loop();
-        0.5 > self.duration() - self.position() // last 0.5 secs ignored
+
+        self.finished
     }
 }
