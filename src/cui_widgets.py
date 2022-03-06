@@ -16,7 +16,7 @@ import musiplayer
 
 if opts.enable_global_shortcuts: import pynput
 if opts.ASCII_ART: import ascii_magic
-if opts.LUUNIX: import ueberzug.lib.v0 as ueberzug
+if opts.LUUNIX_X86_64: import ueberzug.lib.v0 as ueberzug
 
 class Player:
     def __init__(self):
@@ -59,13 +59,13 @@ class PlayerWidget:
     def refresh(self):
         self.scroll_menu.clear()
         if opts.ASCII_ART: self.ascii_image_refresh()
-        elif opts.LUUNIX: self.image_refresh()
+        elif opts.LUUNIX_X86_64: self.image_refresh()
         if self.player.current_song is not None:
             self.print_song_metadata(self.player.current_song)
 
     def image_refresh(self):
         # disable ueberzug album art while popups are up (as the image sits on top of the ui)
-        if not opts.LUUNIX or opts.ASCII_ART: return
+        if not opts.LUUNIX_X86_64 or opts.ASCII_ART: return
         if self.image_placement.path is None: return
         if cui_handle.pycui._popup is not None:
             if self.image_placement.visibility == ueberzug.Visibility.VISIBLE:
@@ -174,7 +174,7 @@ class PlayerWidget:
         # center = lambda text: int((x_blank-len(text))/2)*" "+text
         # right = lambda text: int(x_blank-int(len(text)))*" "+text
         center = lambda text: helpers.fit_text(x_blank, helpers.pad_zwsp(text), center=True)
-        if opts.LUUNIX and not opts.ASCII_ART:
+        if opts.LUUNIX_X86_64 and not opts.ASCII_ART:
             blank = min(
                 self.y_blank() - self.lines_of_song_info,
                 int(1/2.1 * (x_blank)),

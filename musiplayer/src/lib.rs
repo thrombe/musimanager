@@ -9,14 +9,15 @@
 use pyo3::prelude::{Python, PyModule, PyResult};
 use pyo3::{pymodule};
 
-#[cfg(feature = "player-gst")]
+
+#[cfg(any(all(feature = "player-gst", feature = "force"), all(target_os = "linux", target_arch = "x86_64")))]
 mod gst_player;
-#[cfg(feature = "player-gst")]
+#[cfg(any(all(feature = "player-gst", feature = "force"), all(target_os = "linux", target_arch = "x86_64")))]
 use gst_player::{Player};
 
-#[cfg(feature = "player-mpv")]
+#[cfg(any(all(feature = "player-mpv", feature = "force"), all(target_os = "android", target_arch = "aarch64")))]
 mod mpv_player;
-#[cfg(feature = "player-mpv")]
+#[cfg(any(all(feature = "player-mpv", feature = "force"), all(target_os = "android", target_arch = "aarch64")))]
 use mpv_player::{Player};
 
 #[cfg(feature = "player-libmpv")]

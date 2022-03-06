@@ -72,8 +72,9 @@ temp_dir = musimanager_directory + ".temp/"
 
 default_album_art = musimanager_directory + "img.png"
 import platform
-LUUNIX = platform.system() == "Linux"
-ASCII_ART = ((False or not LUUNIX) or force_ascii_art) and not disable_ascii_art
+LUUNIX_X86_64 = platform.system() == "Linux" and os.uname().machine == "x86_64"
+ANDROID_64 = os.uname().machine == "aarch64"
+ASCII_ART = ((False or not LUUNIX_X86_64) or force_ascii_art) and not disable_ascii_art
 
 
 ytmusic = None
@@ -100,3 +101,7 @@ if not os.path.exists(opts_path):
 # the values for removed items will be picked up from the default config file
 """)
         f.write(d)
+
+if not os.path.exists(default_album_art):
+    from PIL import Image
+    Image.new("RGB", (64, 64)).save(default_album_art, "PNG")

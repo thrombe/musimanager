@@ -12,23 +12,29 @@ crate-type = ["cdylib"]
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+anyhow = "1.0"
+
 gstreamer = {version = "0.17", optional = true}
 gstreamer-player = {version = "0.17", optional = true}
 mpv = {version = "0.2.3", optional = true}
 libmpv = {version = "2.0", optional = true}
-anyhow = "1.0"
-
-
 
 [dependencies.pyo3]
 version = "0.15.1"
 features = ["extension-module", "serde", "anyhow"]
 
-
 [features]
-default = ["player-gst"]
-# default = ["player-mpv"]
-# default = ["player-libmpv"]
+# default = ["player-gst", "force"]
+# default = ["player-mpv", "force]
+# default = ["player-libmpv", "force]
+force = []
 player-mpv = ["mpv"]
 player-gst = ["gstreamer-player", "gstreamer"]
 player-libmpv = ["libmpv"] # didn't impliment this one yet
+
+[target.'cfg(all(target_os = "linux", target_arch = "x86_64"))'.dependencies]
+gstreamer = {version = "0.17"}
+gstreamer-player = {version = "0.17"}
+
+[target.'cfg(all(target_os = "android", target_arch = "aarch64"))'.dependencies]
+mpv = {version = "0.2.3"}

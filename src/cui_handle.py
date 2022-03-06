@@ -6,7 +6,7 @@ import py_cui
 import opts
 import cui_widgets
 
-if opts.LUUNIX: import ueberzug.lib.v0 as ueberzug
+if opts.LUUNIX_X86_64: import ueberzug.lib.v0 as ueberzug
 
 pycui = None
 
@@ -17,7 +17,10 @@ class CUI_handle:
         self.browser_widget = None
 
     def setup(self):
-        self.pycui = py_cui.PyCUI(1, 2)
+        if opts.ANDROID_64:
+            self.pycui = py_cui.PyCUI(4, 1)
+        else:
+            self.pycui = py_cui.PyCUI(1, 2)
         global pycui 
         pycui = self.pycui # to make it accessible globally
         self.pycui.toggle_unicode_borders()
@@ -32,11 +35,22 @@ class CUI_handle:
             # picui.set_border_color()
             # picui.set_focus_border_color()
 
-        self.player_widget = cui_widgets.PlayerWidget(self.pycui.add_scroll_menu('Player', 0, 1, row_span=1, column_span=1, padx = 1, pady = 0))
-        self.browser_widget = cui_widgets.BrowserWidget(
-            self.pycui.add_scroll_menu('Browser',  0, 0, row_span=1, column_span=1, padx = 1, pady = 0),
-            self.player_widget,
-            )
+        if opts.ANDROID_64:
+            self.player_widget = cui_widgets.PlayerWidget(
+                self.pycui.add_scroll_menu('Player', row=0, column=0, row_span=1, column_span=1, padx = 1, pady = 0)
+                )
+            self.browser_widget = cui_widgets.BrowserWidget(
+                self.pycui.add_scroll_menu('Browser',  row=1, column=0, row_span=3, column_span=1, padx = 1, pady = 0),
+                self.player_widget,
+                )
+        else:
+            self.player_widget = cui_widgets.PlayerWidget(
+                self.pycui.add_scroll_menu('Player', 0, 1, row_span=1, column_span=1, padx = 1, pady = 0)
+                )
+            self.browser_widget = cui_widgets.BrowserWidget(
+                self.pycui.add_scroll_menu('Browser',  0, 0, row_span=1, column_span=1, padx = 1, pady = 0),
+                self.player_widget,
+                )
 
         self.player_widget.setup()
         self.browser_widget.setup()
@@ -53,7 +67,7 @@ class CUI_handle:
     def start(self):
         if getattr(self, "pycui", None) is None: self.setup()
 
-        if opts.LUUNIX and not opts.ASCII_ART:
+        if opts.LUUNIX_X86_64 and not opts.ASCII_ART:
             with ueberzug.Canvas() as canvas:
                 self.player_widget.image_placement = canvas.create_placement('album_art', scaler=ueberzug.ScalerOption.FIT_CONTAIN.value)
                 self.player_widget.image_placement.visibility = ueberzug.Visibility.INVISIBLE
