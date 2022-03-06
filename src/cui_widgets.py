@@ -210,8 +210,8 @@ class BrowserWidget:
 
     def setup(self):
         self.commands = [
-            (py_cui.keys.KEY_Q_LOWER, self.quit),
-            (py_cui.keys.KEY_Q_UPPER, cui_handle.pycui.stop), # quit without save
+            (py_cui.keys.KEY_Q_LOWER, self.save_quit),
+            (py_cui.keys.KEY_Q_UPPER, self.quit),
             (py_cui.keys.KEY_RIGHT_ARROW, self.try_load_right),
             (py_cui.keys.KEY_LEFT_ARROW, self.try_load_left),
             (py_cui.keys.KEY_P_LOWER, self.player_widget.player.toggle_pause),
@@ -259,8 +259,12 @@ class BrowserWidget:
             else:
                 i += 1
 
-    def quit(self):
+    def save_quit(self):
         self.save()
+        self.quit()
+
+    def quit(self):
+        self.player_widget.player.playback_handle.stop()
         cui_handle.pycui.stop()
 
     def save(self):

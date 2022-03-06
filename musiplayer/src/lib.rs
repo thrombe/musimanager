@@ -2,22 +2,20 @@
 // https://pyo3.rs/latest/
 // https://docs.rs/pyo3/latest/pyo3/
 
-// https://gstreamer.pages.freedesktop.org/gstreamer-rs/stable/latest/docs/gstreamer_player/struct.Player.html
-
 // use anyhow::Context;
 
 use pyo3::prelude::{Python, PyModule, PyResult};
 use pyo3::{pymodule};
 
 
-#[cfg(any(all(feature = "player-gst", feature = "force"), all(target_os = "linux", target_arch = "x86_64")))]
+#[cfg(any(all(feature = "player-gst", feature = "force"), all(target_os = "linux", target_arch = "x86_64", not(feature = "force"))))]
 mod gst_player;
-#[cfg(any(all(feature = "player-gst", feature = "force"), all(target_os = "linux", target_arch = "x86_64")))]
+#[cfg(any(all(feature = "player-gst", feature = "force"), all(target_os = "linux", target_arch = "x86_64", not(feature = "force"))))]
 use gst_player::{Player};
 
-#[cfg(any(all(feature = "player-mpv", feature = "force"), all(target_os = "android", target_arch = "aarch64")))]
+#[cfg(any(all(feature = "player-mpv", feature = "force"), all(target_os = "android", target_arch = "aarch64", not(feature = "force"))))]
 mod mpv_player;
-#[cfg(any(all(feature = "player-mpv", feature = "force"), all(target_os = "android", target_arch = "aarch64")))]
+#[cfg(any(all(feature = "player-mpv", feature = "force"), all(target_os = "android", target_arch = "aarch64", not(feature = "force"))))]
 use mpv_player::{Player};
 
 #[cfg(feature = "player-libmpv")]

@@ -132,17 +132,19 @@ impl Player {
 
     pub fn position(&mut self) -> Result<f64> {
         self.clear_event_loop();
-        Ok(self.mpv.get_property::<f64>("time-remaining").unwrap_or(0.0))
+        let dur = self.duration()?;
+        if dur > 99999999998.0 {return Ok(0.0)}
+        Ok(dur - self.mpv.get_property::<f64>("time-remaining").unwrap_or(0.0))
     }
 
     pub fn duration(&mut self) -> Result<f64> {
         self.clear_event_loop();
-        Ok(self.mpv.get_property::<f64>("duration").unwrap_or(9999.0))
+        Ok(self.mpv.get_property::<f64>("duration").unwrap_or(99999999999.0))
     }
 
     pub fn progress(&mut self) -> Result<f64> {
         self.clear_event_loop();
-        Ok(1.0 - self.position()?/self.duration()?)
+        Ok(self.position()?/self.duration()?)
     }
 
     pub fn is_finished(&mut self) -> Result<bool> {
