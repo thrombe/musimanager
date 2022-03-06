@@ -8,6 +8,7 @@ src/olb/
 
 musiplayer.so
 src/test.py
+musiplayer/src/main.rs
 target/
 .env
 __pycache__
