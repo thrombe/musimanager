@@ -8,9 +8,9 @@ use pyo3::prelude::{Python, PyModule, PyResult};
 use pyo3::{pymodule};
 
 
-#[cfg(any(all(feature = "player-gst", feature = "force"), all(target_os = "linux", target_arch = "x86_64", not(feature = "force"))))]
+#[cfg(any(all(feature = "player-gst", feature = "force"), all(any(target_os = "windows", target_os = "linux"), target_arch = "x86_64", not(feature = "force"))))]
 mod gst_player;
-#[cfg(any(all(feature = "player-gst", feature = "force"), all(target_os = "linux", target_arch = "x86_64", not(feature = "force"))))]
+#[cfg(any(all(feature = "player-gst", feature = "force"), all(any(target_os = "windows", target_os = "linux"), target_arch = "x86_64", not(feature = "force"))))]
 use gst_player::{Player};
 
 #[cfg(any(all(feature = "player-mpv", feature = "force"), all(target_os = "android", target_arch = "aarch64", not(feature = "force"))))]

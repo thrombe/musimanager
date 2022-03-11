@@ -34,7 +34,7 @@ player-mpv = ["mpv"]
 player-gst = ["gstreamer-player", "gstreamer"]
 player-libmpv = ["libmpv"] # didn't impliment this one yet
 
-[target.'cfg(all(target_os = "linux", target_arch = "x86_64"))'.dependencies]
+[target.'cfg(all(any(target_os = "windows", target_os = "linux"), target_arch = "x86_64"))'.dependencies]
 gstreamer = {version = "0.17"}
 gstreamer-player = {version = "0.17"}
 

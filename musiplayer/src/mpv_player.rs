@@ -5,6 +5,7 @@ use anyhow::Result;
 // use pyo3::PyResult as Result;
 
 // https://docs.rs/mpv/0.2.3/mpv/enum.Event.html
+// https://mpv.io/manual/master/#properties
 use mpv;
 
 #[pyclass]

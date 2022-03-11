@@ -4,7 +4,10 @@ import musiplayer_setup
 musiplayer_setup.build_and_move()
 
 import opts
-opts.load_ytmusic() # stores ytmusic in global variable
+
+import threading
+# stores ytmusic in global variable
+threading.Thread(target=opts.load_ytmusic, args=()).start()
 
 import cui_handle
 cui_handle.CUI_handle().safe_start()

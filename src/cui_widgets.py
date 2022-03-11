@@ -237,6 +237,7 @@ class BrowserWidget:
             # self.scroll_menu.add_key_command(k, c)
         self.scroll_menu.set_selected_color(py_cui.MAGENTA_ON_CYAN)
         self.scroll_menu.add_item_list(self.content_state_stack[0].get_current_name_list())
+        threading.Thread(target=self.content_state_stack[0].load, args=()).start()
 
         if opts.enable_global_shortcuts:
             pynput.keyboard.GlobalHotKeys({

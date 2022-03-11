@@ -249,31 +249,39 @@ class SongProvider(serde.Model):
     def search(self, search_term, get_search_box_title=False): return None
 
 class MainProvider(SongProvider):
-    def __init__(self, data, t, name="Browser"):
-        self.tracker = t
+    def __init__(self, data, name="Browser"):
+        self.tracker = None
         super().__init__(data, name)
         self.content_type = WidgetContentType.MAIN
         self.unfiltered_data = 1
 
     def new():
-        import tracker
-        t = tracker.Tracker.load()
         data = [
-            ArtistProvider(t),
-            PlaylistProvider(t),
-            QueueProvider(t),
-            NewAlbumArtistProvider(t),
+            ArtistProvider(),
+            PlaylistProvider(),
+            QueueProvider(),
+            NewAlbumArtistProvider(),
             FileExplorer.new(),
             AutoSearchSongs(),
             AlbumSearchYTM(),
             NewpipePlaylistProvider(),
             ]
-        mp = MainProvider(data, t)
+        mp = MainProvider(data)
         mp.artist_provider = data[0]
         mp.playlist_provider = data[1]
         mp.queue_provider = data[2]
         mp.new_album_artist_provider = data[3]
         return mp
+
+    def load(self):
+        import tracker
+        self.tracker = tracker.Tracker.load()
+        self.artist_provider.load(self.tracker)
+        self.playlist_provider.load(self.tracker)
+        self.queue_provider.load(self.tracker)
+        self.new_album_artist_provider.load(self.tracker)
+        self.data_list[5].load()
+        self.data_list[7].load()
 
     def get_at(self, index):
         return super().get_at(index)
@@ -292,13 +300,17 @@ class MainProvider(SongProvider):
     def move_item_down(self, index, y_blank, top_view): pass
 
 class ArtistProvider(SongProvider):
-    def __init__(self, t, name="Artists"):
-        self.tracker = t
-        data = self.tracker.artists
-        data.sort(key=lambda x: -len(x.songs))
+    def __init__(self, name="Artists"):
+        self.tracker = None
+        data = []
         super().__init__(data, name)
         self.content_type = WidgetContentType.ARTISTS
     
+    def load(self, t):
+        self.tracker = t
+        self.data_list = self.tracker.artists
+        self.data_list.sort(key=lambda x: -len(x.songs))
+
     def get_current_name_list(self):
         return [helpers.pad_zwsp(artist.name) for artist in self.data_list]
     
@@ -409,20 +421,23 @@ class ArtistProvider(SongProvider):
         return menu_funcs, a.name
 
 class NewAlbumArtistProvider(ArtistProvider):
-    def __init__(self, t, name="New Songs from Artists"):
-        self.tracker = t
-
+    def __init__(self, name="New Songs from Artists"):
+        self.tracker = None
         self.last_check_time = time.time()
-
-        self.check_queue = [a for a in t.artists if a.last_auto_search is not None]
-        self.check_queue.sort(key=lambda a: a.last_auto_search)
-
-        data = self.tracker.auto_search_artists
+        self.check_queue = []
+        data = []
 
         super(ArtistProvider, self).__init__(data, name)
         self.content_type = WidgetContentType.NEW_ALBUM_ARTISTS
 
+    def load(self, t):
+        self.tracker = t
+        self.check_queue = [a for a in t.artists if a.last_auto_search is not None]
+        self.check_queue.sort(key=lambda a: a.last_auto_search)
+        self.data_list = self.tracker.auto_search_artists
+
     def refresh(self):
+        if self.tracker is None: return
         if not opts.auto_search_albums or len(self.check_queue) == 0: return
         now = time.time()
         if now - self.last_check_time < 15 * 60: return
@@ -505,14 +520,17 @@ class NewAlbumArtistProvider(ArtistProvider):
     def add_new(_, __): pass
 
 class PlaylistProvider(SongProvider):
-    def __init__(self, t):
-        playlists = t.playlists
-        for playlist in playlists:
-            playlist.default_untracked_attrs()
-            playlist.current_index = 0
+    def __init__(self):
+        playlists = []
         super().__init__(playlists, "Playlists")
         self.content_type = WidgetContentType.PLAYLISTS
     
+    def load(self, t):
+        self.data_list = t.playlists
+        for playlist in self.data_list:
+            playlist.default_untracked_attrs()
+            playlist.current_index = 0
+
     def add_new(self, songs, name):
         song_provider = SongProvider(songs, name)
         self.data_list.append(song_provider)
@@ -598,12 +616,15 @@ class PlaylistProvider(SongProvider):
         return menu_funcs, playlist.name
 
 class QueueProvider(SongProvider):
-    def __init__(self, t):
-        queues = t.queues
-        for q in queues:
-            q.default_untracked_attrs()
+    def __init__(self):
+        queues = []
         super().__init__(queues, "Queues")
         self.content_type = WidgetContentType.QUEUES
+
+    def load(self, t):
+        self.data_list = t.queues
+        for q in self.data_list:
+            q.default_untracked_attrs()
 
     def get_current_name_list(self):
         return [helpers.pad_zwsp(queue.name) for queue in self.data_list]
@@ -666,6 +687,11 @@ class QueueProvider(SongProvider):
 
 class NewpipePlaylistProvider(SongProvider):
     def __init__(self):
+        playlists = []
+        super().__init__(playlists, "Newpipe Backup Playlists")
+        self.content_type = WidgetContentType.PLAYLISTS
+
+    def load(self):
         data = newpipe_db_handler.NewpipeDBHandler.quick_extract_playlists()
         playlists = []
         for key, val in data.items():
@@ -676,8 +702,7 @@ class NewpipePlaylistProvider(SongProvider):
             playlist = SongProvider(songs, key)
             playlists.append(playlist)
             playlists.sort(key=lambda x: x.name)
-        super().__init__(playlists, "Newpipe Backup Playlists")
-        self.content_type = WidgetContentType.PLAYLISTS
+        self.data_list = playlists
 
     def get_at(self, index):
         return super().get_at(index)
@@ -776,6 +801,13 @@ class FileExplorer(SongProvider):
 
 class AutoSearchSongs(SongProvider):
     def __init__(self):
+        self.song_paths = []
+        data = []
+        super().__init__(data, "All Songs")
+        # self.content_type = WidgetContentType.AUTOSEARCH_SONGS
+        self.content_type = WidgetContentType.SONGS # this needs to behave like a queue
+
+    def load(self):
         import tracker
         self.song_paths = tracker.Tracker.get_song_paths(opts.auto_search_under.rstrip(os.path.sep))
         data = []
@@ -784,9 +816,7 @@ class AutoSearchSongs(SongProvider):
             if s.title is None:
                 s.title = sp.split(os.path.sep)[-1]
             data.append(s)
-        super().__init__(data, "All Songs")
-        # self.content_type = WidgetContentType.AUTOSEARCH_SONGS
-        self.content_type = WidgetContentType.SONGS # this needs to behave like a queue
+        self.data_list = data
 
     def get_at(self, index):
         return super().get_at(index)

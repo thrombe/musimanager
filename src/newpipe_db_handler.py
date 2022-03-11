@@ -27,7 +27,7 @@ class NewpipeDBHandler:
 
     def extract_from_zip(self):
         zip_path = self.get_latest_zip_path()
-        if zip_path is None or zip_path.endswith("zip"): return {}
+        if zip_path is None or not zip_path.endswith("zip"): return {}
         input_zip = ZipFile(zip_path)
         newpipe_db = {name: input_zip.read(name) for name in input_zip.namelist()}["newpipe.db"]
         db_path = self.bkup_directory+"newpipe.db"
