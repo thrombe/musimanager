@@ -3,6 +3,9 @@
 import musiplayer_setup
 musiplayer_setup.build_and_move()
 
+import git_handle
+git_handle.try_commit_changes()
+
 import opts
 
 import threading

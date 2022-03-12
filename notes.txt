@@ -16,6 +16,8 @@ bugs:
     \. 1 edit at the top of the songs list and git considers all songs in the list edited as some lines are still the same
 
 plan:
+  /. have a git repo at db
+    /. auto commit after x days/hours (only when program starts)
   /. auto update/search new albums for artists after some interval in background thread
     . show popup on new finds?
     . custom search_terms?
