@@ -62,7 +62,6 @@ plan:
   . get albums of artists from the song
     . get artist from song, get albums from artist searching online
     . ask for custom search_term, leave blank for no custom search_term
-  /. profile code and find whats taking the most time to init
   . some kinda versioning to update the contents of db to update to newer versions of db
     . tracker.version: "x.x.x"
     . [int(v) for v in tracker.version.split(".")]
@@ -106,7 +105,6 @@ plan:
   \. artist.search_term for artists that dont give good enough results for just their names for albums
     \. multiple artist search terms + smol limit
   . add a popup for showing available shortcuts
-  /. make an init func that checks and setus up the temp dirs and stuff on startup
 
 
 dev_plan: 

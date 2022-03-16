@@ -19,7 +19,7 @@ def try_commit_changes():
     out  = str(out.stdout)
 
     #if no git repo, make one
-    if out.startswith("fatal: not a git repository (or any of the parent directories)"):
+    if out.startswith("fatal: not a git repository"):
         commands = f"""
         cd {dir}
         git init .
