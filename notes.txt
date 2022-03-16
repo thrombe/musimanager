@@ -16,8 +16,7 @@ bugs:
     \. 1 edit at the top of the songs list and git considers all songs in the list edited as some lines are still the same
 
 plan:
-  /. have a git repo at db
-    /. auto commit after x days/hours (only when program starts)
+  . sync between multiple devices
   /. auto update/search new albums for artists after some interval in background thread
     . show popup on new finds?
     . custom search_terms?
@@ -63,7 +62,7 @@ plan:
   . get albums of artists from the song
     . get artist from song, get albums from artist searching online
     . ask for custom search_term, leave blank for no custom search_term
-  . profile code and find whats taking the most time to init
+  /. profile code and find whats taking the most time to init
   . some kinda versioning to update the contents of db to update to newer versions of db
     . tracker.version: "x.x.x"
     . [int(v) for v in tracker.version.split(".")]
@@ -77,8 +76,8 @@ plan:
     . https://github.com/tramhao/termusic
     . maybe search for a rodio example?
   . maybe have general buttons for refresh, and stuff
-  . show some loading thing when doing online stuff/doing stuff with songs (when the screen freezes otherwise)
-  . multithreaing for time consuming stuff (async??)
+  . show some loading thing when doing online stuff/doing stuff with songs
+  /. multithreaing for time consuming stuff (async??)
     . including the live player info change on browser selection change 
     . show selected song/album/whatever info on the player widget and add shortcut to switch and show playing song
   . maintain a song history
@@ -107,7 +106,7 @@ plan:
   \. artist.search_term for artists that dont give good enough results for just their names for albums
     \. multiple artist search terms + smol limit
   . add a popup for showing available shortcuts
-  . make an init func that checks and setus up the temp dirs and stuff on startup
+  /. make an init func that checks and setus up the temp dirs and stuff on startup
 
 
 dev_plan: 

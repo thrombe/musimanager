@@ -7,6 +7,7 @@ musimanager_directory = "~/Music/musimanager" # directory where musimanager can 
 
 [newpipe]
 newpipe_playlists = []
+newpipe_bkup_directory = "$paths::musimanager_directory"
 
 [ytmusic_search_limits]
 musitracker_search_limit = 75

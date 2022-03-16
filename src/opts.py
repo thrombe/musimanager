@@ -33,6 +33,14 @@ for k, p in opts["paths"].items():
     if not p.endswith("/"):
         opts["paths"][k] += "/"
 
+# expand all $refrences (only from the loaded configs)
+for k, p in opts.items():
+    for k1, p1 in p.items():
+        if type(p1) == str:
+            if p1.startswith("$"):
+                p1 = p1[1:].split("::")
+                opts[k][k1] = opts[p1[0]][p1[1]]
+
 # import json
 # print(json.dumps(opts, indent=4))
 
@@ -40,6 +48,7 @@ musi_path = opts["paths"]["musi_path"]
 auto_search_under = opts["paths"]["auto_search_under"]
 file_explorer_base_dir = opts["paths"]["file_explorer_base_dir"]
 musimanager_directory = opts["paths"]["musimanager_directory"]
+newpipe_bkup_directory = opts["newpipe"]["newpipe_bkup_directory"]
 
 newpipe_playlists = opts["newpipe"]["newpipe_playlists"]
 musitracker_search_limit = opts["ytmusic_search_limits"]["musitracker_search_limit"]
@@ -65,7 +74,6 @@ hide_ueberzug_album_art = opts["random_options"]["hide_ueberzug_album_art"]
 
 
 
-newpipe_bkup_directory = musimanager_directory
 ytmusic_headers_path = musimanager_directory + "headers_auth.json"
 musitracker_path = musimanager_directory + "musitracker.json"
 temp_dir = musimanager_directory + ".temp/"
