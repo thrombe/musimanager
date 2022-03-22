@@ -33,6 +33,12 @@ auto_search_albums = false
 debug_prints = false
 hide_ueberzug_album_art = false # only works if using this when ueberzug is being used
 
+[general_options]
+git_backup_db = false # enable to save the changes made in the db to a git repo
+
+[android_specific]
+player_widget_to_browser_widget_height_ratio = [1, 7]
+
 [player]
 seek_interval = 10 # seconds
 compile_on_every_boot = false # mostly needed for debugging/developing

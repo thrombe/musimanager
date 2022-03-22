@@ -37,10 +37,10 @@ class CUI_handle:
 
         if opts.ANDROID_64:
             self.player_widget = cui_widgets.PlayerWidget(
-                self.pycui.add_scroll_menu('Player', row=0, column=0, row_span=1, column_span=1, padx = 1, pady = 0)
+                self.pycui.add_scroll_menu('Player', row=0, column=0, row_span=opts.player_widget_to_browser_widget_height_ratio[0], column_span=1, padx = 1, pady = 0)
                 )
             self.browser_widget = cui_widgets.BrowserWidget(
-                self.pycui.add_scroll_menu('Browser',  row=1, column=0, row_span=7, column_span=1, padx = 1, pady = 0),
+                self.pycui.add_scroll_menu('Browser',  row=opts.player_widget_to_browser_widget_height_ratio[0], column=0, row_span=opts.player_widget_to_browser_widget_height_ratio[1], column_span=1, padx = 1, pady = 0),
                 self.player_widget,
                 )
         else:

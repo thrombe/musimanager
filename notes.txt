@@ -16,6 +16,14 @@ bugs:
     \. 1 edit at the top of the songs list and git considers all songs in the list edited as some lines are still the same
 
 plan:
+  . shortcut to bring the window to current desktop and similarly put it back to older pos?
+    . is this even possible?
+    . maybe s smol plugin thing that gets executed with shortcut?
+      . and then look for way to do this in kde
+  . a pinning feature in queues
+    . like "pin this queue to the nth index"
+  . instead of having all these remove, mass_remove_from_x combinations in menu, impliment a select -> copy/cut -> paste system
+  . add a _______seperator______ functionality in all providers
   . sync between multiple devices
   /. auto update/search new albums for artists after some interval in background thread
     . show popup on new finds?
