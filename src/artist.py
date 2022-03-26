@@ -42,9 +42,9 @@ class Artist(serde.Model):
             if s.artist_name not in self.keywords:
                 self.keywords.append(s.artist_name)
         if s.info.channel_id not in self.non_keywords:
-            if s.info.channel_id not in self.keys:
+            if s.info.channel_id not in self.keys and s.info.channel_id:
                 self.keys.append(s.info.channel_id)
-        if s.info.uploader_id not in self.non_keywords:
+        if s.info.uploader_id not in self.non_keywords and s.info.uploader_id:
             if s.info.uploader_id not in self.keys:
                 self.keys.append(s.info.uploader_id)
         s.artist_name = self.name

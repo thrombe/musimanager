@@ -194,7 +194,10 @@ class SongProvider(serde.Model):
         def add_to_queue():
             select_item_using_popup(main_provider.queue_provider, "queue", main_provider.queue_provider.data_list, final_func, tick_func=tick_func)
         def add_to_artist():
-            select_item_using_popup(main_provider.artist_provider, "artists", main_provider.artist_provider.data_list, final_func, tick_func=tick_func)
+            def final_func2(content_provider):
+                s_copy.try_get_info()
+                final_func(content_provider)
+            select_item_using_popup(main_provider.artist_provider, "artists", main_provider.artist_provider.data_list, final_func2, tick_func=tick_func)
         def add_to_new_album_artist():
             select_item_using_popup(main_provider.new_album_artist_provider, "new album artists", main_provider.new_album_artist_provider.data_list, final_func, tick_func=tick_func)
         def add_to_tracker_offline():
