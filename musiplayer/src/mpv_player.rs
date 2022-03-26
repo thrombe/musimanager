@@ -43,7 +43,7 @@ impl Player {
     }
 
     // from the comments, it seemed that clearing the events is important. so i added this in every method.
-    pub fn clear_event_loop(&mut self) {
+    fn clear_event_loop(&mut self) {
         // even if you don't do anything with the events, it is still necessary to empty
         // the event loop
         while let Some(event) = self.mpv.wait_event(0.0) {
@@ -144,6 +144,10 @@ impl Player {
         }
         self.started = true;
         self.dur = Some(self.duration_option().unwrap());
+
+        if self.is_paused().unwrap_or(false) {
+            self.unpause()?;
+        }
 
         self.clear_event_loop();
         Ok(())
