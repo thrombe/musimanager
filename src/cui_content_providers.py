@@ -641,7 +641,8 @@ class QueueProvider(SongProvider):
         self.remove_queue(queue)
         self.data_list.insert(0, queue)
         self.current_index = 0
-        if len(self.data_list) > 15: self.data_list.pop()
+        if len(self.data_list) > opts.num_queues:
+            self.data_list.pop()
 
     def remove_queue(self, queue):
         for i, q in enumerate(self.data_list):
