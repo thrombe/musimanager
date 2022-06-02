@@ -16,6 +16,9 @@ bugs:
     \. 1 edit at the top of the songs list and git considers all songs in the list edited as some lines are still the same
 
 plan:
+  . mpris support
+    . https://wiki.archlinux.org/title/MPRIS
+    . MPRIS (Media Player Remote Interfacing Specification) is a standard D-Bus interface which aims to provide a common programmatic API for controlling media players.
   . shortcut to bring the window to current desktop and similarly put it back to older pos?
     . is this even possible?
     . maybe s smol plugin thing that gets executed with shortcut?

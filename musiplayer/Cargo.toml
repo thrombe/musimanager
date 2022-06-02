@@ -7,7 +7,7 @@ edition = "2021"
 
 [lib]
 name = "musiplayer"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "lib"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }

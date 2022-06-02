@@ -11,12 +11,13 @@ use mpv;
 #[pyclass]
 pub struct Player {
     // mpv never seems to not return stuff when it should. unlike gst_player
-    pub mpv: mpv::MpvHandler,
+    mpv: mpv::MpvHandler,
     finished: bool,
     started: bool,
     url: Option<String>,
     dur: Option<f64>,
     pos: f64,
+    waiting_for_response: bool,
 }
 
 unsafe impl Send for Player {}
@@ -37,29 +38,52 @@ impl Player {
         mpv.set_option("vo", "null").expect(
             "Couldn't set vo=null in libmpv",
         );
-        let mut p = Player {mpv, url: None, finished: false, pos: 0.0, dur: None, started: false};
+        let mut p = Player {mpv, url: None, finished: false, pos: 0.0, dur: None, started: false, waiting_for_response: false};
         p.clear_event_loop();
         p
     }
 
     // from the comments, it seemed that clearing the events is important. so i added this in every method.
-    fn clear_event_loop(&mut self) {
-        // even if you don't do anything with the events, it is still necessary to empty
-        // the event loop
-        while let Some(event) = self.mpv.wait_event(0.0) {
-            match event {
-                // Shutdown will be triggered when the window is explicitely closed,
-                // while Idle will be triggered when the queue will end
-                // mpv::Event::Shutdown | mpv::Event::Idle => {
-                //     break 'main;
-                // }
-                // mpv::Event::PlaybackRestart => {
-                //     if !lol {
-                //         lol = !lol;
-                //         pl.seek();
-                //     }
-                // }
-                _ => (),
+    pub fn clear_event_loop(&mut self) {
+
+        if self.waiting_for_response {
+            // assuming that it never not returns stuff till its done playing
+            // blocking till the player is ready
+            while let Some(event) = self.mpv.wait_event(0.0) {
+                match event {
+                    mpv::Event::Shutdown | mpv::Event::Idle => {
+                        panic!("could not play song");
+                    }
+                    mpv::Event::PlaybackRestart => {
+                        self.waiting_for_response = false;
+                        self.started = true;
+                        self.dur = Some(self.duration_option().unwrap());
+                
+                        if self.is_paused().unwrap_or(false) {
+                            self.unpause().unwrap();
+                        }
+                    }
+                    _ => (),
+                }
+            }
+        } else {
+            // even if you don't do anything with the events, it is still necessary to empty
+            // the event loop
+            while let Some(event) = self.mpv.wait_event(0.0) {
+                match event {
+                    // Shutdown will be triggered when the window is explicitely closed,
+                    // while Idle will be triggered when the queue will end
+                    // mpv::Event::Shutdown | mpv::Event::Idle => {
+                    //     break 'main;
+                    // }
+                    // mpv::Event::PlaybackRestart => {
+                    //     if !lol {
+                    //         lol = !lol;
+                    //         pl.seek();
+                    //     }
+                    // }
+                    _ => (),
+                }
             }
         }
     }
@@ -126,29 +150,7 @@ impl Player {
         self.reset_vars();
         self.mpv.command(&["loadfile", &url, "replace"])?;
         self.url = Some(url);
-        
-        // assuming that it never not returns stuff till its done playing
-        // blocking till the player is ready
-        'loup: loop {
-            while let Some(event) = self.mpv.wait_event(0.0) {
-                match event {
-                    mpv::Event::Shutdown | mpv::Event::Idle => {
-                        panic!("could not play song");
-                    }
-                    mpv::Event::PlaybackRestart => {
-                        break 'loup;
-                    }
-                    _ => (),
-                }
-            }
-        }
-        self.started = true;
-        self.dur = Some(self.duration_option().unwrap());
-
-        if self.is_paused().unwrap_or(false) {
-            self.unpause()?;
-        }
-
+        self.waiting_for_response = true;
         self.clear_event_loop();
         Ok(())
     }
