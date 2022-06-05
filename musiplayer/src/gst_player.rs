@@ -110,10 +110,11 @@ impl Player {
         // gstreamer_player.position() never reaches the values of .duration() (reaches around minimun .duration()-15 (mseconds))
         // it does not have a .is_finished() method (or atleast i could'nt find it)
 
-        if self.paused || self.duration == 0 {return false}
+        let duration = self.duration();
+        if self.paused || duration == 0 {return false}
 
         // i64 was needed as in release mode there are no overflow checks and u64-lil_bigger_u64 cant be smaller than 50
-        (self.duration() as i64) - (self.position() as i64) < 50
+        (duration as i64) - (self.position() as i64) < 50
     }
 
     pub fn is_paused(&self) -> bool {
