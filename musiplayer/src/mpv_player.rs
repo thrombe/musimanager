@@ -1,5 +1,6 @@
 
 
+use derivative::Derivative;
 use anyhow::Result;
 // use pyo3::PyResult as Result;
 
@@ -9,9 +10,11 @@ use mpv;
 
 use crate::MusiPlayer;
 
-#[derive(Debug)]
+#[derive(Derivative)]
+#[derivative(Debug)]
 pub struct Player {
     // mpv never seems to not return stuff when it should. unlike gst_player
+    #[derivative(Debug="ignore")]
     mpv: mpv::MpvHandler,
     finished: bool,
     started: bool,
