@@ -15,6 +15,9 @@ pub struct Player {
     paused: bool,
     position: u64,
     duration: u64,
+    
+    // currently this is only used to so that progress() reports 0 when no song is being played (when it is called just after initialising Player)
+    started: bool,
 }
 
 impl Player {
@@ -33,7 +36,7 @@ impl Player {
 impl Player {
 
     pub fn new() -> Self {
-        Self {player: Self::new_player(), paused: true, duration: 0, position: 0}
+        Self {player: Self::new_player(), paused: true, duration: 0, position: 0, started: false}
     }
 
     pub fn position(&mut self) -> u64 {
@@ -141,7 +144,15 @@ impl Player {
     }
 
     pub fn progress(&mut self) -> f64 {
-        if self.duration() == 0 {return 1.0}
+        if self.duration() == 0 {
+            if !self.started {
+                return 0.0;
+            } else {
+                return 1.0;
+            }
+        } else {
+            self.started = true;
+        }
         (self.position() as f64)/(self.duration() as f64)
     }
 }
