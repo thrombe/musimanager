@@ -31,7 +31,10 @@ class Album(serde.Model):
         )
     
     def load_albums_from_artist_key(key):
-        artist_data = opts.ytmusic.get_artist(key)
+        try:
+            artist_data = opts.ytmusic.get_artist(key)
+        except ValueError: # channel might not have any music content
+            return []
         maybe_albums_data = artist_data.get("albums", None)
         if maybe_albums_data is None: return []
         albums_data = maybe_albums_data.get("results", None)

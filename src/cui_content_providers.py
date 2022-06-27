@@ -573,7 +573,7 @@ class PlaylistProvider(SongProvider):
             songs = []
             for i in range(len(playlist.data_list)):
                 playlist.current_index = i
-                s, a = [f for f in playlist.get_menu_funcs(content_stack) if f.__name__ == "add_to_tracker_offline"][0]()
+                s, a = [f for f in playlist.get_menu_funcs(content_stack)[0] if f.__name__ == "add_to_tracker_offline"][0]()
                 songs.append(s)
                 if a is not None:
                     new_artists.append(a)
@@ -589,7 +589,7 @@ class PlaylistProvider(SongProvider):
         def try_delete_from_tracker():
             for i in range(len(playlist.data_list)):
                 playlist.current_index = i
-                [f for f in playlist.get_menu_funcs(content_stack) if f.__name__ == "try_delete_from_tracker"][0]()
+                [f for f in playlist.get_menu_funcs(content_stack)[0] if f.__name__ == "try_delete_from_tracker"][0]()
             playlist.current_index = 0
         def change_name():
             cui_handle.pycui.show_text_box_popup("new name: ", playlist.change_name)

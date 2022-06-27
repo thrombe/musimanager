@@ -73,7 +73,7 @@ class Tracker(serde.Model):
             self.add_artist(a)
         if a.contains_song(s): return
         a.add_song(s)
-        if s.last_known_path is None:
+        if s.last_known_path is None or not os.path.exists(s.last_known_path):
             s.download()
         s.tag(img_bytes=s.download_cover_image())
         s.move_to_artist_folder()

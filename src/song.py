@@ -155,6 +155,7 @@ class Song(serde.Model):
         self.get_info_ytdl_data(ytdl_data) # for download_cover_image
 
         # yanked code from ytdlp github readme
+        # https://github.com/yt-dlp/yt-dlp#use-a-custom-format-selector
         formats = ytdl_data["formats"][::-1]
         best_video = next(f for f in formats if f['vcodec'] != 'none' and f['acodec'] == 'none') # acodec='none' means there is no audio
         audio_ext = {'mp4': 'm4a', 'webm': 'webm'}[best_video['ext']] # find compatible audio extension
