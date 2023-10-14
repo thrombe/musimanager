@@ -16,6 +16,7 @@ import album
 import cui_handle
 import artist
 import newpipe_db_handler
+import log
 
 class WidgetContentType(enum.Enum):
     MAIN = enum.auto()

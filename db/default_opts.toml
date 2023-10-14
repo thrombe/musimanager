@@ -43,3 +43,6 @@ player_widget_to_browser_widget_height_ratio = [1, 7]
 seek_interval = 10 # seconds
 compile_on_every_boot = false # mostly needed for debugging/developing
 num_queues = 15 # number of queues that will be cached in the db
+
+[logging]
+log_path = "$paths::musimanager_directory"

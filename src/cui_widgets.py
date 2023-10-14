@@ -11,7 +11,7 @@ import cui_content_providers
 import cui_handle
 import helpers
 
-# musiplayer_src.py puts a musiplayer.so file (compiled from rust) in current folder that gets imported here
+# musiplayer_setup.py puts a musiplayer.so file (compiled from rust) in current folder that gets imported here
 import musiplayer
 
 if opts.enable_global_shortcuts: import pynput

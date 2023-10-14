@@ -10,6 +10,7 @@ from PIL import Image
 import io
 
 import opts
+import log
 
 class YTdl:
     def __init__(self, path, ext):
@@ -209,7 +210,12 @@ class Song(serde.Model):
     # TODO: how to confirm if filename is key?
     def from_file(path):
         s = Song.new(None, path.split(os.path.sep)[-1].split(".")[0], None, path=path)
-        mf = tagg.MediaFile(path)
+        try:
+            mf = tagg.MediaFile(path)
+        except:
+            log.log("bad file??")
+            log.log(path)
+            return s
         s.title = mf.title
         s.artist_name = mf.artist
         s.info.album = mf.album

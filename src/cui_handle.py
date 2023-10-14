@@ -18,7 +18,7 @@ class CUI_handle:
 
     def setup(self):
         if opts.ANDROID_64:
-            self.pycui = py_cui.PyCUI(8, 1)
+            self.pycui = py_cui.PyCUI(opts.player_widget_to_browser_widget_height_ratio[0]+opts.player_widget_to_browser_widget_height_ratio[1], 1)
         else:
             self.pycui = py_cui.PyCUI(1, 2)
         global pycui 

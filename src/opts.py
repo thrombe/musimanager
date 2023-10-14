@@ -64,6 +64,7 @@ compile_on_every_boot = opts["player"]["compile_on_every_boot"]
 num_queues = opts["player"]["num_queues"]
 git_backup_db = opts["general_options"]["git_backup_db"]
 player_widget_to_browser_widget_height_ratio = opts["android_specific"]["player_widget_to_browser_widget_height_ratio"]
+log_file_path = opts["logging"]["log_path"] + "log.log"
 
 # random options
 show_artist_name_besides_song_name = opts["random_options"]["show_artist_name_besides_song_name"]

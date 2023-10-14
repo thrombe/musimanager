@@ -8,6 +8,7 @@ import song
 import artist
 import album
 import cui_content_providers
+import log
 
 class Tracker(serde.Model):
     artists: serde.fields.List(serde.fields.Nested(artist.Artist))

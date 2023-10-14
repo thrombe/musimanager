@@ -8,3 +8,5 @@ yt-dlp
 toml
 ueberzug; sys_platform == 'linux'and platform_machine == "x86_64"
 Pillow
+pprint
+logging
