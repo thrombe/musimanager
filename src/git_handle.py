@@ -60,7 +60,7 @@ def try_commit_changes():
             git add musitracker.json
             git commit -m "{str(datetime.date.today()).replace("-", "/")}"
             """
-            subprocess.check_output(
+            subprocess.run(
                 [commands, ],
                 shell=True,
             )
