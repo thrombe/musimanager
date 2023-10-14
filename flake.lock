@@ -1,0 +1,148 @@
+{
+  "nodes": {
+    "jflib-git": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1684877422,
+        "narHash": "sha256-R/EZVuG/WVwATgSyzbOfPGRfmNDnZybQGZm1htmflsQ=",
+        "owner": "Josef-Friedrich",
+        "repo": "jflib",
+        "rev": "722f8cd9fa7008fc1db77d7e785f6bfd90b5d7f6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Josef-Friedrich",
+        "repo": "jflib",
+        "type": "github"
+      }
+    },
+    "mediafile-git": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1666374141,
+        "narHash": "sha256-Sdb5Hvm4Y344msZGie4PJ88ZmFtWfc0chABtmwnEN/Y=",
+        "owner": "beetbox",
+        "repo": "mediafile",
+        "rev": "255afafd2da2febce705fe9702eaf1e4b8c437c2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "beetbox",
+        "repo": "mediafile",
+        "rev": "255afafd2da2febce705fe9702eaf1e4b8c437c2",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1696697597,
+        "narHash": "sha256-q26Qv4DQ+h6IeozF2o1secyQG0jt2VUT3V0K58jr3pg=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "5a237aecb57296f67276ac9ab296a41c23981f56",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-23.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs-80c24eeb9": {
+      "locked": {
+        "lastModified": 1671268780,
+        "narHash": "sha256-9Okbivo10bcXEGCtmAQNfJt1Zpk6B3tjkSQ2CIXmTCg=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "80c24eeb9ff46aa99617844d0c4168659e35175f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "80c24eeb9ff46aa99617844d0c4168659e35175f",
+        "type": "github"
+      }
+    },
+    "nixpkgs-eb354ebf0": {
+      "locked": {
+        "lastModified": 1658397257,
+        "narHash": "sha256-2M1Ih3r8/mL8h0n8+PYoGXFazVY9zBcGJrNxNC3JgNo=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "a174de16edfc6aa0893530b9a95d0bd0c2a952b7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "a174de16edfc6aa0893530b9a95d0bd0c2a952b7",
+        "type": "github"
+      }
+    },
+    "phrydy-git": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1656136414,
+        "narHash": "sha256-+gZFBNlonIk9X8qs6nYE4ILBjhtoA+a06tqbehT9WSI=",
+        "owner": "Josef-Friedrich",
+        "repo": "phrydy",
+        "rev": "2adfc4fcca3880837b0053592b3c87e8fc5011dd",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Josef-Friedrich",
+        "repo": "phrydy",
+        "rev": "2adfc4fcca3880837b0053592b3c87e8fc5011dd",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "jflib-git": "jflib-git",
+        "mediafile-git": "mediafile-git",
+        "nixpkgs": "nixpkgs",
+        "nixpkgs-80c24eeb9": "nixpkgs-80c24eeb9",
+        "nixpkgs-eb354ebf0": "nixpkgs-eb354ebf0",
+        "phrydy-git": "phrydy-git",
+        "serde-git": "serde-git",
+        "unstable-nixpkgs": "unstable-nixpkgs"
+      }
+    },
+    "serde-git": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1664046285,
+        "narHash": "sha256-LY/1lzBjAneD95rPbmt56lW88V9g+7HprsNxXdBg24E=",
+        "owner": "rossmacarthur",
+        "repo": "serde",
+        "rev": "15472295bde96fede508c3916387f6a162062838",
+        "type": "github"
+      },
+      "original": {
+        "owner": "rossmacarthur",
+        "repo": "serde",
+        "type": "github"
+      }
+    },
+    "unstable-nixpkgs": {
+      "locked": {
+        "lastModified": 1696604326,
+        "narHash": "sha256-YXUNI0kLEcI5g8lqGMb0nh67fY9f2YoJsILafh6zlMo=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "87828a0e03d1418e848d3dd3f3014a632e4a4f64",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
