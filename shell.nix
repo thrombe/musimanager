@@ -1,4 +1,4 @@
-{ pkgs ? import <nixpkgs> {}, unstable ? import <nixos-unstable> {}, serde-git, phrydy-git, mediafile-git, jflib-git, pkgs-eb354ebf0, pkgs-80c24eeb9 }:
+{ pkgs ? import <nixpkgs> {}, unstable ? import <nixos-unstable> {}, serde-git, phrydy-git, pkgs-eb354ebf0 }:
 
 let
   serde = pkgs.python310Packages.buildPythonPackage {
@@ -9,30 +9,6 @@ let
       mock
     ];
   };
-  # mediafile-09 = pkgs.python310Packages.buildPythonPackage {
-  #   name = "mediafile";
-  #   src = mediafile-git;
-  #   format = "pyproject";
-  #   propagatedBuildInputs = with pkgs.python310Packages; [
-  #     mutagen
-  #     flit-core
-  #     six
-  #   ];
-  # };
-  # jflib-1 = pkgs-80c24eeb9.python310Packages.buildPythonPackage {
-  #   name = "jflib";
-  #   src = jflib-git;
-  #   format = "pyproject";
-  #   propagatedBuildInputs = with pkgs-80c24eeb9.python310Packages; [
-  #     # poetry
-  #     pkgs.python310Packages.requests
-  #     pkgs-eb354ebf0.python310Packages.poetry
-  #     # pkgs-80c24eeb9.python310Packages.typing-extensions
-  #     typing-extensions
-  #     # pkgs.python310Packages.typing-extensions
-  #   ];
-  # };
-
   # - [Packaging/Python - NixOS Wiki](https://nixos.wiki/wiki/Packaging/Python)
   phrydy = pkgs-eb354ebf0.python310Packages.buildPythonPackage {
     name = "phrydy";
@@ -42,15 +18,10 @@ let
     doCheck = false;
 
     propagatedBuildInputs = with pkgs-eb354ebf0.python310Packages; [
-      # pytest
-      # mock
-      # jflib-1
       ansicolor
       # - [python310Packages.mediafile](https://www.nixhub.io/packages/python310Packages.mediafile)
       mediafile
       typing-extensions
-      # mediafile-09
-      # pkgs-eb354ebf0.python310Packages.mediafile
     ];
   };
 in

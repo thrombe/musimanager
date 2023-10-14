@@ -1,38 +1,5 @@
 {
   "nodes": {
-    "jflib-git": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1684877422,
-        "narHash": "sha256-R/EZVuG/WVwATgSyzbOfPGRfmNDnZybQGZm1htmflsQ=",
-        "owner": "Josef-Friedrich",
-        "repo": "jflib",
-        "rev": "722f8cd9fa7008fc1db77d7e785f6bfd90b5d7f6",
-        "type": "github"
-      },
-      "original": {
-        "owner": "Josef-Friedrich",
-        "repo": "jflib",
-        "type": "github"
-      }
-    },
-    "mediafile-git": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1666374141,
-        "narHash": "sha256-Sdb5Hvm4Y344msZGie4PJ88ZmFtWfc0chABtmwnEN/Y=",
-        "owner": "beetbox",
-        "repo": "mediafile",
-        "rev": "255afafd2da2febce705fe9702eaf1e4b8c437c2",
-        "type": "github"
-      },
-      "original": {
-        "owner": "beetbox",
-        "repo": "mediafile",
-        "rev": "255afafd2da2febce705fe9702eaf1e4b8c437c2",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1696697597,
@@ -46,22 +13,6 @@
         "owner": "nixos",
         "ref": "nixos-23.05",
         "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
-    "nixpkgs-80c24eeb9": {
-      "locked": {
-        "lastModified": 1671268780,
-        "narHash": "sha256-9Okbivo10bcXEGCtmAQNfJt1Zpk6B3tjkSQ2CIXmTCg=",
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "rev": "80c24eeb9ff46aa99617844d0c4168659e35175f",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "rev": "80c24eeb9ff46aa99617844d0c4168659e35175f",
         "type": "github"
       }
     },
@@ -100,10 +51,7 @@
     },
     "root": {
       "inputs": {
-        "jflib-git": "jflib-git",
-        "mediafile-git": "mediafile-git",
         "nixpkgs": "nixpkgs",
-        "nixpkgs-80c24eeb9": "nixpkgs-80c24eeb9",
         "nixpkgs-eb354ebf0": "nixpkgs-eb354ebf0",
         "phrydy-git": "phrydy-git",
         "serde-git": "serde-git",
