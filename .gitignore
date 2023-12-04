@@ -13,4 +13,5 @@ musiplayer/src/main.rs.olb
 target/
 .env
 __pycache__
+.direnv
 
